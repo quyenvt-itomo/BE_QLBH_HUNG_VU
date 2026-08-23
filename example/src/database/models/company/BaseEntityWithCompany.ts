@@ -9,9 +9,9 @@ import type { Organization } from "../Organization";
 export abstract class BaseEntityWithCompany extends BaseEntity {
   @Index()
   @Column({ type: "uuid" })
-  companyId: string;
+  storeId: string;
 
   @ManyToOne("Organization", { onDelete: "CASCADE" })
-  @JoinColumn({ name: "companyId" })
+  @JoinColumn({ name: "storeId" })
   company: Organization;
 }

@@ -219,7 +219,7 @@ export abstract class BaseService<T extends BaseEntity> {
   ): Promise<ApiResponse<T[]>> {
     let page = options.page || 1;
     const size = options.size || 20;
-    const companyId = options.companyId || req?.companyContext?.companyId;
+    const storeId = options.storeId || req?.storeContext?.storeId;
 
     const optionData: IFindPaginationOptions<T> = {
       ...options,
@@ -229,7 +229,7 @@ export abstract class BaseService<T extends BaseEntity> {
       searchFields: this.searchableFields,
       summaryFields: this.summaryFields as (keyof T)[] | undefined,
       timeField: this.timeField,
-      companyId,
+      storeId,
       moreQuery: options,
     };
 
@@ -441,7 +441,7 @@ export abstract class BaseService<T extends BaseEntity> {
     manager?: EntityManager,
     req?: RequestContext,
   ): Promise<T | null> {
-    const companyId = req?.companyContext?.companyId;
+    const storeId = req?.storeContext?.storeId;
     const trashFileIds = this.collectTrashFileIds(data as any);
 
     if (data.isDefault && (data as any).name) delete (data as any).name;
@@ -458,9 +458,9 @@ export abstract class BaseService<T extends BaseEntity> {
       }
 
       if (
-        companyId &&
-        (entity as any).companyId &&
-        (entity as any).companyId !== companyId
+        storeId &&
+        (entity as any).storeId &&
+        (entity as any).storeId !== storeId
       ) {
         throw new BadRequestError(
           "Dữ liệu không thuộc công ty của bạn, không thể cập nhật",
@@ -539,15 +539,15 @@ export abstract class BaseService<T extends BaseEntity> {
     manager?: EntityManager,
     req?: RequestContext,
   ): Promise<boolean> {
-    const companyId = req?.companyContext?.companyId;
+    const storeId = req?.storeContext?.storeId;
     const runWithManager = async (manager: EntityManager) => {
       const entity = await this.findById(id, manager);
       if (!entity) throw new NotFoundError("Không tìm thấy dữ liệu cần xóa");
 
       if (
-        companyId &&
-        (entity as any).companyId &&
-        (entity as any).companyId !== companyId
+        storeId &&
+        (entity as any).storeId &&
+        (entity as any).storeId !== storeId
       ) {
         throw new BadRequestError(
           "Dữ liệu không thuộc công ty của bạn, không thể xóa",
@@ -569,14 +569,14 @@ export abstract class BaseService<T extends BaseEntity> {
     manager?: EntityManager,
     req?: RequestContext,
   ): Promise<boolean> {
-    const companyId = req?.companyContext?.companyId;
+    const storeId = req?.storeContext?.storeId;
     const runWithManager = async (manager: EntityManager) => {
       const entities = await this.repository.findByIds(ids, manager);
       for (const entity of entities) {
         if (
-          companyId &&
-          (entity as any).companyId &&
-          (entity as any).companyId !== companyId
+          storeId &&
+          (entity as any).storeId &&
+          (entity as any).storeId !== storeId
         ) {
           throw new BadRequestError(
             "Dữ liệu không thuộc công ty của bạn, không thể xóa",
@@ -914,7 +914,7 @@ export abstract class BaseService<T extends BaseEntity> {
           query: req.query,
           permissions: (req as any).permissions,
           userContext: (req as any).userContext,
-          companyContext: (req as any).companyContext,
+          storeContext: (req as any).storeContext,
         }
       : undefined;
   }

@@ -31,7 +31,7 @@ import { PARTNER_CONTACT_TYPES } from "@/module/partnerContact/partnerContact.ty
 export class QuotationRequestService extends BaseService<QuotationRequest> {
   protected repository: QuotationRequestRepository;
   protected uniqueFields: (keyof QuotationRequest)[] = ["code"];
-  protected uniqueScope?: (keyof QuotationRequest)[] = ["companyId"];
+  protected uniqueScope?: (keyof QuotationRequest)[] = ["storeId"];
   protected searchableFields = ["code", "note"];
   protected timeField: keyof QuotationRequest = "timeAt";
 
@@ -215,7 +215,7 @@ export class QuotationRequestService extends BaseService<QuotationRequest> {
           await this.partnerRepository.ensurePartnerWithContact(
             qr.customerSnapshot,
             qr.requesterSnapshot,
-            qr.companyId,
+            qr.storeId,
             PartnerType.CUSTOMER,
             trxManager,
           );

@@ -72,7 +72,7 @@ export class InventoryRecalculateService extends TransactionService {
 
   private async loadEvents(productId: string, storeId: string, fromDate: Date, manager: EntityManager): Promise<SourceEvent[]> {
     const [orders, adjustments, transfers, prices] = await Promise.all([
-      manager.getRepository(Order).find({ where: { storeId, status: OrderStatus.COMPLETED, deletedAt: IsNull() } as any, relations: { lines: true } }),
+      manager.getRepository(Order).find({ where: { storeId, status: OrderStatus.COMPLETED, deletedAt: IsNull() } as any, relations: { lines: true, returnLines: true } }),
       manager.getRepository(InventoryAdjustment).find({ where: { storeId, deletedAt: IsNull() } as any, relations: { lines: true } }),
       manager.getRepository(StoreTransfer).find({ where: { deletedAt: IsNull() } as any, relations: { lines: true } }),
       manager.getRepository(ProductPriceHistory).find({ where: { storeId, productId, deletedAt: IsNull() } as any }),
@@ -82,7 +82,7 @@ export class InventoryRecalculateService extends TransactionService {
     for (const order of orders) {
       const at = order.occurredAt || order.orderAt;
       if (!at || at < fromDate) continue;
-      const lines = (order.lines || []).filter((line) => line.productId === productId && !line.deletedAt);
+      const lines = [...(order.lines || []), ...(order.returnLines || [])].filter((line) => line.productId === productId && !line.deletedAt);
       for (const line of lines) {
         const quantity = Math.abs(Number(line.quantity) || 0) * (Number(line.conversionRateAtTime) || 1);
         if (!quantity) continue;
@@ -141,16 +141,16 @@ export class InventoryRecalculateService extends TransactionService {
 
   private async syncOrderCosts(orderIds: string[], manager: EntityManager): Promise<void> {
     for (const orderId of [...new Set(orderIds)]) {
-      const order = await manager.getRepository(Order).findOne({ where: { id: orderId }, relations: { lines: true } });
+      const order = await manager.getRepository(Order).findOne({ where: { id: orderId }, relations: { lines: true, returnLines: true } });
       if (!order) continue;
-      for (const line of order.lines || []) {
+      for (const line of [...(order.lines || []), ...(order.returnLines || [])]) {
         if (!line.productId) continue;
         const tx = await manager.getRepository(InventoryTransaction).findOne({ where: { refId: order.id, productId: line.productId, storeId: order.storeId } as any, order: { occurredAt: "DESC", createdAt: "DESC" } as any });
         if (!tx) continue;
         const quantity = Math.abs(Number(line.quantity) || 0) * (Number(line.conversionRateAtTime) || 1);
         await manager.getRepository(OrderLine).update(line.id, { costPriceAtTime: Number(tx.costPriceAfter) || 0, totalCost: quantity * (Number(tx.costPriceAfter) || 0) } as any);
       }
-      const lines = await manager.getRepository(OrderLine).find({ where: { orderId: order.id, deletedAt: IsNull() } as any });
+      const lines = await manager.getRepository(OrderLine).find({ where: [{ orderId: order.id }, { returnOrderId: order.id }] as any });
       const totalCost = lines.reduce((sum, line) => sum + (Number(line.totalCost) || 0), 0);
       await manager.getRepository(Order).update(order.id, this.isReturn(order.type) ? { returnTotalCost: totalCost } : { totalCost } as any);
     }

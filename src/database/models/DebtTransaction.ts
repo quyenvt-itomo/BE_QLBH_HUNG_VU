@@ -2,7 +2,7 @@ import { Entity, Column } from "typeorm";
 import { BaseEntity, BaseNumericColumnOptions } from "@/shared/base/BaseEntity";
 import { DebtSide, TransactionType } from "@/shared/constants/enum";
 
-export enum DebtRefTypeEnum {
+export enum DebtRefType {
   PURCHASE = "purchase", // nhập hàng
   SALE = "sale", // bán hàng
   PURCHASE_RETURN = "purchase_return", // trả hàng NCC
@@ -16,8 +16,9 @@ export enum DebtRefTypeEnum {
   SHIPPING_FEE = "shipping_fee", // phí vận chuyển
 }
 
+// Backwards-compatible alias for modules that still import the explicit Enum suffix.
 @Entity("debt_transactions")
-export class PartnerDebtTransaction extends BaseEntity {
+export class DebtTransaction extends BaseEntity {
   @Column({ type: "timestamptz" })
   occurredAt: Date;
 
@@ -33,8 +34,8 @@ export class PartnerDebtTransaction extends BaseEntity {
   @Column(BaseNumericColumnOptions)
   amount: number;
 
-  @Column({ type: "enum", enum: DebtRefTypeEnum })
-  refType: DebtRefTypeEnum;
+  @Column({ type: "enum", enum: DebtRefType })
+  refType: DebtRefType;
   @Column({ type: "uuid" })
   refId: string;
   @Column({ type: "varchar", length: 50, nullable: true, default: null })

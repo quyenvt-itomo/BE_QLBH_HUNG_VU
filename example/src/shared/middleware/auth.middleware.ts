@@ -66,7 +66,7 @@ export const authorization = async (
 ): Promise<void> => {
   try {
     const userId = req.user?.userId;
-    const companyId = req.companyContext?.companyId;
+    const storeId = req.storeContext?.storeId;
 
     if (!userId) {
       throw new UnauthorizedError("User not authenticated");
@@ -105,9 +105,9 @@ export const authorization = async (
       return next();
     }
 
-    if (companyId) {
+    if (storeId) {
       const companyUser = user.companyUsers?.find(
-        (cu) => cu.companyId === companyId,
+        (cu) => cu.storeId === storeId,
       );
 
       if (!companyUser) {

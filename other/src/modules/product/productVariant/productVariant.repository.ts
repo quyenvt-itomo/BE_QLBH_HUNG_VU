@@ -387,7 +387,7 @@ export class ProductVariantRepository extends BaseRepository<ProductVariant> {
       `
       SELECT
         latest."storeId",
-        latest."quantityAfter"::float AS qty,
+        latest."quantityAfter"::float AS quantity,
         latest."inventoryValueAfter"::float AS value
       FROM (
         SELECT DISTINCT ON (it."storeId")
@@ -404,21 +404,21 @@ export class ProductVariantRepository extends BaseRepository<ProductVariant> {
     );
 
     // Build metadata — giữ nguyên giá trị âm, không normalize, không filter.
-    const byStore: Record<string, { qty: number; value: number }> = {};
+    const byStore: Record<string, { quantity: number; value: number }> = {};
     let totalQty = 0;
     let totalValue = 0;
 
     for (const row of result) {
-      const qty = parseFloat(row.qty) || 0;
+      const quantity = parseFloat(row.quantity) || 0;
       const value = parseFloat(row.value) || 0;
 
-      byStore[row.storeId] = { qty, value };
-      totalQty += qty;
+      byStore[row.storeId] = { quantity, value };
+      totalQty += quantity;
       totalValue += value;
     }
 
     const stockMetadata = {
-      total: { qty: totalQty, value: totalValue },
+      total: { quantity: totalQty, value: totalValue },
       byStore,
     };
 

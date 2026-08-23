@@ -16,10 +16,10 @@ export class FundBalanceReportController {
 
   getReport = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const companyId = req.companyContext?.companyId;
+      const storeId = req.storeContext?.storeId;
       const query = {
         ...(req.query as unknown as FundBalanceReportQueryDto),
-        companyId,
+        storeId,
       } as FundBalanceReportQueryDto;
       const result = await this.service.getReport(query);
       return res.status(result.statusCode).json(result);
@@ -30,10 +30,10 @@ export class FundBalanceReportController {
 
   getDetail = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const companyId = req.companyContext?.companyId;
+      const storeId = req.storeContext?.storeId;
       const query = {
         ...(req.query as unknown as FundBalanceDetailQueryDto),
-        companyId,
+        storeId,
       } as FundBalanceDetailQueryDto;
       const result = await this.service.getDetail(query);
       return res.status(result.statusCode).json(result);

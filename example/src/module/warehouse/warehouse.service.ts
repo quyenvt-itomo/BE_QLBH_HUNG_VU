@@ -11,7 +11,7 @@ import { Request } from "express";
 export class WarehouseService extends BaseService<Warehouse> {
   protected repository: WarehouseRepository;
   protected uniqueFields: (keyof Warehouse)[] = ["code"];
-  protected uniqueScope?: (keyof Warehouse)[] = ["companyId"];
+  protected uniqueScope?: (keyof Warehouse)[] = ["storeId"];
   protected searchableFields = ["name", "code", "note"];
 
   constructor(

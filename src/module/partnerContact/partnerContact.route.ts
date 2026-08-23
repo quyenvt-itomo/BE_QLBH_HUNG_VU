@@ -2,14 +2,15 @@ import { Router } from "express";
 import { injectable, inject } from "inversify";
 import { PartnerContactController } from "./partnerContact.controller";
 import { zodValidate } from "@/shared/middleware/validation.middleware";
+
 import {
   CreatePartnerContactSchema,
   UpdatePartnerContactSchema,
-  PartnerContactQuerySchema,
   PartnerContactParamsSchema,
+  PartnerContactCreateParamsSchema,
+  PartnerContactQuerySchema,
 } from "./partnerContact.validator";
 import { PARTNER_CONTACT_TYPES } from "./partnerContact.types";
-import { permissionMiddleware } from "@/shared/middleware/permission.middleware";
 
 @injectable()
 export class PartnerContactRouter {
@@ -17,47 +18,54 @@ export class PartnerContactRouter {
 
   constructor(
     @inject(PARTNER_CONTACT_TYPES.PartnerContactController)
-    private controller: PartnerContactController,
+    private partnerContactController: PartnerContactController,
   ) {
-    this.router = Router();
+    this.router = Router({ mergeParams: true });
     this.initializeRoutes();
   }
 
   private initializeRoutes(): void {
-    this.router.get(
-      "/",
-      zodValidate(PartnerContactQuerySchema, "query"),
-      permissionMiddleware("partner", "read"),
-      this.controller.getAllWithPagination,
-    );
     this.router.post(
       "/",
+      zodValidate(PartnerContactCreateParamsSchema, "params"),
       zodValidate(CreatePartnerContactSchema, "body"),
-      permissionMiddleware("partner", "update"),
-      this.controller.create,
+      this.partnerContactController.create,
     );
-    this.router.get(
-      "/:id",
-      zodValidate(PartnerContactParamsSchema, "params"),
-      permissionMiddleware("partner", "read"),
-      this.controller.getById,
-    );
+
     this.router.put(
       "/:id",
       zodValidate(PartnerContactParamsSchema, "params"),
       zodValidate(UpdatePartnerContactSchema, "body"),
-      permissionMiddleware("partner", "update"),
-      this.controller.update,
+      this.partnerContactController.update,
     );
+
     this.router.delete(
       "/:id",
       zodValidate(PartnerContactParamsSchema, "params"),
-      permissionMiddleware("partner", "update"),
-      this.controller.delete,
+      this.partnerContactController.delete,
     );
   }
 
   public getRouter(): Router {
     return this.router;
+  }
+
+  // Return a read-only router exposing only GET list and GET by id
+  public getReadOnlyRouter(): Router {
+    const r = Router({ mergeParams: true });
+
+    r.get(
+      "/",
+      zodValidate(PartnerContactQuerySchema, "query"),
+      this.partnerContactController.getAllWithPagination,
+    );
+
+    r.get(
+      "/:id",
+      zodValidate(PartnerContactParamsSchema, "params"),
+      this.partnerContactController.getById,
+    );
+
+    return r;
   }
 }

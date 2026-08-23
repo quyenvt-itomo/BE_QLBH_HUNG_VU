@@ -25,7 +25,7 @@ import { NotificationType } from "@/database/models/Notification";
 export class ShippingPlanService extends BaseService<ShippingPlan> {
   protected repository: ShippingPlanRepository;
   protected uniqueFields: (keyof ShippingPlan)[] = ["code"];
-  protected uniqueScope?: (keyof ShippingPlan)[] = ["companyId"];
+  protected uniqueScope?: (keyof ShippingPlan)[] = ["storeId"];
   protected searchableFields = ["code", "note"];
 
   constructor(

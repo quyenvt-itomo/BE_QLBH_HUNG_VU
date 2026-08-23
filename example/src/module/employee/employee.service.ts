@@ -13,7 +13,7 @@ import { ValidationError } from "@/shared/types/errors";
 export class EmployeeService extends BaseService<Employee> {
   protected repository: EmployeeRepository;
   protected uniqueFields: (keyof Employee)[] = ["code", "email", "phone"];
-  protected uniqueScope?: (keyof Employee)[] | undefined = ["companyId"];
+  protected uniqueScope?: (keyof Employee)[] | undefined = ["storeId"];
   protected searchableFields = ["code", "name", "email", "phone", "note"];
 
   constructor(

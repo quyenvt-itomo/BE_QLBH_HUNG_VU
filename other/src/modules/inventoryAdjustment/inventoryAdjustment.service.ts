@@ -49,10 +49,10 @@ export class InventoryAdjustmentService extends BaseService<InventoryAdjustment>
 
   //   entities.forEach((entity) => {
   //     (entity as any).totalAdjustmentQty =
-  //       (entity as any).totaladjustmentqty ?? 0;
+  //       (entity as any).totaladjustmentquantity ?? 0;
   //     (entity as any).totalAdjustmentValue =
   //       (entity as any).totaladjustmentvalue ?? 0;
-  //     delete (entity as any).totaladjustmentqty;
+  //     delete (entity as any).totaladjustmentquantity;
   //     delete (entity as any).totaladjustmentvalue;
   //   });
   // }
@@ -63,10 +63,10 @@ export class InventoryAdjustmentService extends BaseService<InventoryAdjustment>
   // ): Promise<void> {
   //   await super.attachMoreDataToEntity(entity, req);
   //   (entity as any).totalAdjustmentQty =
-  //     (entity as any).totaladjustmentqty ?? 0;
+  //     (entity as any).totaladjustmentquantity ?? 0;
   //   (entity as any).totalAdjustmentValue =
   //     (entity as any).totaladjustmentvalue ?? 0;
-  //   delete (entity as any).totaladjustmentqty;
+  //   delete (entity as any).totaladjustmentquantity;
   //   delete (entity as any).totaladjustmentvalue;
   // }
 

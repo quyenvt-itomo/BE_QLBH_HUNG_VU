@@ -173,7 +173,7 @@ const STORE_ID_INJECT_KEYS = [
 ];
 export function injectCompanyIdToArrays<T extends Record<string, any>>(
   data: T,
-  companyId: string,
+  storeId: string,
 ): T {
   const result = { ...data } as Record<string, any>;
 
@@ -181,7 +181,7 @@ export function injectCompanyIdToArrays<T extends Record<string, any>>(
     if (Array.isArray(result[key])) {
       result[key] = result[key].map((item: any) => ({
         ...item,
-        companyId,
+        storeId,
       }));
     }
   }

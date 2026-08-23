@@ -62,7 +62,7 @@ export class VatDebtSyncService {
 
   /** Số dư VAT hiện tại (tới thời điểm) dùng để tính countedAmount cho điều chỉnh. */
   async getBalanceAtDate(
-    companyId: string,
+    storeId: string,
     atDate: Date,
     manager?: EntityManager,
   ): Promise<number> {
@@ -73,7 +73,7 @@ export class VatDebtSyncService {
         `COALESCE(SUM(CASE WHEN tx.type = :inType THEN tx.amount ELSE -tx.amount END),0)::float`,
         "balance",
       )
-      .where("tx.companyId = :companyId", { companyId })
+      .where("tx.storeId = :storeId", { storeId })
       .andWhere("tx.occurredAt <= :atDate", { atDate })
       .andWhere("tx.deletedAt IS NULL")
       .setParameters({ inType: TransactionType.IN })
@@ -103,7 +103,7 @@ export class VatDebtSyncService {
 
     await this.insertMany(manager, [
       {
-        companyId: data.companyId,
+        storeId: data.storeId,
         occurredAt: data.invoiceDate,
         type,
         amount: Number(data.taxAmount),
@@ -128,7 +128,7 @@ export class VatDebtSyncService {
 
     await this.insertMany(manager, [
       {
-        companyId: data.companyId,
+        storeId: data.storeId,
         occurredAt: data.occurredAt,
         type: TransactionType.IN,
         amount: Number(data.amount),
@@ -151,7 +151,7 @@ export class VatDebtSyncService {
 
     await this.insertMany(manager, [
       {
-        companyId: data.companyId,
+        storeId: data.storeId,
         occurredAt: data.occurredAt,
         type: data.type,
         amount: Number(data.deltaAmount),

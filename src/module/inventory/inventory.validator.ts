@@ -11,6 +11,7 @@ export const GetStockReportQuerySchema = z.object({
   keyword: z.string().optional(),
   productIds: ids,
   storeIds: ids,
+  storeId: z.uuid().optional(),
   productId: z.uuid().optional(),
 });
 export const GetTransactionDetailsQuerySchema = z.object({

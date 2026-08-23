@@ -24,8 +24,8 @@ import {
 import { VAT_DEBT_SYNC_TYPES, VatDebtSyncService } from "@/module/vatDebtSync";
 import {
   PartnerDebtRefTypeEnum,
-  PartnerDebtTransaction,
-} from "@/database/models/company/PartnerDebtTransaction";
+  DebtTransaction,
+} from "@/database/models/company/DebtTransaction";
 import { VatTransactionType } from "@/database/models/company/VatDebtTransaction";
 import { TransactionType } from "@/shared/constants/enum";
 
@@ -33,7 +33,7 @@ import { TransactionType } from "@/shared/constants/enum";
 export class InvoiceService extends BaseService<Invoice> {
   protected repository: InvoiceRepository;
   protected uniqueFields: (keyof Invoice)[] = ["invoiceNumber"];
-  protected uniqueScope?: (keyof Invoice)[] = ["companyId"];
+  protected uniqueScope?: (keyof Invoice)[] = ["storeId"];
   protected searchableFields = ["invoiceNumber", "note"];
   protected timeField: keyof Invoice = "invoiceDate";
 
@@ -156,7 +156,7 @@ export class InvoiceService extends BaseService<Invoice> {
     const invoice = await this.repository.getById(invoiceId, manager);
     if (!invoice) return;
 
-    const rows = await manager.getRepository(PartnerDebtTransaction).find({
+    const rows = await manager.getRepository(DebtTransaction).find({
       where: { invoiceId, deletedAt: undefined as any },
     });
 

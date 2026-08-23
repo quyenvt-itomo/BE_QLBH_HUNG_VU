@@ -13,14 +13,14 @@ SET
     adjustment_value = 0,
     updated_at = NOW()
 WHERE 
-    delta_qty = 0 
+    delta_quantity = 0 
     AND adjustment_value != 0
     AND deleted_at IS NULL;
 
 -- Show affected records count
 -- SELECT COUNT(*) as affected_records 
 -- FROM inventory_adjustment_line 
--- WHERE delta_qty = 0 AND adjustment_value != 0 AND deleted_at IS NULL;
+-- WHERE delta_quantity = 0 AND adjustment_value != 0 AND deleted_at IS NULL;
 
 -- Recalculate totalAdjustmentValue for affected adjustments
 UPDATE inventory_adjustment ia
@@ -42,7 +42,7 @@ WHERE
     ia.id IN (
         SELECT DISTINCT ial.adjustment_id
         FROM inventory_adjustment_line ial
-        WHERE ial.delta_qty = 0 
+        WHERE ial.delta_quantity = 0 
         AND ial.adjustment_value != 0
         AND ial.deleted_at IS NULL
     )
@@ -53,7 +53,7 @@ SELECT
     COUNT(*) as remaining_inconsistent_records
 FROM inventory_adjustment_line 
 WHERE 
-    delta_qty = 0 
+    delta_quantity = 0 
     AND adjustment_value != 0 
     AND deleted_at IS NULL;
 

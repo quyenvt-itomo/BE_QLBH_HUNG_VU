@@ -12,7 +12,7 @@ import { FUND_TYPES, FundRepository } from "@/module/fund";
 export class FundAdjustmentService extends BaseService<FundAdjustment> {
   protected repository: FundAdjustmentRepository;
   protected uniqueFields: (keyof FundAdjustment)[] = ["code"];
-  protected uniqueScope?: (keyof FundAdjustment)[] = ["companyId"];
+  protected uniqueScope?: (keyof FundAdjustment)[] = ["storeId"];
   protected searchableFields = ["code"];
 
   constructor(

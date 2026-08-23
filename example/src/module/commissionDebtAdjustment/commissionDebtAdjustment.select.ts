@@ -5,7 +5,7 @@ import { FindOptionsRelations, FindOptionsSelect } from "typeorm";
 export const CommissionDebtAdjustmentSelectFull: FindOptionsSelect<CommissionDebtAdjustment> =
   {
     ...BaseSelect,
-    companyId: true,
+    storeId: true,
     code: true,
     occurredAt: true,
     partnerContactId: true,

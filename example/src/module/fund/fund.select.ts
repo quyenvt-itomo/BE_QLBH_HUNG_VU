@@ -1,6 +1,6 @@
 export const FundSelectFull = [
   "fund.id",
-  "fund.companyId",
+  "fund.storeId",
   "fund.code",
   "fund.name",
   "fund.type",

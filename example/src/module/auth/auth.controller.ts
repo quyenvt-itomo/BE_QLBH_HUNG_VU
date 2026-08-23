@@ -83,8 +83,8 @@ export class AuthController {
         if (!userId) {
           throw new Error("User not authenticated");
         }
-        const companyId = req.companyContext?.companyId || undefined;
-        const user = await this.authService.getCurrent(userId, companyId);
+        const storeId = req.storeContext?.storeId || undefined;
+        const user = await this.authService.getCurrent(userId, storeId);
         const { password, ...userWithoutPassword } = user;
         sendResponse({ res, data: userWithoutPassword });
       } catch (error: any) {

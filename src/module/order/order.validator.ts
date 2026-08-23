@@ -1,78 +1,117 @@
+import { OrderStatus, OrderType, ReturnOrderTypes } from "@/database/models";
 import {
   BaseCreateSchema,
-  BaseUpdateSchema,
-  BaseQuerySchema,
-  BaseParamsSchema,
-  DateTransform,
-  zBooleanLike,
   BaseLineSchema,
-  AdditionalInfoSchema,
+  BaseParamsSchema,
+  BaseQuerySchema,
+  BaseUpdateSchema,
+  DateTransform,
 } from "@/shared/base/BaseValidator";
+import { RateType } from "@/shared/constants/enum";
 import * as z from "zod";
-import { SaleLineTypeEnum } from "@/shared/constants/enum";
-import { DiscountTypeEnum } from "@/shared/constants/enum";
 
 export const OrderLineSchema = BaseLineSchema.extend({
-  type: z
-    .enum([SaleLineTypeEnum.PRODUCT, SaleLineTypeEnum.SERVICE])
-    .default(SaleLineTypeEnum.PRODUCT),
+  orderId: z.uuid().nullish(),
+  returnOrderId: z.uuid().nullish(),
+  refOrderLineId: z.uuid().nullish(),
+
   productId: z.uuid().nullish(),
-  serviceId: z.uuid().nullish(),
   unitId: z.uuid().nullish(),
   quantity: z.number().positive(),
   unitPrice: z.number().min(0),
-  taxRate: z.number().min(0).max(100).default(0),
-  subTotal: z.number().min(0),
-  taxAmount: z.number().min(0),
-  grossAmount: z.number().min(0),
-  commissionAmount: z.number().min(0).default(0),
-  conversionRateAtTime: z.number().positive().optional(),
-  costPriceAtTime: z.number().min(0).optional(),
-  costAmount: z.number().min(0).optional(),
-});
-
-export const OrderCommissionSchema = z.object({
-  id: z.uuid().optional(),
-  partnerContactId: z.uuid(),
-  totalAmount: z.number().min(0),
 });
 
 export const CreateOrderSchema = BaseCreateSchema.extend({
-  timeAt: DateTransform.optional(),
-  quotationId: z.uuid().nullish(),
-  customerId: z.uuid().nullish(),
-  customerSnapshot: z.record(z.string(), z.unknown()).nullish(),
-  staffId: z.uuid().nullish(),
-  meshSpecId: z.uuid().nullish(),
-  additionalInfo: z.array(AdditionalInfoSchema).optional().default([]),
-  discountType: z.enum(DiscountTypeEnum).default(DiscountTypeEnum.AMOUNT),
-  discountValue: z.number().min(0).default(0),
-  taxType: z.enum(DiscountTypeEnum).default(DiscountTypeEnum.PERCENT),
-  taxValue: z.number().min(0).default(0),
-  lines: z.array(OrderLineSchema).default([]),
-  commissions: z.array(OrderCommissionSchema).optional().default([]),
-});
+  refOrderId: z.uuid().nullish(),
+
+  type: z.enum(OrderType),
+  code: z.string().optional(),
+  orderAt: DateTransform.optional(),
+
+  partnerId: z.uuid().nullish(),
+
+  discountType: z.enum(RateType).optional().default(RateType.AMOUNT),
+  discountValue: z.number().nullish(),
+
+  taxType: z.enum(RateType).optional().default(RateType.AMOUNT),
+  taxValue: z.number().nullish(),
+
+  shipperId: z.uuid().nullish(),
+  shippingFee: z.number().min(0).nullish(),
+  isFreeShipping: z.boolean().optional().default(false),
+
+  lines: z.array(OrderLineSchema).optional().default([]),
+  returnLines: z.array(OrderLineSchema).optional().default([]),
+
+  incomeExpenses: z
+    .array(
+      z.object({
+        fundId: z.uuid().optional(),
+        amount: z.number().min(0).optional(),
+      }),
+    )
+    .optional(),
+}).refine(
+  (data) => {
+    if (ReturnOrderTypes.includes(data.type)) {
+      return !!data.refOrderId;
+    }
+    return true;
+  },
+  {
+    message: "Đơn hoàn trả phải có đơn gốc",
+    path: ["refOrderId"],
+  },
+);
 
 export const UpdateOrderSchema = BaseUpdateSchema.extend({
-  timeAt: DateTransform.optional(),
-  customerId: z.uuid().nullish(),
-  customerSnapshot: z.record(z.string(), z.unknown()).nullish(),
-  staffId: z.uuid().nullish(),
-  meshSpecId: z.uuid().nullish(),
-  additionalInfo: z.array(AdditionalInfoSchema).optional(),
-  discountType: z.enum(DiscountTypeEnum).optional(),
-  discountValue: z.number().min(0).optional(),
-  taxType: z.enum(DiscountTypeEnum).optional(),
-  taxValue: z.number().min(0).optional(),
+  code: z.string().optional(),
+  partnerId: z.uuid().optional(),
+  type: z.enum(OrderType).optional(),
+
+  orderAt: DateTransform.optional(),
+
+  discountType: z.enum(RateType).optional(),
+  discountValue: z.number().optional(),
+
+  shipperId: z.uuid().nullish(),
+  shippingFee: z.number().min(0).nullish(),
+  isFreeShipping: z.boolean().optional(),
   lines: z.array(OrderLineSchema).optional(),
-  commissions: z.array(OrderCommissionSchema).optional(),
+  returnLines: z.array(OrderLineSchema).optional(),
 });
 
+// Extend BaseQuerySchema with Order-specific filters
 export const OrderQuerySchema = BaseQuerySchema.extend({
-  customerId: z.uuid().optional(),
-  staffId: z.uuid().optional(),
-  isCompleted: zBooleanLike().optional(),
-  quotationId: z.uuid().optional(),
+  grossAmountGte: z.coerce.number().min(0).optional(),
+  grossAmountLte: z.coerce.number().min(0).optional(),
+  grossAmountGt: z.coerce.number().min(0).optional(),
+  grossAmountLt: z.coerce.number().min(0).optional(),
+  grossAmountEq: z.coerce.number().min(0).optional(),
+
+  discountAmountGte: z.coerce.number().min(0).optional(),
+  discountAmountLte: z.coerce.number().min(0).optional(),
+  discountAmountGt: z.coerce.number().min(0).optional(),
+  discountAmountLt: z.coerce.number().min(0).optional(),
+  discountAmountEq: z.coerce.number().min(0).optional(),
+
+  netAmountGte: z.coerce.number().min(0).optional(),
+  netAmountLte: z.coerce.number().min(0).optional(),
+  netAmountGt: z.coerce.number().min(0).optional(),
+  netAmountLt: z.coerce.number().min(0).optional(),
+  netAmountEq: z.coerce.number().min(0).optional(),
+
+  taxAmountGte: z.coerce.number().min(0).optional(),
+  taxAmountLte: z.coerce.number().min(0).optional(),
+  taxAmountGt: z.coerce.number().min(0).optional(),
+  taxAmountLt: z.coerce.number().min(0).optional(),
+  taxAmountEq: z.coerce.number().min(0).optional(),
+
+  totalAmountGte: z.coerce.number().min(0).optional(),
+  totalAmountLte: z.coerce.number().min(0).optional(),
+  totalAmountGt: z.coerce.number().min(0).optional(),
+  totalAmountLt: z.coerce.number().min(0).optional(),
+  totalAmountEq: z.coerce.number().min(0).optional(),
 });
 
 export const OrderParamsSchema = BaseParamsSchema;

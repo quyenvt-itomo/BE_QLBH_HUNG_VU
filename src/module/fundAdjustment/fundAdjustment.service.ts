@@ -1,53 +1,6 @@
-import type { RequestContext } from "@/shared/types/interfaces";
-import { injectable, inject } from "inversify";
-import { BaseService } from "@/shared/base/BaseService";
-import { FundAdjustmentRepository } from "./fundAdjustment.repository";
-import { FUND_ADJUSTMENT_TYPES } from "./fundAdjustment.types";
 import { FundAdjustment } from "@/database/models/FundAdjustment";
-import { DeepPartial, EntityManager } from "typeorm";
-import { Request } from "express";
-import { FUND_TYPES, FundRepository } from "@/module/fund";
-
-@injectable()
-export class FundAdjustmentService extends BaseService<FundAdjustment> {
-  protected repository: FundAdjustmentRepository;
-  protected uniqueFields: (keyof FundAdjustment)[] = ["code"];
-  protected uniqueScope?: (keyof FundAdjustment)[] = ["companyId"];
-  protected searchableFields = ["code"];
-
-  constructor(
-    @inject(FUND_ADJUSTMENT_TYPES.FundAdjustmentRepository)
-    repository: FundAdjustmentRepository,
-    @inject(FUND_TYPES.FundRepository)
-    private fundRepository: FundRepository,
-  ) {
-    super();
-    this.repository = repository;
-  }
-
-  async validateBeforeCreate(
-    data: DeepPartial<FundAdjustment>,
-    manager: EntityManager,
-    req?: RequestContext,
-  ): Promise<void> {
-    if (data.fundId) {
-      data.fundSnapshot = await this.fundRepository.getSnapshot(
-        data.fundId,
-        manager,
-      );
-    }
-  }
-
-  async validateBeforeUpdate(
-    id: string,
-    data: DeepPartial<FundAdjustment>,
-    manager: EntityManager,
-    req?: RequestContext,
-  ): Promise<void> {
-    if (data.fundId !== undefined) {
-      data.fundSnapshot = data.fundId
-        ? await this.fundRepository.getSnapshot(data.fundId, manager)
-        : null;
-    }
-  }
-}
+import { Fund } from "@/database/models/Fund";
+import { IsNull } from "typeorm";
+import { SimpleService } from "../_shared/simple.service";
+import { FundAdjustmentRepository } from "./fundAdjustment.repository";
+export class FundAdjustmentService extends SimpleService<FundAdjustment> { constructor(repository: FundAdjustmentRepository) { super(repository, "store", "fundadjustment"); } async validateBeforeCreate(data: any, manager: any, req?: any): Promise<void> { await super.validateBeforeCreate(data, manager, req); if (!data.fundId) throw new Error("fund.required"); const fund = await manager.getRepository(Fund).findOne({ where: { id: data.fundId, deletedAt: IsNull() } as any }); if (!fund) throw new Error("fund.not_found"); data.fundSnapshot = { id: fund.id, code: fund.code, name: fund.name, type: fund.type }; data.deltaAmount = Number(data.countedAmount || 0) - Number(data.expectedAmount || 0); } }

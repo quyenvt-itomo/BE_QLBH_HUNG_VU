@@ -8,7 +8,7 @@ import { PaymentTerm } from "@/database/models/company/PaymentTerm";
 export class PaymentTermService extends BaseService<PaymentTerm> {
   protected repository: PaymentTermRepository;
   protected uniqueFields: (keyof PaymentTerm)[] = ["code"];
-  protected uniqueScope?: (keyof PaymentTerm)[] = ["companyId"];
+  protected uniqueScope?: (keyof PaymentTerm)[] = ["storeId"];
   protected searchableFields = ["code", "name"];
 
   constructor(

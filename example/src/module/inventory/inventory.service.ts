@@ -38,7 +38,7 @@ export class InventoryService extends TransactionService {
   async getStockReport(params: GetStockReportQueryDto): Promise<ApiResponse> {
     try {
       const {
-        companyId,
+        storeId,
         keyword,
         page = 1,
         size = 20,
@@ -59,7 +59,7 @@ export class InventoryService extends TransactionService {
        * BƯỚC 1: Resolve danh sách warehouse trong scope
        * ============================================ */
       const allWarehouses = await manager.find(Warehouse, {
-        where: { companyId, deletedAt: IsNull() },
+        where: { storeId, deletedAt: IsNull() },
       });
 
       const finalWarehouseIds = warehouseId
@@ -81,7 +81,7 @@ export class InventoryService extends TransactionService {
       const transfersQb = manager
         .createQueryBuilder(WarehouseTransfer, "t")
         .select("t.id")
-        .where("t.companyId = :companyId", { companyId })
+        .where("t.storeId = :storeId", { storeId })
         .andWhere("t.deletedAt IS NULL")
         .andWhere("t.timeAt <= :endAt", { endAt })
         .andWhere("t.timeAt >= :startAt", { startAt });
@@ -118,7 +118,7 @@ export class InventoryService extends TransactionService {
         .createQueryBuilder(Product, "product")
         .leftJoin("product.baseUnit", "baseUnit")
         .leftJoin("product.group", "group")
-        .where("product.companyId = :companyId", { companyId })
+        .where("product.storeId = :storeId", { storeId })
         .andWhere("product.deletedAt IS NULL");
 
       if (keyword) {
@@ -179,7 +179,7 @@ export class InventoryService extends TransactionService {
             FROM inventory_transactions tx_open
             WHERE tx_open."productId" = tx."productId"
               AND tx_open."warehouseId" = tx."warehouseId"
-              AND tx_open."companyId" = :companyId
+              AND tx_open."storeId" = :storeId
               AND tx_open."deletedAt" IS NULL
               AND tx_open."occurredAt" < :startAt
             ORDER BY tx_open."occurredAt" DESC, tx_open."createdAt" DESC, tx_open."id" DESC
@@ -193,7 +193,7 @@ export class InventoryService extends TransactionService {
             FROM inventory_transactions tx_open
             WHERE tx_open."productId" = tx."productId"
               AND tx_open."warehouseId" = tx."warehouseId"
-              AND tx_open."companyId" = :companyId
+              AND tx_open."storeId" = :storeId
               AND tx_open."deletedAt" IS NULL
               AND tx_open."occurredAt" < :startAt
             ORDER BY tx_open."occurredAt" DESC, tx_open."createdAt" DESC, tx_open."id" DESC
@@ -255,7 +255,7 @@ export class InventoryService extends TransactionService {
             FROM inventory_transactions tx_close
             WHERE tx_close."productId" = tx."productId"
               AND tx_close."warehouseId" = tx."warehouseId"
-              AND tx_close."companyId" = :companyId
+              AND tx_close."storeId" = :storeId
               AND tx_close."deletedAt" IS NULL
               AND tx_close."occurredAt" <= :endAt
             ORDER BY tx_close."occurredAt" DESC, tx_close."createdAt" DESC, tx_close."id" DESC
@@ -269,7 +269,7 @@ export class InventoryService extends TransactionService {
             FROM inventory_transactions tx_close
             WHERE tx_close."productId" = tx."productId"
               AND tx_close."warehouseId" = tx."warehouseId"
-              AND tx_close."companyId" = :companyId
+              AND tx_close."storeId" = :storeId
               AND tx_close."deletedAt" IS NULL
               AND tx_close."occurredAt" <= :endAt
             ORDER BY tx_close."occurredAt" DESC, tx_close."createdAt" DESC, tx_close."id" DESC
@@ -277,7 +277,7 @@ export class InventoryService extends TransactionService {
           ), 0)`,
           "closingAmount",
         )
-        .where('tx."companyId" = :companyId', { companyId })
+        .where('tx."storeId" = :storeId', { storeId })
         .andWhere('tx."deletedAt" IS NULL')
         .andWhere('tx."occurredAt" <= :endAt', { endAt })
         .groupBy('tx."productId"')
@@ -285,7 +285,7 @@ export class InventoryService extends TransactionService {
         .setParameters({
           startAt,
           endAt,
-          companyId,
+          storeId,
           typeIn: TransactionType.IN,
           typeOut: TransactionType.OUT,
           refTypeTransfer: InventoryTransactionRefType.TRANSFER,
@@ -583,7 +583,7 @@ export class InventoryService extends TransactionService {
     params: GetTransactionDetailsQueryDto,
   ): Promise<ApiResponse<InventoryTransaction[]>> {
     const {
-      companyId,
+      storeId,
       productId,
       warehouseIds = [],
       warehouseId,
@@ -604,7 +604,7 @@ export class InventoryService extends TransactionService {
     const stockMap = await this.calculateStockForProducts(
       [productId],
       finalWarehouseIds,
-      companyId!,
+      storeId!,
       startAt,
       endAt,
       manager,
@@ -621,14 +621,14 @@ export class InventoryService extends TransactionService {
         ? finalWarehouseIds
         : (
             await manager.find(Warehouse, {
-              where: { companyId, deletedAt: IsNull() },
+              where: { storeId, deletedAt: IsNull() },
             })
           ).map((w) => w.id);
 
     const transfersQb = manager
       .createQueryBuilder(WarehouseTransfer, "t")
       .select("t.id")
-      .where("t.companyId = :companyId", { companyId })
+      .where("t.storeId = :storeId", { storeId })
       .andWhere("t.deletedAt IS NULL")
       .andWhere("t.timeAt >= :startAt", { startAt })
       .andWhere("t.timeAt <= :endAt", { endAt });
@@ -654,7 +654,7 @@ export class InventoryService extends TransactionService {
      * -------------------------------------------- */
     const txQb = manager
       .createQueryBuilder(InventoryTransaction, "tx")
-      .where('tx."companyId" = :companyId', { companyId })
+      .where('tx."storeId" = :storeId', { storeId })
       .andWhere('tx."deletedAt" IS NULL')
       .andWhere('tx."productId" = :productId', { productId })
       .andWhere("tx.occurredAt BETWEEN :startAt AND :endAt", {
@@ -816,7 +816,7 @@ export class InventoryService extends TransactionService {
   private async calculateStockForProducts(
     productIds: string[],
     warehouseIds: string[],
-    companyId: string,
+    storeId: string,
     startAt: Date,
     endAt: Date,
     manager?: EntityManager,
@@ -860,7 +860,7 @@ export class InventoryService extends TransactionService {
         ? warehouseIds
         : (
             await mainManager.find(Warehouse, {
-              where: { companyId, deletedAt: IsNull() },
+              where: { storeId, deletedAt: IsNull() },
             })
           ).map((w) => w.id);
 
@@ -871,7 +871,7 @@ export class InventoryService extends TransactionService {
     const transfersQb = mainManager
       .createQueryBuilder(WarehouseTransfer, "t")
       .select("t.id")
-      .where("t.companyId = :companyId", { companyId })
+      .where("t.storeId = :storeId", { storeId })
       .andWhere("t.deletedAt IS NULL")
       .andWhere("t.timeAt >= :startAt", { startAt })
       .andWhere("t.timeAt <= :endAt", { endAt });
@@ -908,7 +908,7 @@ export class InventoryService extends TransactionService {
           FROM inventory_transactions tx_open
           WHERE tx_open."productId" = tx."productId"
             AND tx_open."warehouseId" = tx."warehouseId"
-            AND tx_open."companyId" = :companyId
+            AND tx_open."storeId" = :storeId
             AND tx_open."deletedAt" IS NULL
             AND tx_open."occurredAt" < :startAt
           ORDER BY tx_open."occurredAt" DESC, tx_open."createdAt" DESC, tx_open."id" DESC
@@ -922,7 +922,7 @@ export class InventoryService extends TransactionService {
           FROM inventory_transactions tx_open
           WHERE tx_open."productId" = tx."productId"
             AND tx_open."warehouseId" = tx."warehouseId"
-            AND tx_open."companyId" = :companyId
+            AND tx_open."storeId" = :storeId
             AND tx_open."deletedAt" IS NULL
             AND tx_open."occurredAt" < :startAt
           ORDER BY tx_open."occurredAt" DESC, tx_open."createdAt" DESC, tx_open."id" DESC
@@ -984,7 +984,7 @@ export class InventoryService extends TransactionService {
           FROM inventory_transactions tx_close
           WHERE tx_close."productId" = tx."productId"
             AND tx_close."warehouseId" = tx."warehouseId"
-            AND tx_close."companyId" = :companyId
+            AND tx_close."storeId" = :storeId
             AND tx_close."deletedAt" IS NULL
             AND tx_close."occurredAt" <= :endAt
           ORDER BY tx_close."occurredAt" DESC, tx_close."createdAt" DESC, tx_close."id" DESC
@@ -998,7 +998,7 @@ export class InventoryService extends TransactionService {
           FROM inventory_transactions tx_close
           WHERE tx_close."productId" = tx."productId"
             AND tx_close."warehouseId" = tx."warehouseId"
-            AND tx_close."companyId" = :companyId
+            AND tx_close."storeId" = :storeId
             AND tx_close."deletedAt" IS NULL
             AND tx_close."occurredAt" <= :endAt
           ORDER BY tx_close."occurredAt" DESC, tx_close."createdAt" DESC, tx_close."id" DESC
@@ -1007,7 +1007,7 @@ export class InventoryService extends TransactionService {
         "closingAmount",
       )
       .where('tx."productId" IN (:...productIds)', { productIds })
-      .andWhere('tx."companyId" = :companyId', { companyId })
+      .andWhere('tx."storeId" = :storeId', { storeId })
       .andWhere('tx."deletedAt" IS NULL')
       .andWhere('tx."occurredAt" <= :endAt', { endAt })
       .groupBy('tx."productId"')
@@ -1015,7 +1015,7 @@ export class InventoryService extends TransactionService {
       .setParameters({
         startAt,
         endAt,
-        companyId,
+        storeId,
         typeIn: TransactionType.IN,
         typeOut: TransactionType.OUT,
         refTypeTransfer: InventoryTransactionRefType.TRANSFER,

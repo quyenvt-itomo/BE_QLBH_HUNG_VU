@@ -11,8 +11,8 @@ export interface ProductSnapshot {
   name: string;
 }
 export interface StockMetadata {
-  total: { qty: number; value: number };
-  byStore: Record<string, { qty: number; value: number }>;
+  total: { quantity: number; value: number };
+  byStore: Record<string, { quantity: number; value: number }>;
 }
 
 @Entity("products")
@@ -39,7 +39,7 @@ export class Product extends BaseEntity {
 
   @Column({
     type: "jsonb",
-    default: () => '\'{"total":{"qty":0,"value":0},"byStore":{}}\'::jsonb',
+    default: () => '\'{"total":{"quantity":0,"value":0},"byStore":{}}\'::jsonb',
   })
   stockMetadata: StockMetadata;
 
@@ -51,10 +51,17 @@ export class Product extends BaseEntity {
   extraUnits: ProductExtraUnit[];
 
   // * Lịch sử giá vốn
-  @OneToMany(() => ProductPriceHistory, (ph) => ph.product, { cascade: true })
+  // Price history is accounting/reporting data. Never cascade-delete it with a product.
+  @OneToMany(() => ProductPriceHistory, (ph) => ph.product, {
+    cascade: ["insert", "update"],
+  })
   priceHistories: ProductPriceHistory[];
 
   // * Thông tin tại các cửa hàng
   @OneToMany(() => StoreProduct, (sp) => sp.product)
   storeProducts: StoreProduct[];
+
+  // TODO: More fields
+  stockQuantity?: number;
+  stockValue?: number;
 }

@@ -22,7 +22,7 @@ export class EmployeeRepository extends BaseRepository<Employee> {
       name: employee.name,
       gender: employee.gender,
       dob: employee.dob,
-      companyId: employee.companyId,
+      storeId: employee.storeId,
     };
   }
 

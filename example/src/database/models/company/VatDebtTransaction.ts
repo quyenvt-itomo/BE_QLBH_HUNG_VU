@@ -15,7 +15,7 @@ export class VatDebtTransaction extends BaseEntity {
   occurredAt: Date;
 
   @Column({ type: "uuid" })
-  companyId: string;
+  storeId: string;
 
   @Column({ type: "enum", enum: TransactionType })
   type: TransactionType;

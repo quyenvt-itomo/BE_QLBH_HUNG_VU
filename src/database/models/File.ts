@@ -125,7 +125,7 @@ export class File extends BaseEntity {
   @Column({ type: "varchar", length: 255, nullable: true })
   alt: string | null;
 
-  @Index(["companyId", "status"])
+  @Index(["storeId", "status"])
   @Column({
     type: "enum",
     enum: FileStatus,

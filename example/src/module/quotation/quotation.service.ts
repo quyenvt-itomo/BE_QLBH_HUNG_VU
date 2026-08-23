@@ -41,7 +41,7 @@ import { generateCode } from "@/shared/utils/code.utils";
 export class QuotationService extends BaseService<Quotation> {
   protected repository: QuotationRepository;
   protected uniqueFields: (keyof Quotation)[] = ["code"];
-  protected uniqueScope?: (keyof Quotation)[] = ["companyId"];
+  protected uniqueScope?: (keyof Quotation)[] = ["storeId"];
   protected searchableFields = ["code", "note"];
   protected timeField: keyof Quotation = "timeAt";
 
@@ -460,8 +460,8 @@ export class QuotationService extends BaseService<Quotation> {
     // Chuẩn bị Order với lines & commissions (cascade)
     const orderRepo = trxManager.getRepository(Order);
     const order = orderRepo.create({
-      code: await generateCode("order", fullQuotation.companyId),
-      companyId: fullQuotation.companyId,
+      code: await generateCode("order", fullQuotation.storeId),
+      storeId: fullQuotation.storeId,
       quotationId: fullQuotation.id,
 
       customerId: fullQuotation.customerId,

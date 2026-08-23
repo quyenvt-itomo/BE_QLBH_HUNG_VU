@@ -7,7 +7,7 @@ import {
 } from "@/shared/base/BaseValidator";
 
 export const CreateRoleSchema = BaseCreateSchema.extend({
-  companyId: z.uuid(),
+  storeId: z.uuid(),
   name: z.string().trim().max(255),
   permissions: z
     .record(z.string().trim(), z.array(z.string().trim()).optional())

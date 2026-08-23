@@ -62,7 +62,7 @@ export class QuotationRepository extends BaseRepository<Quotation> {
     await this.getRepository(manager).update(
       {
         quotationRequestId: quotation.quotationRequestId,
-        companyId: quotation.companyId,
+        storeId: quotation.storeId,
         id: Not(quotation.id),
       },
       {

@@ -1,14 +1,4 @@
-import { injectable, inject } from "inversify";
-import { BaseController } from "@/shared/base/BaseController";
 import { Role } from "@/database/models/Role";
+import { SimpleController } from "../_shared/simple.controller";
 import { RoleService } from "./role.service";
-import { ROLE_TYPES } from "./role.types";
-
-@injectable()
-export class RoleController extends BaseController<Role> {
-  protected service: RoleService;
-  constructor(@inject(ROLE_TYPES.RoleService) service: RoleService) {
-    super();
-    this.service = service;
-  }
-}
+export class RoleController extends SimpleController<Role> { constructor(service: RoleService) { super(service); } }

@@ -23,11 +23,23 @@ export class AttributeRouter {
   }
 
   private initializeRoutes(): void {
-    this.router.get("/", zodValidate(AttributeQuerySchema, "query"), this.attributeController.getAllWithPagination);
+    this.router.get(
+      "/",
+      zodValidate(AttributeQuerySchema, "query"),
+      this.attributeController.getAllWithPagination,
+    );
 
-    this.router.post("/", zodValidate(CreateAttributeSchema, "body"), this.attributeController.create);
+    this.router.post(
+      "/",
+      zodValidate(CreateAttributeSchema, "body"),
+      this.attributeController.create,
+    );
 
-    this.router.get("/:id", zodValidate(AttributeParamsSchema, "params"), this.attributeController.getById);
+    this.router.get(
+      "/:id",
+      zodValidate(AttributeParamsSchema, "params"),
+      this.attributeController.getById,
+    );
 
     this.router.put(
       "/:id",
@@ -36,7 +48,11 @@ export class AttributeRouter {
       this.attributeController.update,
     );
 
-    this.router.delete("/:id", zodValidate(AttributeParamsSchema, "params"), this.attributeController.delete);
+    this.router.delete(
+      "/:id",
+      zodValidate(AttributeParamsSchema, "params"),
+      this.attributeController.delete,
+    );
   }
 
   public getRouter(): Router {

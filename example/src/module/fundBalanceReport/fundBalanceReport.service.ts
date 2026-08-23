@@ -16,7 +16,7 @@ export class FundBalanceReportService extends TransactionService {
    */
   async getReport(params: FundBalanceReportQueryDto): Promise<ApiResponse> {
     const {
-      companyId,
+      storeId,
       page = 1,
       size = 20,
       fundIds,
@@ -28,10 +28,10 @@ export class FundBalanceReportService extends TransactionService {
 
     const manager = await this.getManager();
 
-    // Filter funds by companyId
+    // Filter funds by storeId
     const fundsQb = manager
       .createQueryBuilder(Fund, "fund")
-      .where("fund.companyId = :companyId", { companyId })
+      .where("fund.storeId = :storeId", { storeId })
       .andWhere("fund.deletedAt IS NULL");
 
     if (this.checkArrayFilter(fundIds)) {
@@ -128,7 +128,7 @@ export class FundBalanceReportService extends TransactionService {
    */
   async getDetail(params: FundBalanceDetailQueryDto): Promise<ApiResponse> {
     const {
-      companyId,
+      storeId,
       fundId,
       page = 1,
       size = 20,
@@ -142,7 +142,7 @@ export class FundBalanceReportService extends TransactionService {
     const qb = manager
       .createQueryBuilder(FundTransaction, "tx")
       .innerJoin(Fund, "fund", "fund.id = tx.fundId AND fund.deletedAt IS NULL")
-      .where("fund.companyId = :companyId", { companyId })
+      .where("fund.storeId = :storeId", { storeId })
       .orderBy("tx.occurredAt", sortOrder);
 
     if (fundId) {

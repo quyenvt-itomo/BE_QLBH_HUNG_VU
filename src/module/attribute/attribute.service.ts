@@ -1,15 +1,15 @@
 import { injectable, inject } from "inversify";
-import { BaseService } from "@/shared/base/BaseService";
-import { Attribute, AttributeType } from "@/database/models/Attribute";
-import { AttributeRepository } from "./attribute.repository";
-import { ATTRIBUTE_TYPES } from "./attribute.types";
-import { ForbiddenError } from "@/shared/types/errors";
+import { DeepPartial, EntityManager, ILike } from "typeorm";
 import {
   ActionMap,
   ActionValue,
   RequestContext,
 } from "@/shared/types/interfaces";
-import { DeepPartial, EntityManager, ILike } from "typeorm";
+import { ForbiddenError } from "@/shared/types/errors";
+import { BaseService } from "@/shared/base/BaseService";
+import { Attribute, AttributeType } from "@/database/models/Attribute";
+import { AttributeRepository } from "./attribute.repository";
+import { ATTRIBUTE_TYPES } from "./attribute.types";
 
 @injectable()
 export class AttributeService extends BaseService<Attribute> {
@@ -70,7 +70,7 @@ export class AttributeService extends BaseService<Attribute> {
     entity: Attribute,
     req?: RequestContext,
   ): Promise<ActionValue> {
-    if (entity.isDefault || entity.companyId === null)
+    if (entity.isDefault)
       return {
         can: false,
         reason: "Không thể sửa thuộc tính mặc định của hệ thống",
@@ -83,7 +83,7 @@ export class AttributeService extends BaseService<Attribute> {
     entity: Attribute,
     req?: RequestContext,
   ): Promise<ActionValue> {
-    if (entity.isDefault || entity.companyId === null)
+    if (entity.isDefault)
       return {
         can: false,
         reason: "Không thể xóa thuộc tính mặc định của hệ thống",
@@ -103,14 +103,11 @@ export class AttributeService extends BaseService<Attribute> {
   ): Promise<{ id: string; name: string }> {
     let attr = await this.repository.findOne({
       where: { name: ILike(name), type },
-    } as any);
+    });
+
     if (!attr) {
-      attr = (await this.create(
-        { name, type, code: null, note: null } as any,
-        undefined,
-        req,
-      )) as any;
+      attr = await this.create({ name, type, note: null }, undefined, req);
     }
-    return { id: attr!.id, name: attr!.name };
+    return { id: attr.id, name: attr.name };
   }
 }

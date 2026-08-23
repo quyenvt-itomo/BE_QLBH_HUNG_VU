@@ -27,7 +27,7 @@ import { OffsetLineDto } from "./partnerDebtOffset.validator";
 export class PartnerDebtOffsetService extends BaseService<PartnerDebtOffset> {
   protected repository: PartnerDebtOffsetRepository;
   protected uniqueFields: (keyof PartnerDebtOffset)[] = ["code"];
-  protected uniqueScope?: (keyof PartnerDebtOffset)[] = ["companyId"];
+  protected uniqueScope?: (keyof PartnerDebtOffset)[] = ["storeId"];
   protected searchableFields = ["code"];
 
   constructor(

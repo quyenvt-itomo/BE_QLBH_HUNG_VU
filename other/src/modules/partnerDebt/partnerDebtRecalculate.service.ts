@@ -1,6 +1,6 @@
 import { injectable } from "inversify";
 import { DeepPartial, EntityManager } from "typeorm";
-import { PartnerDebtTransaction } from "@/database/models/store/PartnerDebtTransaction";
+import { DebtTransaction } from "@/database/models/store/DebtTransaction";
 import { Order } from "@/database/models/store/Order";
 import { IncomeExpense } from "@/database/models/store/IncomeExpense";
 import { PartnerDebtAdjustment } from "@/database/models/store/PartnerDebtAdjustment";
@@ -41,7 +41,7 @@ export class PartnerDebtRecalculateService extends TransactionService {
   private async getTransactionDataByOrder(
     order: Order,
     manager: EntityManager,
-  ): Promise<DeepPartial<PartnerDebtTransaction>[]> {
+  ): Promise<DeepPartial<DebtTransaction>[]> {
     const {
       type,
       totalAmount,
@@ -62,7 +62,7 @@ export class PartnerDebtRecalculateService extends TransactionService {
     const debtAmount =
       totalAmount - (loyaltyPointsDiscountAmount || 0) - (payment || 0);
 
-    const transactions: DeepPartial<PartnerDebtTransaction>[] = [];
+    const transactions: DeepPartial<DebtTransaction>[] = [];
 
     // Nếu debtAmount <= 0 tức là không phát sinh công nợ mới, có thể do khách đã thanh toán trước hoặc đơn hàng chỉ có điểm mà không có tiền, thì sẽ không cần ghi transaction công nợ nữa
     if (debtAmount > 0) {
@@ -182,7 +182,7 @@ export class PartnerDebtRecalculateService extends TransactionService {
   }
   private getTransactionDataByIncomeExpense(
     incomeExpense: IncomeExpense,
-  ): DeepPartial<PartnerDebtTransaction> {
+  ): DeepPartial<DebtTransaction> {
     const isExpense = incomeExpense.type === IncomeExpenseTypeEnum.EXPENSE;
     return {
       amount: incomeExpense.amount,
@@ -200,7 +200,7 @@ export class PartnerDebtRecalculateService extends TransactionService {
   }
   private getTransactionDataByAdjustment(
     adjustment: PartnerDebtAdjustment,
-  ): DeepPartial<PartnerDebtTransaction> {
+  ): DeepPartial<DebtTransaction> {
     return {
       amount: adjustment.deltaAmount,
       occurredAt: adjustment.occurredAt,
@@ -215,7 +215,7 @@ export class PartnerDebtRecalculateService extends TransactionService {
   }
   private getTransactionDataByOffset(
     offset: PartnerDebtOffset,
-  ): DeepPartial<PartnerDebtTransaction> {
+  ): DeepPartial<DebtTransaction> {
     return {
       amount: offset.offsetAmount,
       occurredAt: offset.occurredAt,
@@ -260,7 +260,7 @@ export class PartnerDebtRecalculateService extends TransactionService {
     // );
 
     const txDeleteQb = mainManager
-      .getRepository(PartnerDebtTransaction)
+      .getRepository(DebtTransaction)
       .createQueryBuilder()
       .delete()
       .where("storeId = :storeId", { storeId })
@@ -463,7 +463,7 @@ export class PartnerDebtRecalculateService extends TransactionService {
     manager: EntityManager,
   ): Promise<void> {
     await manager.save(
-      PartnerDebtTransaction,
+      DebtTransaction,
       await this.getTransactionDataByOrder(data, manager),
     );
   }
@@ -478,7 +478,7 @@ export class PartnerDebtRecalculateService extends TransactionService {
     manager: EntityManager,
   ): Promise<void> {
     await manager.save(
-      PartnerDebtTransaction,
+      DebtTransaction,
       this.getTransactionDataByIncomeExpense(data),
     );
   }
@@ -518,7 +518,7 @@ export class PartnerDebtRecalculateService extends TransactionService {
     if (deltaAmount === 0) return;
 
     await manager.save(
-      PartnerDebtTransaction,
+      DebtTransaction,
       this.getTransactionDataByAdjustment(newAdjustment),
     );
   }
@@ -556,7 +556,7 @@ export class PartnerDebtRecalculateService extends TransactionService {
     const partialTransaction = this.getTransactionDataByOffset(newOffset);
 
     // Đối trừ công nợ cả hai bên (Một phiếu tạo hai transaction)
-    await manager.save(PartnerDebtTransaction, [
+    await manager.save(DebtTransaction, [
       {
         ...partialTransaction,
         side: PartnerDebtSideEnum.PAYABLE,
@@ -595,7 +595,7 @@ export class PartnerDebtRecalculateService extends TransactionService {
     await deleteQb.execute();
 
     const txQb = manager
-      .createQueryBuilder(PartnerDebtTransaction, "t")
+      .createQueryBuilder(DebtTransaction, "t")
       .where("t.occurredAt <= :snapshotDate", { snapshotDate })
       .andWhere("t.storeId = :storeId", { storeId });
 
@@ -730,7 +730,7 @@ export class PartnerDebtRecalculateService extends TransactionService {
 
     // Cộng dồn các transaction từ snapshot đến atDate
     const txs = await manager
-      .getRepository(PartnerDebtTransaction)
+      .getRepository(DebtTransaction)
       .createQueryBuilder("tx")
       .where("tx.partnerId = :partnerId", { partnerId })
       .andWhere("tx.storeId = :storeId", { storeId })

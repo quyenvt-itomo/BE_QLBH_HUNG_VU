@@ -5,7 +5,7 @@ import {
   BaseCreateSchema,
   BaseUpdateSchema,
 } from "@/shared/base/BaseValidator";
-import { AttributeType } from "@/database/models/Attribute";
+import { AttributeType } from "@/database/models";
 
 export const CreateAttributeSchema = BaseCreateSchema.extend({
   name: z.string().trim().max(255),

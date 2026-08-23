@@ -12,13 +12,13 @@ export enum FundTransactionRefTypeEnum {
 }
 
 @Entity("fund_transactions")
-@Index(["companyId", "occurredAt"])
+@Index(["storeId", "occurredAt"])
 @Index(["fundId", "occurredAt"])
 @Index(["refType", "refId"])
 export class FundTransaction extends BaseEntity {
   @Column({ type: "uuid" })
   @Index()
-  companyId: string;
+  storeId: string;
 
   @Column({ type: "timestamptz" })
   occurredAt: Date;

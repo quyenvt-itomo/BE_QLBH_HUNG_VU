@@ -1,10 +1,9 @@
-import { injectable, inject } from "inversify";
-import { ProductService } from "./product.service";
-import { PRODUCT_TYPES } from "./product.types";
+import { inject, injectable } from "inversify";
+import { NextFunction, Request, Response } from "express";
 import { BaseController } from "@/shared/base/BaseController";
 import { Product } from "@/database/models/Product";
-import { Request, Response, NextFunction } from "express";
-import { ProductQueryDto } from "./product.validator";
+import { PRODUCT_TYPES } from "./product.types";
+import { ProductService } from "./product.service";
 
 @injectable()
 export class ProductController extends BaseController<Product> {
@@ -15,43 +14,51 @@ export class ProductController extends BaseController<Product> {
     this.service = service;
   }
 
-  getPublicProducts = async (
-    req: Request,
-    res: Response,
-    next: NextFunction,
-  ): Promise<Response<any, Record<string, any>> | undefined> => {
-    try {
-      const options = req.query as unknown as ProductQueryDto;
-      options.isPublic = true;
-      const reqContext = this.service.getReqContext(req);
-      const data = await this.service.findAllWithPagination(
-        options,
-        undefined,
-        reqContext,
-      );
-      if (data.data?.length)
-        await this.service.hydrateEntities(data.data, reqContext);
-      return res.status(data.statusCode).json(data);
-    } catch (error) {
-      console.error(error);
-      next(error);
-    }
-  };
-
   getPriceHistories = async (
     req: Request,
     res: Response,
     next: NextFunction,
   ) => {
     try {
-      const query = req.query as unknown as ProductQueryDto;
-      const reqContext = this.service.getReqContext(req);
-      const data = await this.service.getPriceHistories(query, reqContext);
-      return res.status(200).json({
+      const data = await this.service.getPriceHistories(
+        req.query as any,
+        this.service.getReqContext(req),
+      );
+      return res.json({ success: true, data, statusCode: 200, message: "OK" });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  updateStoreCost = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const storeId = String(
+        req.body.storeId ||
+          req.headers["x-store-id"] ||
+          req.query.storeId ||
+          "",
+      );
+      const contextStoreId =
+        req.storeContext?.storeId || req.storeContext?.storeId;
+      const costPrice = Number(req.body.costPrice);
+      if (
+        !storeId ||
+        (contextStoreId && storeId !== contextStoreId) ||
+        !Number.isFinite(costPrice) ||
+        costPrice < 0
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "storeId and costPrice are required",
+          statusCode: 400,
+        });
+      }
+      await this.service.updateStoreCost(req.params.id, storeId, costPrice);
+      return res.json({
         success: true,
-        data,
+        data: { productId: req.params.id, storeId, costPrice },
         statusCode: 200,
-        message: "OK",
+        message: "price.updated",
       });
     } catch (error) {
       next(error);

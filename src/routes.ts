@@ -1,61 +1,115 @@
-import { Router, Request, Response } from "express";
+import { Router } from "express";
 import { IsNull } from "typeorm";
+import { container } from "@/config/container";
 import DatabaseConfig from "@/config/database";
 import { getCode } from "@/shared/utils/code.utils";
+import { companyResolver } from "@/shared/middleware/company.middleware";
+import { authenticate, authorization } from "@/shared/middleware/auth.middleware";
+import { asyncHandler } from "@/shared/utils/controller.utils";
+import { AUTH_TYPES } from "@/module/auth/auth.types";
+import { AuthRouter } from "@/module/auth/auth.route";
+import { PRODUCT_TYPES } from "@/module/product/product.types";
+import { ProductRouter } from "@/module/product/product.route";
+import { PARTNER_TYPES } from "@/module/partner/partner.types";
+import { PartnerRouter } from "@/module/partner/partner.route";
+import { PARTNER_CONTACT_TYPES } from "@/module/partnerContact/partnerContact.types";
+import { PartnerContactRouter } from "@/module/partnerContact/partnerContact.route";
+import { ORDER_TYPES } from "@/module/order/order.types";
+import { OrderRouter } from "@/module/order/order.route";
+import { orderContextMiddleware } from "@/module/order/order.middleware";
+import { ATTRIBUTE_TYPES } from "@/module/attribute/attribute.types";
+import { AttributeRouter } from "@/module/attribute/attribute.route";
+import { FILE_TYPES } from "@/module/file/file.types";
+import { FileRouter } from "@/module/file/file.route";
+import { STORE_TYPES } from "@/module/store/store.types";
+import { StoreRouter } from "@/module/store/store.route";
+import { INVENTORY_TYPES } from "@/module/inventory/inventory.types";
+import { InventoryController } from "@/module/inventory/inventory.controller";
+import { INVENTORY_ADJUSTMENT_TYPES } from "@/module/inventoryAdjustment/inventoryAdjustment.types";
+import { InventoryAdjustmentRouter } from "@/module/inventoryAdjustment/inventoryAdjustment.route";
+import { INVENTORY_TRANSACTION_TYPES } from "@/module/inventoryTransaction/inventoryTransaction.types";
+import { InventoryTransactionRouter } from "@/module/inventoryTransaction/inventoryTransaction.route";
+import { STORE_TRANSFER_TYPES } from "@/module/storeTransfer/storeTransfer.types";
+import { StoreTransferRouter } from "@/module/storeTransfer/storeTransfer.route";
+import { PRODUCT_PRICE_HISTORY_TYPES } from "@/module/productPriceHistory/productPriceHistory.types";
+import { ProductPriceHistoryRouter } from "@/module/productPriceHistory/productPriceHistory.route";
+import { INCOME_EXPENSE_TYPES } from "@/module/incomeExpense/incomeExpense.types";
+import { IncomeExpenseRouter } from "@/module/incomeExpense/incomeExpense.route";
+import { FUND_TYPES } from "@/module/fund/fund.types";
+import { FundRouter } from "@/module/fund/fund.route";
+import { FUND_ADJUSTMENT_TYPES } from "@/module/fundAdjustment/fundAdjustment.types";
+import { FundAdjustmentRouter } from "@/module/fundAdjustment/fundAdjustment.route";
+import { FUND_TRANSACTION_TYPES } from "@/module/fundTransaction/fundTransaction.types";
+import { FundTransactionRouter } from "@/module/fundTransaction/fundTransaction.route";
+import { FUND_TRANSFER_TYPES } from "@/module/fundTransfer/fundTransfer.types";
+import { FundTransferRouter } from "@/module/fundTransfer/fundTransfer.route";
+import { NOTIFICATION_TYPES } from "@/module/notification/notification.types";
+import { NotificationRouter } from "@/module/notification/notification.route";
+import { PRODUCT_EXTRA_UNIT_TYPES } from "@/module/productExtraUnit/productExtraUnit.types";
+import { ProductExtraUnitRouter } from "@/module/productExtraUnit/productExtraUnit.route";
+import { ROLE_TYPES } from "@/module/role/role.types";
+import { RoleRouter } from "@/module/role/role.route";
+import { STORE_PRODUCT_TYPES } from "@/module/storeProduct/storeProduct.types";
+import { StoreProductRouter } from "@/module/storeProduct/storeProduct.route";
+import { STORE_USER_TYPES } from "@/module/storeUser/storeUser.types";
+import { StoreUserRouter } from "@/module/storeUser/storeUser.route";
+import { USER_TYPES } from "@/module/user/user.types";
+import { UserRouter } from "@/module/user/user.route";
+import { DEBT_ADJUSTMENT_TYPES } from "@/module/debtAdjustment/debtAdjustment.types";
+import { DebtAdjustmentRouter } from "@/module/debtAdjustment/debtAdjustment.route";
+import { VAT_ADJUSTMENT_TYPES } from "@/module/vatDebtAdjustment/vatAdjustment.types";
+import { VatAdjustmentRouter } from "@/module/vatDebtAdjustment/vatAdjustment.route";
+import { VAT_TRANSACTION_TYPES } from "@/module/vatTransaction/vatTransaction.types";
+import { VatTransactionRouter } from "@/module/vatTransaction/vatTransaction.route";
 import { Product } from "@/database/models/Product";
-import { Partner } from "@/database/models/Partner";
-import { Attribute } from "@/database/models/Attribute";
-import { Store } from "@/database/models/Store";
-import { User } from "@/database/models/User";
-import { Role } from "@/database/models/Role";
-import { Fund } from "@/database/models/Fund";
-import { FundAdjustment } from "@/database/models/FundAdjustment";
-import { FundTransfer } from "@/database/models/FundTransfer";
-import { IncomeExpense } from "@/database/models/store/IncomeExpense";
-import { InventoryAdjustment } from "@/database/models/store/InventoryAdjustment";
-import { Order } from "@/database/models/store/Order";
-import { ProductPriceHistory } from "@/database/models/store/ProductPriceHistory";
 import { InventoryTransaction } from "@/database/models/store/InventoryTransaction";
-import { PartnerContact } from "@/database/models/PartnerContact";
-import { StoreProduct } from "@/database/models/store/StoreProduct";
-import { StoreUser } from "@/database/models/store/StoreUser";
-import { StoreTransfer } from "@/database/models/StoreTransfer";
-import { StoreTransferLine } from "@/database/models/StoreTransferLine";
-import { DebtAdjustment } from "@/database/models/DebtAdjustment";
-import { VatAdjustment } from "@/database/models/VatDebtAdjustment";
-import { VatTransaction } from "@/database/models/VatTransaction";
-import { PartnerDebtTransaction } from "@/database/models/DebtTransaction";
 
 const router = Router();
-const models = {
-  product: Product, partner: Partner, attribute: Attribute, store: Store,
-  user: User, role: Role, fund: Fund, fundAdjustment: FundAdjustment,
-  fundTransfer: FundTransfer, incomeExpense: IncomeExpense,
-  inventoryAdjustment: InventoryAdjustment, order: Order,
-  priceHistory: ProductPriceHistory, partnerContact: PartnerContact,
-  storeProduct: StoreProduct, storeUser: StoreUser, storeTransfer: StoreTransfer,
-  storeTransferLine: StoreTransferLine, debtAdjustment: DebtAdjustment,
-  vatAdjustment: VatAdjustment, vatTransaction: VatTransaction,
-  partnerDebtTransaction: PartnerDebtTransaction,
-} as const;
-
-function repoFor(key: keyof typeof models) { return DatabaseConfig.getRepository(models[key]); }
-function scopeWhere(req: Request, extra: Record<string, unknown> = {}) {
-  const storeId = (req.headers["x-store-id"] || req.query.storeId || req.body?.storeId) as string | undefined;
-  return storeId ? { ...extra, storeId, deletedAt: IsNull() } : { ...extra, deletedAt: IsNull() };
-}
-
-for (const [key] of Object.entries(models) as [keyof typeof models, unknown][]) {
-  const path = `/${key.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)}`;
-  router.get(path, async (req, res, next) => { try { const data = await repoFor(key).find({ where: scopeWhere(req) as any, order: { createdAt: "DESC" } as any }); res.json({ statusCode: 200, success: true, message: "OK", data }); } catch (e) { next(e); } });
-  router.get(`${path}/:id`, async (req, res, next) => { try { const data = await repoFor(key).findOne({ where: { id: req.params.id } as any }); if (!data) return res.status(404).json({ statusCode: 404, success: false, message: "not_found" }); res.json({ statusCode: 200, success: true, message: "OK", data }); } catch (e) { next(e); } });
-  router.post(path, async (req, res, next) => { try { const data = await repoFor(key).save(repoFor(key).create(req.body)); res.status(201).json({ statusCode: 201, success: true, message: "created", data }); } catch (e) { next(e); } });
-  router.patch(`${path}/:id`, async (req, res, next) => { try { await repoFor(key).update(req.params.id, req.body); const data = await repoFor(key).findOne({ where: { id: req.params.id } as any }); res.json({ statusCode: 200, success: true, message: "updated", data }); } catch (e) { next(e); } });
-  router.delete(`${path}/:id`, async (req, res, next) => { try { await repoFor(key).softDelete(req.params.id); res.json({ statusCode: 200, success: true, message: "deleted", data: true }); } catch (e) { next(e); } });
-}
-
+router.use(companyResolver);
 router.get("/code", getCode);
-router.get("/inventory/transactions", async (req, res, next) => { try { const where: any = { productId: req.query.productId, deletedAt: IsNull() }; if (req.query.storeId) where.storeId = req.query.storeId; const data = await DatabaseConfig.getRepository(InventoryTransaction).find({ where, order: { occurredAt: "ASC", createdAt: "ASC" } as any }); res.json({ statusCode: 200, success: true, message: "OK", data }); } catch (e) { next(e); } });
-router.get("/inventory/report", async (_req, res, next) => { try { const data = await DatabaseConfig.getRepository(Product).find({ where: { deletedAt: IsNull() } as any }); res.json({ statusCode: 200, success: true, message: "OK", data }); } catch (e) { next(e); } });
+router.use("/auth", container.get<AuthRouter>(AUTH_TYPES.AuthRouter).getRouter());
+router.use(authenticate, authorization);
+
+router.use("/attribute", container.get<AttributeRouter>(ATTRIBUTE_TYPES.AttributeRouter).getRouter());
+router.use("/file", container.get<FileRouter>(FILE_TYPES.FileRouter).getRouter());
+router.use("/store", container.get<StoreRouter>(STORE_TYPES.StoreRouter).getRouter());
+router.use("/product", container.get<ProductRouter>(PRODUCT_TYPES.ProductRouter).getRouter());
+
+const partnerRouter = container.get<PartnerRouter>(PARTNER_TYPES.PartnerRouter).getRouter();
+router.use("/customer", (req: any, _res, next) => { req.partnerContext = { module: "customer", type: "customer" }; next(); }, partnerRouter);
+router.use("/supplier", (req: any, _res, next) => { req.partnerContext = { module: "supplier", type: "supplier" }; next(); }, partnerRouter);
+router.use("/shipper", (req: any, _res, next) => { req.partnerContext = { module: "shipper", type: "shipper" }; next(); }, partnerRouter);
+router.use("/partner-contact", container.get<PartnerContactRouter>(PARTNER_CONTACT_TYPES.PartnerContactRouter).getRouter());
+
+router.use("/sale", orderContextMiddleware("sale"), container.get<OrderRouter>(ORDER_TYPES.OrderRouter).getRouter());
+router.use("/sale-return", orderContextMiddleware("saleReturn"), container.get<OrderRouter>(ORDER_TYPES.OrderRouter).getRouter());
+router.use("/purchase", orderContextMiddleware("purchase"), container.get<OrderRouter>(ORDER_TYPES.OrderRouter).getRouter());
+router.use("/purchase-return", orderContextMiddleware("purchaseReturn"), container.get<OrderRouter>(ORDER_TYPES.OrderRouter).getRouter());
+
+router.use(container.get<IncomeExpenseRouter>(INCOME_EXPENSE_TYPES.Router).getRouter());
+router.use("/fund", container.get<FundRouter>(FUND_TYPES.Router).getRouter());
+router.use("/fund-adjustment", container.get<FundAdjustmentRouter>(FUND_ADJUSTMENT_TYPES.Router).getRouter());
+router.use("/fund-transaction", container.get<FundTransactionRouter>(FUND_TRANSACTION_TYPES.Router).getRouter());
+router.use("/fund-transfer", container.get<FundTransferRouter>(FUND_TRANSFER_TYPES.Router).getRouter());
+router.use("/inventory-adjustment", container.get<InventoryAdjustmentRouter>(INVENTORY_ADJUSTMENT_TYPES.Router).getRouter());
+router.use("/inventory-transaction", container.get<InventoryTransactionRouter>(INVENTORY_TRANSACTION_TYPES.Router).getRouter());
+router.use("/store-transfer", container.get<StoreTransferRouter>(STORE_TRANSFER_TYPES.Router).getRouter());
+router.use("/product-price-history", container.get<ProductPriceHistoryRouter>(PRODUCT_PRICE_HISTORY_TYPES.Router).getRouter());
+router.use("/notification", container.get<NotificationRouter>(NOTIFICATION_TYPES.Router).getRouter());
+router.use("/product-extra-unit", container.get<ProductExtraUnitRouter>(PRODUCT_EXTRA_UNIT_TYPES.Router).getRouter());
+router.use("/role", container.get<RoleRouter>(ROLE_TYPES.Router).getRouter());
+router.use("/store-product", container.get<StoreProductRouter>(STORE_PRODUCT_TYPES.Router).getRouter());
+router.use("/store-user", container.get<StoreUserRouter>(STORE_USER_TYPES.Router).getRouter());
+router.use("/user", container.get<UserRouter>(USER_TYPES.Router).getRouter());
+router.use("/debt-adjustment", container.get<DebtAdjustmentRouter>(DEBT_ADJUSTMENT_TYPES.Router).getRouter());
+router.use("/vat-adjustment", container.get<VatAdjustmentRouter>(VAT_ADJUSTMENT_TYPES.Router).getRouter());
+router.use("/vat-transaction", container.get<VatTransactionRouter>(VAT_TRANSACTION_TYPES.Router).getRouter());
+
+const inventoryController = container.get<InventoryController>(INVENTORY_TYPES.InventoryController);
+router.get("/inventory", asyncHandler(inventoryController.getStockReport));
+router.get("/inventory/report", asyncHandler(inventoryController.getStockReport));
+router.get("/inventory/transactions", asyncHandler(inventoryController.getTransactionDetails));
+router.get("/inventory-report/products", asyncHandler(async (_req, res) => { const data = await DatabaseConfig.getRepository(Product).find({ where: { deletedAt: IsNull() } as any }); res.json({ success: true, statusCode: 200, message: "OK", data }); }));
+router.get("/inventory-transaction-report", asyncHandler(async (req, res) => { const where: any = { deletedAt: IsNull() }; if (req.query.productId) where.productId = req.query.productId; if (req.query.storeId) where.storeId = req.query.storeId; const data = await DatabaseConfig.getRepository(InventoryTransaction).find({ where, order: { occurredAt: "ASC", createdAt: "ASC", id: "ASC" } as any }); res.json({ success: true, statusCode: 200, message: "OK", data }); }));
 
 export default router;

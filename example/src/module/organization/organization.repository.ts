@@ -28,12 +28,12 @@ export class OrganizationRepository extends BaseRepository<Organization> {
     options: IFindPaginationOptions<Organization>,
   ): Promise<void> {
     const alias = qb.alias;
-    const companyId = options.companyId;
+    const storeId = options.storeId;
     const { parentId, managerId, types, getAll } =
       (options.moreQuery as OrganizationQueryDto) || {};
 
-    if (companyId && !getAll) {
-      const descendants = await this.findDescendants(companyId);
+    if (storeId && !getAll) {
+      const descendants = await this.findDescendants(storeId);
       const descendantIds = descendants.map((x) => x.id);
 
       qb.andWhere(`${alias}.id IN (:...ids)`, { ids: descendantIds });

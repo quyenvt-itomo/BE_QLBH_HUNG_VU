@@ -21,7 +21,7 @@ import { withTransaction } from "@/shared/base/TransactionManager";
 export class PartnerService extends BaseService<Partner> {
   protected repository: PartnerRepository;
   protected uniqueFields: (keyof Partner)[] = ["code"];
-  protected uniqueScope?: (keyof Partner)[] | undefined = ["companyId"];
+  protected uniqueScope?: (keyof Partner)[] | undefined = ["storeId"];
   protected searchableFields = [
     "name",
     "code",
@@ -41,9 +41,9 @@ export class PartnerService extends BaseService<Partner> {
 
   async getPublicByTaxCode(
     taxCode: string,
-    companyId: string,
+    storeId: string,
   ): Promise<Partner | null> {
-    return this.repository.findByTaxCode(taxCode, companyId);
+    return this.repository.findByTaxCode(taxCode, storeId);
   }
 
   async update(

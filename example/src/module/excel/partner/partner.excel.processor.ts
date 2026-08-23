@@ -43,7 +43,7 @@ type PartnerImportData = Partial<
     | "note"
     | "staffId"
     | "paymentTermId"
-    | "companyId"
+    | "storeId"
   >
 >;
 
@@ -85,8 +85,8 @@ export class PartnerExcelProcessor {
       result.totalRows = rows.length;
       if (!rows.length) return result;
 
-      const companyId = req.companyContext?.companyId;
-      if (!companyId) throw new BadRequestError("Thiếu thông tin công ty");
+      const storeId = req.storeContext?.storeId;
+      if (!storeId) throw new BadRequestError("Thiếu thông tin công ty");
 
       for (let i = 0; i < rows.length; i++) {
         const row = rows[i];
@@ -118,7 +118,7 @@ export class PartnerExcelProcessor {
           let staffId: string | null = null;
           if (row.staffCode) {
             const staff = await this.employeeService.findOne({
-              where: { code: row.staffCode, companyId },
+              where: { code: row.staffCode, storeId },
             });
             staffId = staff?.id || null;
           }
@@ -127,7 +127,7 @@ export class PartnerExcelProcessor {
           let paymentTermId: string | null = null;
           if (row.paymentTermName) {
             const pt = await this.paymentTermService.findOne({
-              where: { name: row.paymentTermName, companyId },
+              where: { name: row.paymentTermName, storeId },
             });
             paymentTermId = pt?.id || null;
           }
@@ -164,7 +164,7 @@ export class PartnerExcelProcessor {
 
           await withTransaction(async (manager) => {
             const existing = await this.partnerService.findOne({
-              where: { code: row.code, companyId },
+              where: { code: row.code, storeId },
             });
             if (existing && options.duplicateHandling === "update") {
               await this.partnerService.update(existing.id, data, manager, req);
@@ -174,7 +174,7 @@ export class PartnerExcelProcessor {
             } else if (existing && options.duplicateHandling === "stop") {
               throw new Error(`Mã ${row.code} đã tồn tại`);
             } else {
-              data.companyId = companyId;
+              data.storeId = storeId;
               await this.partnerService.create(data, manager, req);
             }
           });

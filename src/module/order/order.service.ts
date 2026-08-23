@@ -1,411 +1,144 @@
-import type {
-  RequestContext,
-  ActionMap,
-  ActionValue,
-} from "@/shared/types/interfaces";
-import { injectable, inject } from "inversify";
+import { inject, injectable } from "inversify";
+import { DeepPartial, EntityManager, IsNull } from "typeorm";
+import { withTransaction } from "@/shared/base/TransactionManager";
 import { BaseService } from "@/shared/base/BaseService";
+import { RequestContext } from "@/shared/types/interfaces";
+import { generateCode } from "@/shared/utils/code.utils";
+import { Attribute, Order, OrderLine, OrderStatus, Partner, Product } from "@/database/models";
 import { OrderRepository } from "./order.repository";
 import { ORDER_TYPES } from "./order.types";
-import { Order } from "@/database/models/store/Order";
-import { OrderLine } from "@/database/models/store/OrderLine";
-import {
-  StockDocument,
-  StockDocumentStatus,
-} from "@/database/models/company/StockDocument";
-import { DeepPartial, EntityManager } from "typeorm";
-import { withTransaction } from "@/shared/base/TransactionManager";
-import { BadRequestError, NotFoundError } from "@/shared/types/errors";
-import { NotificationService } from "@/module/notification/notification.service";
-import { NOTIFICATION_TYPES } from "@/module/notification/notification.types";
-import { NotificationType, ActionType } from "@/database/models/Notification";
-import { EMPLOYEE_TYPES, EmployeeRepository } from "@/module/employee";
-import { PARTNER_TYPES } from "@/module/partner/partner.types";
-import { PartnerRepository } from "@/module/partner/partner.repository";
-import { PRODUCT_TYPES } from "@/module/product/product.types";
-import { ProductRepository } from "@/module/product/product.repository";
-import { ATTRIBUTE_TYPES } from "@/module/attribute/attribute.types";
-import { AttributeRepository } from "@/module/attribute/attribute.repository";
-import { StockDocumentLine } from "@/database/models/company/StockDocumentLine";
-import { ORDER_LINE_TYPES } from "../orderLine/orderLine.types";
-import { OrderLineRepository } from "../orderLine/orderLine.repository";
-import { CalculationUtil } from "@/shared/utils/calculation.util";
+import { INVENTORY_TYPES } from "@/module/inventory/inventory.types";
+import { InventoryRecalculateService } from "@/module/inventory/inventoryRecalculate.service";
 
+/** Order is the aggregate root. Lines are persisted only through Order. */
 @injectable()
 export class OrderService extends BaseService<Order> {
   protected repository: OrderRepository;
   protected uniqueFields: (keyof Order)[] = ["code"];
-  protected uniqueScope?: (keyof Order)[] = ["companyId"];
   protected searchableFields = ["code", "note"];
-  protected timeField: keyof Order = "timeAt";
+  protected timeField: keyof Order = "orderAt";
 
   constructor(
-    @inject(ORDER_TYPES.OrderRepository)
-    repository: OrderRepository,
-    @inject(EMPLOYEE_TYPES.EmployeeRepository)
-    private employeeRepository: EmployeeRepository,
-    @inject(PARTNER_TYPES.PartnerRepository)
-    private partnerRepository: PartnerRepository,
-    @inject(PRODUCT_TYPES.ProductRepository)
-    private productRepository: ProductRepository,
-    @inject(ATTRIBUTE_TYPES.AttributeRepository)
-    private attributeRepository: AttributeRepository,
-    @inject(ORDER_LINE_TYPES.OrderLineRepository)
-    private orderLineRepository: OrderLineRepository,
-    @inject(NOTIFICATION_TYPES.NotificationService)
-    private notificationService: NotificationService,
+    @inject(ORDER_TYPES.OrderRepository) repository: OrderRepository,
+    @inject(INVENTORY_TYPES.InventoryRecalculateService) private readonly inventory: InventoryRecalculateService,
   ) {
     super();
     this.repository = repository;
   }
 
-  async actionAfterCreate(
-    data: Order,
-    manager: EntityManager,
-    req?: RequestContext,
-  ): Promise<void> {
-    // Notify users with read permission on "order" module
-    await this.notificationService.notifyUsersWithReadPermission(
-      data,
-      "order",
-      NotificationType.ORDER,
-      ActionType.CREATE,
-      data.creatorId,
-    );
-  }
-
-  async update(
-    id: string,
-    data: DeepPartial<Order>,
-    manager?: EntityManager,
-    req?: RequestContext,
-  ): Promise<Order | null> {
-    const { lines, ...safeData } = data;
-    const result = await super.update(
-      id,
-      safeData as DeepPartial<Order>,
-      manager,
-      req,
-    );
-    if (lines !== undefined && result) {
-      const run = async (trxManager: EntityManager) => {
-        const lineRepo = trxManager.getRepository(OrderLine);
-        const existing = await lineRepo.find({ where: { orderId: id } });
-        const existingById = new Map(existing.map((line) => [line.id, line]));
-        for (const line of lines) {
-          await this.productRepository.attachInfo(line, trxManager);
-          await this.attributeRepository.attachUnitInfo(line, trxManager);
-          const oldLine = line.id ? existingById.get(line.id) : undefined;
-          if (oldLine) {
-            if (
-              (line.productId && line.productId !== oldLine.productId) ||
-              (line.unitId && line.unitId !== oldLine.unitId)
-            ) {
-              throw new BadRequestError(
-                "Không thể đổi hàng hóa hoặc đơn vị tính của dòng đã lưu; hãy hủy đơn để tạo lại",
-              );
-            }
-            line.conversionRateAtTime = oldLine.conversionRateAtTime;
-            line.costPriceAtTime = oldLine.costPriceAtTime;
-            line.costAmount =
-              (Number(line.quantity) || 0) * (Number(oldLine.costPriceAtTime) || 0);
-          } else {
-            await this.productRepository.attachUnitConversion(line, trxManager);
-            await this.productRepository.attachCostInfo(line, trxManager);
-          }
-        }
-        const current = await trxManager.getRepository(Order).findOne({
-          where: { id },
-        });
-        const total = new CalculationUtil().calculateDocumentTotal(lines, {
-          discountType: (safeData.discountType ?? current?.discountType) as any,
-          discountValue: safeData.discountValue ?? current?.discountValue,
-          taxType: (safeData.taxType ?? current?.taxType) as any,
-          taxValue: safeData.taxValue ?? current?.taxValue,
-        });
-        await trxManager.getRepository(Order).update(id, {
-          subTotal: total.subTotal,
-          discountAmount: total.discountAmount,
-          taxAmount: total.taxAmount,
-          totalAmount: total.grossAmount,
-          totalCost: lines.reduce(
-            (sum, line) => sum + (Number(line.costAmount) || 0),
-            0,
-          ),
-        });
-        const incomingIds = new Set(
-          lines.map((l: any) => l.id).filter(Boolean),
-        );
-        const removedIds = existing
-          .map((l) => l.id)
-          .filter((lid) => !incomingIds.has(lid));
-        if (removedIds.length > 0) {
-          await lineRepo.softDelete(removedIds);
-        }
-        const toSave = lines.map((l: any, i: number) => ({
-          ...l,
-          orderId: id,
-          sortOrder: l.sortOrder || 10 * (i + 1),
-        }));
-        if (toSave.length > 0) {
-          await lineRepo.save(toSave);
-        }
-      };
-      if (manager) {
-        await run(manager);
-      } else {
-        await withTransaction(run);
-      }
+  private async loadSnapshots(data: DeepPartial<Order>, manager: EntityManager): Promise<void> {
+    if (data.partnerId) {
+      const partner = await manager.getRepository(Partner).findOne({ where: { id: data.partnerId, deletedAt: IsNull() } as any });
+      if (!partner) throw new Error("partner.not_found");
+      data.partnerSnapshot = { id: partner.id, type: partner.type, groupId: partner.groupId, isOrganization: partner.isOrganization, name: partner.name, code: partner.code, email: partner.email, phone: partner.phone, taxCode: partner.taxCode, addresses: partner.addresses || [], representative: partner.representative, banks: partner.banks || [] };
     }
-    if (
-      lines === undefined &&
-      result &&
-      ["discountType", "discountValue", "taxType", "taxValue"].some(
-        (field) => (safeData as any)[field] !== undefined,
-      )
-    ) {
-      const recalculate = async (trxManager: EntityManager) => {
-        const current = await trxManager.getRepository(Order).findOne({
-          where: { id },
-          relations: { lines: true },
-        });
-        if (!current) return;
-        const total = new CalculationUtil().calculateDocumentTotal(current.lines || [], {
-          discountType: current.discountType as any,
-          discountValue: current.discountValue,
-          taxType: current.taxType as any,
-          taxValue: current.taxValue,
-        });
-        await trxManager.getRepository(Order).update(id, {
-          subTotal: total.subTotal,
-          discountAmount: total.discountAmount,
-          taxAmount: total.taxAmount,
-          totalAmount: total.grossAmount,
-        });
-      };
-      await withTransaction(recalculate);
+    if (data.shipperId) {
+      const shipper = await manager.getRepository(Partner).findOne({ where: { id: data.shipperId, deletedAt: IsNull() } as any });
+      if (!shipper) throw new Error("shipper.not_found");
+      data.shipperSnapshot = { id: shipper.id, type: shipper.type, groupId: shipper.groupId, isOrganization: shipper.isOrganization, name: shipper.name, code: shipper.code, email: shipper.email, phone: shipper.phone, taxCode: shipper.taxCode, addresses: shipper.addresses || [], representative: shipper.representative, banks: shipper.banks || [] };
     }
-    return result;
-  }
-
-  async complete(id: string, req?: RequestContext): Promise<Order> {
-    return withTransaction(async (trxManager) => {
-      const order = await this.repository.findById(id, trxManager);
-      if (!order) throw new NotFoundError("Không tìm thấy đơn hàng");
-      if (order.isCompleted) {
-        throw new BadRequestError("Đơn hàng đã được hoàn thành");
-      }
-
-      return trxManager.getRepository(Order).save({
-        ...order,
-        isCompleted: true,
-        completedAt: new Date(),
-      });
-    });
-  }
-
-  async cancel(id: string, req?: RequestContext): Promise<Order> {
-    return withTransaction(async (trxManager) => {
-      const order = await this.repository.findById(id, trxManager);
-      if (!order) throw new NotFoundError("Không tìm thấy đơn hàng");
-      if (order.isCompleted) {
-        throw new BadRequestError("Không thể hủy đơn hàng đã hoàn thành");
-      }
-      return trxManager.getRepository(Order).remove(order);
-    });
-  }
-
-  async validateBeforeCreate(
-    data: DeepPartial<Order>,
-    manager: EntityManager,
-    req?: RequestContext,
-  ): Promise<void> {
-    // Populate snapshots
-    await this.partnerRepository.attachInfo(data, manager);
-    await this.employeeRepository.attachInfo(data, manager);
-
-    // Populate product + unit snapshots cho từng line
-    if (data.lines) {
-      for (const line of data.lines) {
-        await this.productRepository.attachInfo(line, manager);
-        await this.attributeRepository.attachUnitInfo(line, manager);
-        await this.productRepository.attachUnitConversion(line, manager);
-        await this.productRepository.attachCostInfo(line, manager);
-      }
-    }
-
-    const total = new CalculationUtil().calculateDocumentTotal(data.lines || [], {
-      discountType: data.discountType as any,
-      discountValue: data.discountValue,
-      taxType: data.taxType as any,
-      taxValue: data.taxValue,
-    });
-    data.subTotal = total.subTotal;
-    data.discountAmount = total.discountAmount;
-    data.taxAmount = total.taxAmount;
-    data.totalAmount = total.grossAmount;
-    data.totalCost = (data.lines || []).reduce(
-      (sum, line) => sum + (Number(line.costAmount) || 0),
-      0,
-    );
-  }
-
-  async validateBeforeUpdate(
-    id: string,
-    data: DeepPartial<Order>,
-    manager: EntityManager,
-    req?: RequestContext,
-  ): Promise<void> {
-    const order = await this.repository.findById(id, manager);
-    if (!order) throw new NotFoundError("Không tìm thấy đơn hàng");
-
-    const canUpdate = await this.canUpdate(order, req);
-    if (!canUpdate.can) throw new BadRequestError(canUpdate.reason);
-  }
-
-  // ======================== ACTIONS ========================
-
-  protected async attachActions(
-    entity: Order & { _actions?: ActionMap },
-    req?: RequestContext,
-  ): Promise<void> {
-    entity._actions = await this.getActions(entity, req);
-  }
-
-  private async getActions(
-    entity: Order | null,
-    req?: RequestContext,
-  ): Promise<ActionMap> {
-    const actions = this.getDefaultAction();
-    if (!entity) return actions;
-    actions.update = await this.canUpdate(entity, req);
-    actions.delete = await this.canDelete(entity, req);
-    actions.complete = await this.canComplete(entity, req);
-    actions.createShippingPlan = await this.canCreateShippingPlan(entity, req);
-    actions.createStockDocument = await this.canCreateStockDocument(
-      entity,
-      req,
-    );
-    return actions;
-  }
-
-  // ======================== CAN CHECKS ========================
-
-  async canUpdate(entity: Order, _req?: RequestContext): Promise<ActionValue> {
-    if (entity.isCompleted) {
-      return {
-        can: false,
-        reason: "Không thể sửa đơn hàng đã hoàn thành",
-      };
-    }
-    return { can: true };
-  }
-
-  async canDelete(entity: Order, _req?: RequestContext): Promise<ActionValue> {
-    if (entity.isCompleted) {
-      return {
-        can: false,
-        reason: "Không thể xóa đơn hàng đã hoàn thành",
-      };
-    }
-    return { can: true };
-  }
-
-  async canComplete(
-    entity: Order,
-    _req?: RequestContext,
-  ): Promise<ActionValue> {
-    if (entity.isCompleted) {
-      return { can: false, reason: "Đơn hàng đã được hoàn thành" };
-    }
-    return { can: true };
-  }
-
-  /**
-   * Kiểm tra xem có thể tạo phương án vận chuyển từ đơn hàng này không.
-   */
-  async canCreateShippingPlan(
-    entity: Order | string,
-    req?: RequestContext,
-  ): Promise<ActionValue> {
-    const order =
-      typeof entity === "string"
-        ? await this.repository.findById(entity)
-        : entity;
-    if (!order) return { can: false, reason: "Không tìm thấy đơn hàng" };
-
-    if (order.isCompleted) {
-      return {
-        can: false,
-        reason: "Đơn hàng đã hoàn thành, không thể tạo phương án vận chuyển",
-      };
-    }
-    return { can: true };
-  }
-
-  /**
-   * Kiểm tra xem có thể tạo phiếu xuất kho từ đơn hàng này không.
-   */
-  async canCreateStockDocument(
-    entity: Order | string,
-    req?: RequestContext,
-  ): Promise<ActionValue> {
-    const order =
-      typeof entity === "string"
-        ? await this.repository.findById(entity)
-        : entity;
-    if (!order) return { can: false, reason: "Không tìm thấy đơn hàng" };
-
-    if (order.isCompleted) {
-      return {
-        can: false,
-        reason: "Đơn hàng đã hoàn thành, không thể tạo phiếu xuất kho",
-      };
-    }
-    return { can: true };
-  }
-
-  /**
-   * Tính lại deliveredQuantity cho từng OrderLine của một đơn bán
-   * dựa trên tất cả StockDocumentLine đã complete, chưa xóa.
-   * deliveredQuantity = Σ(line.billingQuantity) của các phiếu (doc) status=COMPLETED
-   * và chưa bị xóa (deletedAt IS NULL).
-   */
-  async recalculateLineDeliveryQuantities(
-    orderId: string,
-    manager: EntityManager,
-  ): Promise<void> {
-    const lines = await this.orderLineRepository.find({
-      where: { orderId },
-      select: ["id"],
-    });
-
-    if (!lines.length) return;
-
+    const lines = [
+      ...((data.lines || []) as DeepPartial<OrderLine>[]),
+      ...((data.returnLines || []) as DeepPartial<OrderLine>[]),
+    ];
+    let grossAmount = 0;
+    let totalCost = 0;
     for (const line of lines) {
-      const orderLineId = line.id;
-
-      // Tính tổng deliveredQuantity từ TẤT CẢ các stock document line đã complete, chưa xóa
-      const totalResult = await manager
-        .getRepository(StockDocumentLine)
-        .createQueryBuilder("line")
-        .innerJoin(StockDocument, "doc", "doc.id = line.stockDocumentId")
-        .select("COALESCE(SUM(line.billingQuantity), 0)", "total")
-        .where("line.orderLineId = :orderLineId")
-        .andWhere("line.deletedAt IS NULL")
-        .andWhere("doc.status = :status")
-        .andWhere("doc.deletedAt IS NULL")
-        .setParameters({
-          orderLineId,
-          status: StockDocumentStatus.COMPLETED,
-        })
-        .getRawOne<{ total: string }>();
-
-      await this.orderLineRepository.update(
-        orderLineId,
-        { deliveredQuantity: Number(totalResult?.total) || 0 },
-        manager,
-      );
+      if (!line.productId) throw new Error("order.line.product_required");
+      const product = await manager.getRepository(Product).findOne({ where: { id: line.productId, deletedAt: IsNull() } as any });
+      if (!product) throw new Error("product.not_found");
+      line.productSnapshot = { id: product.id, code: product.code, name: product.name };
+      if (line.unitId) {
+        const unit = await manager.getRepository(Attribute).findOne({ where: { id: line.unitId, deletedAt: IsNull() } as any });
+        if (!unit) throw new Error("unit.not_found");
+        line.unitSnapshot = { id: unit.id, name: unit.name };
+      }
+      line.conversionRateAtTime = Number(line.conversionRateAtTime) || 1;
+      line.subTotal = (Number(line.quantity) || 0) * (Number(line.unitPrice) || 0);
+      line.totalCost = (Number(line.quantity) || 0) * line.conversionRateAtTime * (Number(line.costPriceAtTime) || 0);
+      grossAmount += Number(line.subTotal);
+      totalCost += Number(line.totalCost);
     }
+    data.grossAmount = grossAmount;
+    data.discountAmount = Number(data.discountValue) || 0;
+    data.netAmount = Math.max(0, grossAmount - Number(data.discountAmount));
+    data.taxAmount = Number(data.taxValue) || 0;
+    data.totalAmount = Number(data.netAmount) + Number(data.taxAmount);
+    data.totalCost = totalCost;
+    data.returnGrossAmount = Number(data.returnGrossAmount) || 0;
+    data.returnDiscountAmount = Number(data.returnDiscountAmount) || 0;
+    data.returnNetAmount = Number(data.returnNetAmount) || 0;
+    data.returnTaxAmount = Number(data.returnTaxAmount) || 0;
+    data.returnTotalAmount = Number(data.returnTotalAmount) || 0;
+    data.returnTotalCost = Number(data.returnTotalCost) || 0;
+    data.settlementAmount = Number(data.totalAmount) - Number(data.returnTotalAmount);
+  }
+
+  async validateBeforeCreate(data: DeepPartial<Order>, manager: EntityManager, req?: RequestContext): Promise<void> {
+    data.storeId = data.storeId || req?.storeContext?.storeId;
+    if (!data.storeId) throw new Error("store.required");
+    data.code = data.code || await generateCode(String(data.type || "sale"), data.storeId);
+    data.status = data.status || OrderStatus.DRAFT;
+    await this.loadSnapshots(data, manager);
+  }
+
+  async validateBeforeUpdate(id: string, data: DeepPartial<Order>, manager: EntityManager, req?: RequestContext): Promise<void> {
+    const current = await this.repository.findById(id, manager);
+    if (!current) throw new Error("order.not_found");
+    if (req?.storeContext?.storeId && current.storeId !== req.storeContext.storeId) throw new Error("store.scope.mismatch");
+    const merged = { ...current, ...data } as DeepPartial<Order>;
+    await this.loadSnapshots(merged, manager);
+    Object.assign(data, { type: current.type, storeId: current.storeId, lines: merged.lines, returnLines: merged.returnLines, partnerSnapshot: merged.partnerSnapshot, shipperSnapshot: merged.shipperSnapshot, grossAmount: merged.grossAmount, discountAmount: merged.discountAmount, netAmount: merged.netAmount, taxAmount: merged.taxAmount, totalAmount: merged.totalAmount, totalCost: merged.totalCost, settlementAmount: merged.settlementAmount });
+  }
+
+  private async recalculate(data: Order, manager: EntityManager): Promise<void> {
+    if (data.status !== OrderStatus.COMPLETED || !data.occurredAt) return;
+    const lines = await manager.getRepository(OrderLine).find({ where: [{ orderId: data.id }, { returnOrderId: data.id }] as any });
+    for (const productId of new Set(lines.map((line) => line.productId).filter((id): id is string => Boolean(id)))) {
+      await this.inventory.recalculateProductStoreFromDate(productId, data.storeId, data.occurredAt, manager);
+    }
+  }
+
+  async actionAfterCreate(data: Order, manager: EntityManager): Promise<void> { await this.recalculate(data, manager); }
+  async actionAfterUpdate(data: Order, manager: EntityManager): Promise<void> { await this.recalculate(data, manager); }
+
+  async update(id: string, data: DeepPartial<Order>, manager?: EntityManager, req?: RequestContext): Promise<Order | null> {
+    const hasLines = data.lines !== undefined || data.returnLines !== undefined;
+    const payload = { ...data } as any;
+
+    const run = async (em: EntityManager): Promise<Order | null> => {
+      await this.validateBeforeUpdate(id, payload, em, req);
+      const current = await this.repository.findById(id, em);
+      if (!current) throw new Error("order.not_found");
+      if (current.status === OrderStatus.COMPLETED && hasLines) throw new Error("order.completed_locked");
+
+      const preparedLines = hasLines ? {
+        lines: (payload.lines || []).map((line: any) => ({ ...line, id: undefined, orderId: id, returnOrderId: null })),
+        returnLines: (payload.returnLines || []).map((line: any) => ({ ...line, id: undefined, orderId: null, returnOrderId: id })),
+      } : undefined;
+      delete payload.lines;
+      delete payload.returnLines;
+      const updated = await this.repository.update(id, payload, em);
+      if (!updated) return null;
+
+      if (preparedLines) {
+        await em.getRepository(OrderLine).delete([{ orderId: id }, { returnOrderId: id }] as any);
+        if (preparedLines.lines.length) await em.getRepository(OrderLine).save(em.getRepository(OrderLine).create(preparedLines.lines as any));
+        if (preparedLines.returnLines.length) await em.getRepository(OrderLine).save(em.getRepository(OrderLine).create(preparedLines.returnLines as any));
+      }
+      const result = await this.repository.findById(id, em);
+      if (result) await this.actionAfterUpdate(result, em);
+      return result;
+    };
+
+    return manager ? run(manager) : withTransaction(run);
+  }
+
+  async complete(id: string, req?: RequestContext): Promise<Order | null> {
+    return this.update(id, { status: OrderStatus.COMPLETED, occurredAt: new Date() }, undefined, req);
+  }
+
+  async cancel(id: string, req?: RequestContext): Promise<Order | null> {
+    return this.update(id, { status: OrderStatus.CANCELED, canceledAt: new Date() }, undefined, req);
   }
 }

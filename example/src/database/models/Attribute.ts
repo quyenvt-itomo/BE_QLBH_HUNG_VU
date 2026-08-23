@@ -51,9 +51,9 @@ export class Attribute extends BaseEntity {
 
   @Index()
   @Column({ type: "uuid", nullable: true })
-  companyId: string | null;
+  storeId: string | null;
 
   @ManyToOne(() => Organization, { onDelete: "SET NULL" })
-  @JoinColumn({ name: "companyId" })
+  @JoinColumn({ name: "storeId" })
   company: Organization | null;
 }

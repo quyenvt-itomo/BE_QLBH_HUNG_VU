@@ -2,13 +2,13 @@ import { z } from "zod";
 import { BaseQuerySchema, DateTransform } from "@/shared/base/BaseValidator";
 
 export const VatDebtReportQuerySchema = BaseQuerySchema.extend({
-  companyId: z.uuid(),
+  storeId: z.uuid(),
   startAt: DateTransform.optional(),
   endAt: DateTransform.optional(),
 });
 
 export const VatDebtDetailQuerySchema = BaseQuerySchema.extend({
-  companyId: z.uuid(),
+  storeId: z.uuid(),
   startAt: DateTransform.optional(),
   endAt: DateTransform.optional(),
 });

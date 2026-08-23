@@ -1,0 +1,6 @@
+import { DebtAdjustment } from "@/database/models/DebtAdjustment";
+import { Partner } from "@/database/models/Partner";
+import { IsNull } from "typeorm";
+import { SimpleService } from "../_shared/simple.service";
+import { DebtAdjustmentRepository } from "./debtAdjustment.repository";
+export class DebtAdjustmentService extends SimpleService<DebtAdjustment> { constructor(repository: DebtAdjustmentRepository) { super(repository, "store", "debtadjustment"); } async validateBeforeCreate(data: any, manager: any, req?: any): Promise<void> { await super.validateBeforeCreate(data, manager, req); data.deltaAmount = Number(data.countedAmount || 0) - Number(data.expectedAmount || 0); if (data.partnerId) { const partner = await manager.getRepository(Partner).findOne({ where: { id: data.partnerId, deletedAt: IsNull() } as any }); if (!partner) throw new Error("partner.not_found"); data.partnerSnapshot = { id: partner.id, type: partner.type, groupId: partner.groupId, isOrganization: partner.isOrganization, name: partner.name, code: partner.code, email: partner.email, phone: partner.phone, taxCode: partner.taxCode, addresses: partner.addresses || [], representative: partner.representative, banks: partner.banks || [] }; } } }

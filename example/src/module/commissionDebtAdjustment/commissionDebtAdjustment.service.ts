@@ -15,7 +15,7 @@ import {
 export class CommissionDebtAdjustmentService extends BaseService<CommissionDebtAdjustment> {
   protected repository: CommissionDebtAdjustmentRepository;
   protected uniqueFields: (keyof CommissionDebtAdjustment)[] = ["code"];
-  protected uniqueScope?: (keyof CommissionDebtAdjustment)[] = ["companyId"];
+  protected uniqueScope?: (keyof CommissionDebtAdjustment)[] = ["storeId"];
   protected searchableFields = ["code"];
 
   constructor(

@@ -17,10 +17,10 @@ CREATE INDEX IF NOT EXISTS "IDX_inventory_transactions_ref"
   WHERE "deletedAt" IS NULL;
 
 CREATE INDEX IF NOT EXISTS "IDX_inventory_transactions_company"
-  ON inventory_transactions ("companyId", "occurredAt" DESC)
+  ON inventory_transactions ("storeId", "occurredAt" DESC)
   WHERE "deletedAt" IS NULL;
 
--- PartnerDebtTransaction: truy vấn công nợ đối tác
+-- DebtTransaction: truy vấn công nợ đối tác
 CREATE INDEX IF NOT EXISTS "IDX_debt_transactions_partner_side_time"
   ON debt_transactions ("partnerId", "side", "occurredAt" DESC)
   WHERE "deletedAt" IS NULL;
@@ -30,7 +30,7 @@ CREATE INDEX IF NOT EXISTS "IDX_debt_transactions_ref"
   WHERE "deletedAt" IS NULL;
 
 CREATE INDEX IF NOT EXISTS "IDX_debt_transactions_company"
-  ON debt_transactions ("companyId", "occurredAt" DESC)
+  ON debt_transactions ("storeId", "occurredAt" DESC)
   WHERE "deletedAt" IS NULL;
 
 -- CommissionDebtTransaction: truy vấn công nợ hoa hồng
@@ -43,7 +43,7 @@ CREATE INDEX IF NOT EXISTS "IDX_commission_debt_transactions_ref"
   WHERE "deletedAt" IS NULL;
 
 CREATE INDEX IF NOT EXISTS "IDX_commission_debt_transactions_company"
-  ON commission_debt_transactions ("companyId", "occurredAt" DESC)
+  ON commission_debt_transactions ("storeId", "occurredAt" DESC)
   WHERE "deletedAt" IS NULL;
 
 -- FundTransaction: truy vấn số dư quỹ
@@ -56,12 +56,12 @@ CREATE INDEX IF NOT EXISTS "IDX_fund_transactions_ref"
   WHERE "deletedAt" IS NULL;
 
 CREATE INDEX IF NOT EXISTS "IDX_fund_transactions_company"
-  ON fund_transactions ("companyId", "occurredAt" DESC)
+  ON fund_transactions ("storeId", "occurredAt" DESC)
   WHERE "deletedAt" IS NULL;
 
 -- VatDebtTransaction
 CREATE INDEX IF NOT EXISTS "IDX_vat_debt_transactions_company_time"
-  ON vat_debt_transactions ("companyId", "occurredAt" DESC)
+  ON vat_debt_transactions ("storeId", "occurredAt" DESC)
   WHERE "deletedAt" IS NULL;
 
 -- ============================================================================
@@ -69,15 +69,15 @@ CREATE INDEX IF NOT EXISTS "IDX_vat_debt_transactions_company_time"
 -- ============================================================================
 
 CREATE INDEX IF NOT EXISTS "IDX_stock_documents_company_type_status"
-  ON stock_documents ("companyId", "type", "status")
+  ON stock_documents ("storeId", "type", "status")
   WHERE "deletedAt" IS NULL;
 
 CREATE INDEX IF NOT EXISTS "IDX_stock_documents_code"
-  ON stock_documents ("companyId", "code")
+  ON stock_documents ("storeId", "code")
   WHERE "deletedAt" IS NULL;
 
 CREATE INDEX IF NOT EXISTS "IDX_stock_documents_effective_date"
-  ON stock_documents ("companyId", "effectiveDate" DESC)
+  ON stock_documents ("storeId", "effectiveDate" DESC)
   WHERE "deletedAt" IS NULL;
 
 -- StockDocumentLine
@@ -94,11 +94,11 @@ CREATE INDEX IF NOT EXISTS "IDX_stock_document_lines_product"
 -- ============================================================================
 
 CREATE INDEX IF NOT EXISTS "IDX_purchases_company_status"
-  ON purchases ("companyId", "status", "orderedAt" DESC)
+  ON purchases ("storeId", "status", "orderedAt" DESC)
   WHERE "deletedAt" IS NULL;
 
 CREATE INDEX IF NOT EXISTS "IDX_purchases_partner"
-  ON purchases ("companyId", "partnerId")
+  ON purchases ("storeId", "partnerId")
   WHERE "deletedAt" IS NULL;
 
 CREATE INDEX IF NOT EXISTS "IDX_purchase_lines_purchase"
@@ -106,11 +106,11 @@ CREATE INDEX IF NOT EXISTS "IDX_purchase_lines_purchase"
   WHERE "deletedAt" IS NULL;
 
 CREATE INDEX IF NOT EXISTS "IDX_purchase_quotations_company_status"
-  ON purchase_quotations ("companyId", "approveStatus")
+  ON purchase_quotations ("storeId", "approveStatus")
   WHERE "deletedAt" IS NULL;
 
 CREATE INDEX IF NOT EXISTS "IDX_purchase_requisitions_company_status"
-  ON purchase_requisitions ("companyId", "status")
+  ON purchase_requisitions ("storeId", "status")
   WHERE "deletedAt" IS NULL;
 
 -- ============================================================================
@@ -118,11 +118,11 @@ CREATE INDEX IF NOT EXISTS "IDX_purchase_requisitions_company_status"
 -- ============================================================================
 
 CREATE INDEX IF NOT EXISTS "IDX_orders_company_status_time"
-  ON orders ("companyId", "status", "orderedAt" DESC)
+  ON orders ("storeId", "status", "orderedAt" DESC)
   WHERE "deletedAt" IS NULL;
 
 CREATE INDEX IF NOT EXISTS "IDX_orders_partner"
-  ON orders ("companyId", "partnerId")
+  ON orders ("storeId", "partnerId")
   WHERE "deletedAt" IS NULL;
 
 CREATE INDEX IF NOT EXISTS "IDX_order_lines_order"
@@ -134,11 +134,11 @@ CREATE INDEX IF NOT EXISTS "IDX_order_lines_product"
   WHERE "deletedAt" IS NULL;
 
 CREATE INDEX IF NOT EXISTS "IDX_quotations_company_status"
-  ON quotations ("companyId", "approveStatus")
+  ON quotations ("storeId", "approveStatus")
   WHERE "deletedAt" IS NULL;
 
 CREATE INDEX IF NOT EXISTS "IDX_quotations_partner"
-  ON quotations ("companyId", "partnerId")
+  ON quotations ("storeId", "partnerId")
   WHERE "deletedAt" IS NULL;
 
 CREATE INDEX IF NOT EXISTS "IDX_quotation_lines_quotation"
@@ -146,7 +146,7 @@ CREATE INDEX IF NOT EXISTS "IDX_quotation_lines_quotation"
   WHERE "deletedAt" IS NULL;
 
 CREATE INDEX IF NOT EXISTS "IDX_quotation_requests_company_status"
-  ON quotation_requests ("companyId", "status")
+  ON quotation_requests ("storeId", "status")
   WHERE "deletedAt" IS NULL;
 
 -- ============================================================================
@@ -154,11 +154,11 @@ CREATE INDEX IF NOT EXISTS "IDX_quotation_requests_company_status"
 -- ============================================================================
 
 CREATE INDEX IF NOT EXISTS "IDX_productions_company_order"
-  ON productions ("companyId", "orderId", "status")
+  ON productions ("storeId", "orderId", "status")
   WHERE "deletedAt" IS NULL;
 
 CREATE INDEX IF NOT EXISTS "IDX_productions_factory"
-  ON productions ("companyId", "factoryId")
+  ON productions ("storeId", "factoryId")
   WHERE "deletedAt" IS NULL;
 
 CREATE INDEX IF NOT EXISTS "IDX_production_materials_production"
@@ -174,11 +174,11 @@ CREATE INDEX IF NOT EXISTS "IDX_production_receivers_production"
 -- ============================================================================
 
 CREATE INDEX IF NOT EXISTS "IDX_invoices_company_partner"
-  ON invoices ("companyId", "partnerId")
+  ON invoices ("storeId", "partnerId")
   WHERE "deletedAt" IS NULL;
 
 CREATE INDEX IF NOT EXISTS "IDX_invoices_company_direction"
-  ON invoices ("companyId", "direction")
+  ON invoices ("storeId", "direction")
   WHERE "deletedAt" IS NULL;
 
 CREATE INDEX IF NOT EXISTS "IDX_invoice_allocations_invoice"
@@ -186,15 +186,15 @@ CREATE INDEX IF NOT EXISTS "IDX_invoice_allocations_invoice"
   WHERE "deletedAt" IS NULL;
 
 CREATE INDEX IF NOT EXISTS "IDX_income_expenses_company_time"
-  ON income_expenses ("companyId", "occurredAt" DESC)
+  ON income_expenses ("storeId", "occurredAt" DESC)
   WHERE "deletedAt" IS NULL;
 
 CREATE INDEX IF NOT EXISTS "IDX_income_expenses_fund"
-  ON income_expenses ("companyId", "fundId")
+  ON income_expenses ("storeId", "fundId")
   WHERE "deletedAt" IS NULL;
 
 CREATE INDEX IF NOT EXISTS "IDX_payment_requests_company_status"
-  ON payment_requests ("companyId", "status")
+  ON payment_requests ("storeId", "status")
   WHERE "deletedAt" IS NULL;
 
 -- ============================================================================
@@ -203,16 +203,16 @@ CREATE INDEX IF NOT EXISTS "IDX_payment_requests_company_status"
 
 -- Product
 CREATE INDEX IF NOT EXISTS "IDX_products_company_type"
-  ON products ("companyId", "type")
+  ON products ("storeId", "type")
   WHERE "deletedAt" IS NULL;
 
 CREATE INDEX IF NOT EXISTS "IDX_products_code"
-  ON products ("companyId", "code")
+  ON products ("storeId", "code")
   WHERE "deletedAt" IS NULL;
 
 -- Partner
 CREATE INDEX IF NOT EXISTS "IDX_partners_company_type"
-  ON partners ("companyId", "type")
+  ON partners ("storeId", "type")
   WHERE "deletedAt" IS NULL;
 
 CREATE INDEX IF NOT EXISTS "IDX_partner_contacts_partner"
@@ -221,17 +221,17 @@ CREATE INDEX IF NOT EXISTS "IDX_partner_contacts_partner"
 
 -- Employee
 CREATE INDEX IF NOT EXISTS "IDX_employees_company"
-  ON employees ("companyId")
+  ON employees ("storeId")
   WHERE "deletedAt" IS NULL;
 
 -- Warehouse
 CREATE INDEX IF NOT EXISTS "IDX_warehouses_company"
-  ON warehouses ("companyId")
+  ON warehouses ("storeId")
   WHERE "deletedAt" IS NULL;
 
 -- Fund
 CREATE INDEX IF NOT EXISTS "IDX_funds_company"
-  ON funds ("companyId")
+  ON funds ("storeId")
   WHERE "deletedAt" IS NULL;
 
 -- ============================================================================
@@ -243,11 +243,11 @@ CREATE INDEX IF NOT EXISTS "IDX_warehouse_transfers_warehouses"
   WHERE "deletedAt" IS NULL;
 
 CREATE INDEX IF NOT EXISTS "IDX_inventory_adjustments_company"
-  ON inventory_adjustments ("companyId", "status")
+  ON inventory_adjustments ("storeId", "status")
   WHERE "deletedAt" IS NULL;
 
 CREATE INDEX IF NOT EXISTS "IDX_inventory_conversions_company"
-  ON inventory_conversions ("companyId", "status")
+  ON inventory_conversions ("storeId", "status")
   WHERE "deletedAt" IS NULL;
 
 -- ============================================================================
@@ -263,7 +263,7 @@ CREATE INDEX IF NOT EXISTS "IDX_gate_logs_vehicle"
   WHERE "deletedAt" IS NULL;
 
 CREATE INDEX IF NOT EXISTS "IDX_gate_logs_company_time"
-  ON gate_logs ("companyId", "timeAt" DESC)
+  ON gate_logs ("storeId", "timeAt" DESC)
   WHERE "deletedAt" IS NULL;
 
 -- ============================================================================
@@ -275,7 +275,7 @@ CREATE INDEX IF NOT EXISTS "IDX_company_users_user"
   WHERE "deletedAt" IS NULL;
 
 CREATE INDEX IF NOT EXISTS "IDX_company_users_company"
-  ON company_users ("companyId", "roleId")
+  ON company_users ("storeId", "roleId")
   WHERE "deletedAt" IS NULL;
 
 CREATE INDEX IF NOT EXISTS "IDX_login_approvals_user_device"
@@ -286,8 +286,8 @@ CREATE INDEX IF NOT EXISTS "IDX_login_approvals_user_device"
 -- 11. INDEX CHO OPERATION LOG
 -- ============================================================================
 
--- Migration: thêm cột companyId (nếu chưa có)
--- ALTER TABLE operation_logs ADD COLUMN "companyId" uuid NULL;
+-- Migration: thêm cột storeId (nếu chưa có)
+-- ALTER TABLE operation_logs ADD COLUMN "storeId" uuid NULL;
 
 CREATE INDEX IF NOT EXISTS "IDX_operation_logs_target"
   ON operation_logs ("targetEntity", "targetId")
@@ -302,7 +302,7 @@ CREATE INDEX IF NOT EXISTS "IDX_operation_logs_action"
   WHERE "deletedAt" IS NULL;
 
 CREATE INDEX IF NOT EXISTS "IDX_operation_logs_company"
-  ON operation_logs ("companyId", "createdAt" DESC)
+  ON operation_logs ("storeId", "createdAt" DESC)
   WHERE "deletedAt" IS NULL;
 
 -- ============================================================================
@@ -314,7 +314,7 @@ CREATE INDEX IF NOT EXISTS "IDX_user_notifications_user_read"
   WHERE "deletedAt" IS NULL;
 
 CREATE INDEX IF NOT EXISTS "IDX_notifications_company"
-  ON notifications ("companyId", "createdAt" DESC)
+  ON notifications ("storeId", "createdAt" DESC)
   WHERE "deletedAt" IS NULL;
 
 -- ============================================================================
@@ -322,7 +322,7 @@ CREATE INDEX IF NOT EXISTS "IDX_notifications_company"
 -- ============================================================================
 
 CREATE INDEX IF NOT EXISTS "IDX_shipping_plans_company"
-  ON shipping_plans ("companyId", "status")
+  ON shipping_plans ("storeId", "status")
   WHERE "deletedAt" IS NULL;
 
 -- ============================================================================

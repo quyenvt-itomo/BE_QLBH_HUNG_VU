@@ -20,7 +20,7 @@ interface UnitPricePair {
 export class ProductService extends BaseService<Product> {
   protected repository: ProductRepository;
   protected uniqueFields: (keyof Product)[] = ["code"];
-  protected uniqueScope?: (keyof Product)[] = ["companyId"];
+  protected uniqueScope?: (keyof Product)[] = ["storeId"];
   protected searchableFields = ["name", "code", "note"];
 
   private _oldProductForPriceHistory: Product | null = null;
@@ -226,9 +226,9 @@ export class ProductService extends BaseService<Product> {
       .leftJoinAndSelect("product.extraUnits", "eu")
       .leftJoinAndSelect("eu.unit", "euUnit");
 
-    const companyId = req?.companyContext?.companyId;
-    if (companyId) {
-      productQb.andWhere("product.companyId = :companyId", { companyId });
+    const storeId = req?.storeContext?.storeId;
+    if (storeId) {
+      productQb.andWhere("product.storeId = :storeId", { storeId });
     }
     if (type) {
       productQb.andWhere("product.type = :type", { type });

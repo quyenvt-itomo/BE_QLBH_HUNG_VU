@@ -22,13 +22,13 @@ export interface FifoData {
 }
 
 @Entity("inventory_transactions")
-@Index(["companyId", "occurredAt"])
+@Index(["storeId", "occurredAt"])
 @Index(["productId", "warehouseId", "occurredAt"])
 @Index(["refType", "refId"])
 export class InventoryTransaction extends BaseEntity {
   @Column({ type: "uuid" })
   @Index()
-  companyId: string;
+  storeId: string;
 
   @Column({ type: "timestamptz" })
   occurredAt: Date;

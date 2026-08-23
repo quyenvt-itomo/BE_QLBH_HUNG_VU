@@ -27,7 +27,6 @@ export class ProductRouter {
     this.router.get(
       "/price-history",
       zodValidate(ProductQuerySchema, "query"),
-      permissionMiddleware("priceHistory", "read"),
       this.controller.getPriceHistories,
     );
 
@@ -70,15 +69,5 @@ export class ProductRouter {
 
   public getRouter(): Router {
     return this.router;
-  }
-
-  public getPublicRouter(): Router {
-    const publicRouter = Router();
-    publicRouter.get(
-      "/",
-      zodValidate(ProductQuerySchema, "query"),
-      this.controller.getPublicProducts,
-    );
-    return publicRouter;
   }
 }

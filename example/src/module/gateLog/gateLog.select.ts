@@ -4,7 +4,7 @@ import { FindOptionsRelations, FindOptionsSelect } from "typeorm";
 
 export const GateLogSelectFull: FindOptionsSelect<GateLog> = {
   ...BaseSelect,
-  companyId: true,
+  storeId: true,
   code: true,
   timeAt: true,
   type: true,

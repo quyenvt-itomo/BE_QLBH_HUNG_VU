@@ -37,7 +37,7 @@ import {
 export class PurchaseService extends BaseService<Purchase> {
   protected repository: PurchaseRepository;
   protected uniqueFields: (keyof Purchase)[] = ["code"];
-  protected uniqueScope?: (keyof Purchase)[] = ["companyId"];
+  protected uniqueScope?: (keyof Purchase)[] = ["storeId"];
   protected searchableFields = ["code", "note"];
   protected timeField: keyof Purchase = "orderedAt";
 
@@ -256,10 +256,10 @@ export class PurchaseService extends BaseService<Purchase> {
       const toleranceRate = Number(purchase.toleranceRate) || 0;
 
       const allWithinTolerance = lines.every((line) => {
-        const qty = line.quantity || 0;
-        if (!qty) return true;
+        const quantity = line.quantity || 0;
+        if (!quantity) return true;
         const delivered = deliveredByLine.get(line.id) || 0;
-        const ratio = (delivered / qty) * 100;
+        const ratio = (delivered / quantity) * 100;
         return ratio >= 100 - toleranceRate && ratio <= 100 + toleranceRate;
       });
 

@@ -1,0 +1,1 @@
+export const OTP_TOKEN_TYPES = { Repository: Symbol.for("OtpTokenRepository"), Service: Symbol.for("OtpTokenService"), Controller: Symbol.for("OtpTokenController"), Router: Symbol.for("OtpTokenRouter") };

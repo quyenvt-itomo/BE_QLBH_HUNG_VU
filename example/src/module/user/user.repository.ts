@@ -18,17 +18,17 @@ export class UserRepository extends BaseRepository<User> {
     options: IFindPaginationOptions<User>,
   ): Promise<void> {
     const alias = qb.alias;
-    const { companyId } = options;
+    const { storeId } = options;
 
     qb.andWhere(
       `(${alias}.username NOT ILIKE :admin OR ${alias}.username IS NULL)`,
       { admin: "%admin%" },
     );
 
-    if (companyId) {
-      // chỉ lấy những người dùng được phân quyền trong công ty này (join vowis relationship companyUsers, phỉa tồn tại 1 bản ghi có companyId này)
-      qb.innerJoin(`${alias}.companyUsers`, "cu", "cu.companyId = :companyId", {
-        companyId,
+    if (storeId) {
+      // chỉ lấy những người dùng được phân quyền trong công ty này (join vowis relationship companyUsers, phỉa tồn tại 1 bản ghi có storeId này)
+      qb.innerJoin(`${alias}.companyUsers`, "cu", "cu.storeId = :storeId", {
+        storeId,
       });
     }
   }

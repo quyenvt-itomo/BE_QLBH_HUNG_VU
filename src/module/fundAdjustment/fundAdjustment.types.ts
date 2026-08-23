@@ -1,6 +1,1 @@
-export const FUND_ADJUSTMENT_TYPES = {
-  FundAdjustmentController: Symbol.for("FundAdjustmentController"),
-  FundAdjustmentService: Symbol.for("FundAdjustmentService"),
-  FundAdjustmentRepository: Symbol.for("FundAdjustmentRepository"),
-  FundAdjustmentRouter: Symbol.for("FundAdjustmentRouter"),
-};
+export const FUND_ADJUSTMENT_TYPES = { Repository: Symbol.for("FundAdjustmentRepository"), Service: Symbol.for("FundAdjustmentService"), Controller: Symbol.for("FundAdjustmentController"), Router: Symbol.for("FundAdjustmentRouter") };

@@ -16,10 +16,10 @@ export class VatDebtReportController {
 
   getReport = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const companyId = req.companyContext?.companyId;
+      const storeId = req.storeContext?.storeId;
       const query = {
         ...(req.query as unknown as VatDebtReportQueryDto),
-        companyId,
+        storeId,
       } as VatDebtReportQueryDto;
       const result = await this.service.getReport(query);
       return res.status(result.statusCode).json(result);
@@ -30,10 +30,10 @@ export class VatDebtReportController {
 
   getDetail = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const companyId = req.companyContext?.companyId;
+      const storeId = req.storeContext?.storeId;
       const query = {
         ...(req.query as unknown as VatDebtDetailQueryDto),
-        companyId,
+        storeId,
       } as VatDebtDetailQueryDto;
       const result = await this.service.getDetail(query);
       return res.status(result.statusCode).json(result);

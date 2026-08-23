@@ -14,7 +14,7 @@ import { LoginApprovalQueryDto } from "./loginApproval.validator";
 export const LoginApprovalSelect: FindOptionsSelect<LoginApproval> = {
   id: true,
   userId: true,
-  companyId: true,
+  storeId: true,
   deviceId: true,
   deviceInfo: true,
   status: true,
@@ -40,11 +40,11 @@ export class LoginApprovalRepository extends BaseRepository<LoginApproval> {
     options: IFindPaginationOptions<LoginApproval>,
   ): Promise<void> {
     const alias = qb.alias;
-    const { companyId, userId, status } =
+    const { storeId, userId, status } =
       (options?.moreQuery as LoginApprovalQueryDto) || {};
 
-    if (companyId) {
-      qb.andWhere(`${alias}.companyId = :companyId`, { companyId });
+    if (storeId) {
+      qb.andWhere(`${alias}.storeId = :storeId`, { storeId });
     }
     if (userId) {
       qb.andWhere(`${alias}.userId = :userId`, { userId });

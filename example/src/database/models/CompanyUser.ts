@@ -9,7 +9,7 @@ import { Role } from "./company/Role";
 @Entity("company_users")
 export class CompanyUser extends BaseEntity {
   @Column({ type: "uuid" })
-  companyId: string;
+  storeId: string;
 
   @Column({ type: "uuid" })
   userId: string;
@@ -24,7 +24,7 @@ export class CompanyUser extends BaseEntity {
   @ManyToOne(() => Organization, (org) => org.companyUsers, {
     onDelete: "CASCADE",
   })
-  @JoinColumn({ name: "companyId" })
+  @JoinColumn({ name: "storeId" })
   company: Organization;
 
   @ManyToOne(() => User, (user) => user.companyUsers, {

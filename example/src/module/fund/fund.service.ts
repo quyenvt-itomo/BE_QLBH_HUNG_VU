@@ -11,7 +11,7 @@ import { Request } from "express";
 export class FundService extends BaseService<Fund> {
   protected repository: FundRepository;
   protected uniqueFields: (keyof Fund)[] = ["code"];
-  protected uniqueScope?: (keyof Fund)[] = ["companyId"];
+  protected uniqueScope?: (keyof Fund)[] = ["storeId"];
   protected searchableFields = ["code", "name"];
 
   constructor(

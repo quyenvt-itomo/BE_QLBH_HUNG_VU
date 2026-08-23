@@ -15,13 +15,13 @@ export enum CommissionDebtRefTypeEnum {
  * Idempotent qua (refType, refId).
  */
 @Entity("commission_debt_transactions")
-@Index(["companyId", "occurredAt"])
+@Index(["storeId", "occurredAt"])
 @Index(["partnerContactId", "occurredAt"])
 @Index(["refType", "refId"])
 export class CommissionDebtTransaction extends BaseEntity {
   @Column({ type: "uuid" })
   @Index()
-  companyId: string;
+  storeId: string;
 
   @Column({ type: "timestamptz" })
   occurredAt: Date;

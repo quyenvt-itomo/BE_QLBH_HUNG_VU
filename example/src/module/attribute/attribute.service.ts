@@ -70,7 +70,7 @@ export class AttributeService extends BaseService<Attribute> {
     entity: Attribute,
     req?: RequestContext,
   ): Promise<ActionValue> {
-    if (entity.isDefault || entity.companyId === null)
+    if (entity.isDefault || entity.storeId === null)
       return {
         can: false,
         reason: "Không thể sửa thuộc tính mặc định của hệ thống",
@@ -83,7 +83,7 @@ export class AttributeService extends BaseService<Attribute> {
     entity: Attribute,
     req?: RequestContext,
   ): Promise<ActionValue> {
-    if (entity.isDefault || entity.companyId === null)
+    if (entity.isDefault || entity.storeId === null)
       return {
         can: false,
         reason: "Không thể xóa thuộc tính mặc định của hệ thống",

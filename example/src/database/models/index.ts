@@ -87,7 +87,7 @@ import { Invoice } from "./company/Invoice";
 import { InvoiceAllocation } from "./company/InvoiceAllocation";
 
 // --- Kế toán: Công nợ ---
-import { PartnerDebtTransaction } from "./company/PartnerDebtTransaction";
+import { DebtTransaction } from "./company/DebtTransaction";
 import { PartnerDebtAdjustment } from "./company/PartnerDebtAdjustment";
 import { PartnerDebtOffset } from "./company/PartnerDebtOffset";
 import { PartnerDebtOffsetLine } from "./company/PartnerDebtOffsetLine";
@@ -200,7 +200,7 @@ export const entities = [
   InvoiceAllocation,
 
   // Kế toán: Công nợ
-  PartnerDebtTransaction,
+  DebtTransaction,
   PartnerDebtAdjustment,
   PartnerDebtOffset,
   PartnerDebtOffsetLine,

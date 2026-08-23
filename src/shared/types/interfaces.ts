@@ -109,11 +109,10 @@ export interface UserContext {
 }
 
 export interface CompanyContext {
-  companyId: string;
+  storeId: string;
   companyName: string;
   companyCode: string;
-  /** Store context is the canonical scope; companyId is a compatibility alias. */
-  storeId?: string;
+  /** Store context is the canonical scope; storeId is a compatibility alias. */
   companyType?: string;
 }
 
@@ -163,7 +162,7 @@ export interface RequestContext {
   query?: any;
   permissions?: PermissionStructure;
   userContext?: UserContext;
-  companyContext?: CompanyContext;
+  storeContext?: CompanyContext;
 }
 
 export interface AuthTokens {

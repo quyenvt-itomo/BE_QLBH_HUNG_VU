@@ -113,7 +113,7 @@ export const BaseQuerySchema = z.object({
   isFinished: zBooleanLike(),
   isActive: zBooleanLike(),
   warehouseId: z.uuid().optional(),
-  companyId: z.uuid().optional(),
+  storeId: z.uuid().optional(),
 
   // Common array ID filters
   ids: zArrayable(z.uuid()),

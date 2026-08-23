@@ -71,7 +71,7 @@ type EmployeeImportData = Partial<
     | "note"
     | "workingOrganizationId"
     | "jobPositionId"
-    | "companyId"
+    | "storeId"
   >
 >;
 
@@ -115,8 +115,8 @@ export class EmployeeExcelProcessor {
       const deductionMap = this.parseDeductions(workbook);
       const contractMap = this.parseContracts(workbook);
 
-      const companyId = req.companyContext?.companyId;
-      if (!companyId) throw new BadRequestError("Thiếu thông tin công ty");
+      const storeId = req.storeContext?.storeId;
+      if (!storeId) throw new BadRequestError("Thiếu thông tin công ty");
 
       for (let i = 0; i < rows.length; i++) {
         const row = rows[i];
@@ -144,7 +144,7 @@ export class EmployeeExcelProcessor {
           let jobPositionId: string | null = null;
           if (row.jobPositionName) {
             const jp = await this.jobPositionService.findOne({
-              where: { name: ILike(row.jobPositionName), companyId },
+              where: { name: ILike(row.jobPositionName), storeId },
             });
             jobPositionId = jp?.id || null;
           }
@@ -211,7 +211,7 @@ export class EmployeeExcelProcessor {
           let savedEmployee: Employee | null = null;
           await withTransaction(async (manager) => {
             const existing = await this.employeeService.findOne({
-              where: { code: row.code, companyId },
+              where: { code: row.code, storeId },
             });
             if (existing && options.duplicateHandling === "update") {
               savedEmployee = await this.employeeService.update(
@@ -226,7 +226,7 @@ export class EmployeeExcelProcessor {
             } else if (existing && options.duplicateHandling === "stop") {
               throw new Error(`Mã ${row.code} đã tồn tại`);
             } else {
-              data.companyId = companyId;
+              data.storeId = storeId;
               savedEmployee = await this.employeeService.create(
                 data,
                 manager,

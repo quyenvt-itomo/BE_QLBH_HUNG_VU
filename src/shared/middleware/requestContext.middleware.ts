@@ -3,15 +3,15 @@ import logger from "../utils/logger";
 import { injectCompanyIdToArrays } from "../utils/utils";
 
 /**
- * Middleware bơm thông tin người dùng (creator/updater) và companyId vào dữ liệu request.
+ * Middleware bơm thông tin người dùng (creator/updater) và storeId vào dữ liệu request.
  *
  * ⚠️ PHẢI đặt SAU `authorization` trong chuỗi middleware vì phụ thuộc `req.userContext`.
  *
- * - Với GET → scope = "query", chỉ inject `companyId` (nếu user STORE), KHÔNG gắn audit fields.
+ * - Với GET → scope = "query", chỉ inject `storeId` (nếu user STORE), KHÔNG gắn audit fields.
  * - Với các method còn lại → scope = "body":
  *    + Gắn creatorId/updaterId + snapshot
- *    + Gắn companyId (nếu user STORE) - không ghi đè companyId FE gửi nếu user là admin/system
- *    + Inject companyId xuống các array con (items, variants, options, ...)
+ *    + Gắn storeId (nếu user STORE) - không ghi đè storeId FE gửi nếu user là admin/system
+ *    + Inject storeId xuống các array con (items, variants, options, ...)
  *    + Hỗ trợ cả body là object (create/update) lẫn body là `{ data: T[] }` (createMany)
  */
 export const injectRequestContext = (
@@ -21,7 +21,7 @@ export const injectRequestContext = (
 ): void => {
   try {
     const userCtx = req.userContext;
-    const companyCtx = req.companyContext;
+    const companyCtx = req.storeContext;
 
     const scope = req.method === "GET" ? "query" : "body";
     const source = req[scope] as any;
@@ -38,14 +38,14 @@ export const injectRequestContext = (
         }
       }
 
-      // Ưu tiên companyId user STORE; nếu không có thì giữ companyId FE gửi (admin/system)
+      // Ưu tiên storeId user STORE; nếu không có thì giữ storeId FE gửi (admin/system)
       if (companyCtx) {
-        next.companyId = next.companyId || companyCtx.companyId;
+        next.storeId = next.storeId || companyCtx.storeId;
       }
 
-      // Inject companyId xuống các array con (chỉ áp dụng cho body)
-      if (scope === "body" && next.companyId) {
-        next = injectCompanyIdToArrays(next, next.companyId);
+      // Inject storeId xuống các array con (chỉ áp dụng cho body)
+      if (scope === "body" && next.storeId) {
+        next = injectCompanyIdToArrays(next, next.storeId);
       }
 
       return next;

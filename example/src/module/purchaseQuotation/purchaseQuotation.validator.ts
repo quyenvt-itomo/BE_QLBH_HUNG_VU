@@ -19,7 +19,7 @@ export const PurchaseQuotationLineSchema = BaseLineSchema.extend({
 });
 
 export const CreatePurchaseQuotationSchema = BaseCreateSchema.extend({
-  companyId: z.uuid(),
+  storeId: z.uuid(),
   timeAt: DateTransform.optional(),
   staffId: z.uuid().nullish(),
   supplierId: z.uuid().nullish(),

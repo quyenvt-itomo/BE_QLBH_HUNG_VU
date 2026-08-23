@@ -166,7 +166,7 @@ export class NotificationService extends BaseService<Notification> {
    * Tìm tất cả userIds của người dùng trong một công ty có quyền cụ thể trên một module.
    */
   async findUsersWithPermission(
-    companyId: string,
+    storeId: string,
     module: Module,
     permission: string,
   ): Promise<string[]> {
@@ -176,12 +176,12 @@ export class NotificationService extends BaseService<Notification> {
         SELECT DISTINCT cu."userId"
         FROM company_users cu
         INNER JOIN roles r ON r.id = cu."roleId" AND r."deletedAt" IS NULL
-        WHERE cu."companyId" = $1
+        WHERE cu."storeId" = $1
           AND cu."deletedAt" IS NULL
           AND r.permissions->>$2 IS NOT NULL
           AND r.permissions->$2 ? $3
       `,
-        [companyId, module, permission],
+        [storeId, module, permission],
       );
 
       return (rows as any[]).map((r) => r.userId);
@@ -199,18 +199,18 @@ export class NotificationService extends BaseService<Notification> {
     entity: {
       id: string;
       code: string;
-      companyId?: string | null;
+      storeId?: string | null;
       creatorId?: string | null;
     },
     module: Module,
     notificationType: NotificationType,
   ): Promise<void> {
     try {
-      const companyId = entity.companyId;
-      if (!companyId) return;
+      const storeId = entity.storeId;
+      if (!storeId) return;
 
       const userIds = await this.findUsersWithPermission(
-        companyId,
+        storeId,
         module,
         "approve",
       );
@@ -309,7 +309,7 @@ export class NotificationService extends BaseService<Notification> {
     entity: {
       id: string;
       code: string;
-      companyId?: string;
+      storeId?: string;
       staffId?: string | null;
     },
     module: Module,
@@ -318,8 +318,8 @@ export class NotificationService extends BaseService<Notification> {
     excludeUserId?: string | null,
   ): Promise<void> {
     try {
-      const companyId = entity.companyId;
-      if (!companyId) return;
+      const storeId = entity.storeId;
+      if (!storeId) return;
 
       const staffId = entity.staffId;
       if (!staffId) return;
@@ -329,13 +329,13 @@ export class NotificationService extends BaseService<Notification> {
         SELECT DISTINCT cu."userId"
         FROM company_users cu
         INNER JOIN roles r ON r.id = cu."roleId" AND r."deletedAt" IS NULL
-        WHERE cu."companyId" = $1
+        WHERE cu."storeId" = $1
           AND cu."employeeId" = $2
           AND cu."deletedAt" IS NULL
           AND r.permissions->>$3 IS NOT NULL
           AND r.permissions->$3 ? $4
       `,
-        [companyId, staffId, module, "read"],
+        [storeId, staffId, module, "read"],
       );
 
       const userIds = (rows as any[]).map((r) => r.userId);

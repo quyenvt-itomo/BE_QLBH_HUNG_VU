@@ -74,7 +74,7 @@ export class StockDocumentService extends BaseService<StockDocument> {
   protected repository: StockDocumentRepository;
   protected targetEntity = "StockDocument";
   protected uniqueFields: (keyof StockDocument)[] = ["code"];
-  protected uniqueScope?: (keyof StockDocument)[] = ["companyId"];
+  protected uniqueScope?: (keyof StockDocument)[] = ["storeId"];
   protected searchableFields = ["code", "vehiclePlate", "note"];
   protected timeField: keyof StockDocument = "effectiveDate";
 
@@ -389,8 +389,8 @@ export class StockDocumentService extends BaseService<StockDocument> {
     manager: EntityManager,
   ): Promise<void> {
     try {
-      const companyId = data.companyId;
-      if (!companyId || !data.id) return;
+      const storeId = data.storeId;
+      if (!storeId || !data.id) return;
 
       const warehouse = data.warehouseId
         ? await this.warehouseRepository.getById(data.warehouseId, manager)
@@ -411,7 +411,7 @@ export class StockDocumentService extends BaseService<StockDocument> {
         {
           id: data.id,
           code: data.code,
-          companyId,
+          storeId,
           staffId: keeperEmployeeId,
           kind: this.describeDocumentKind(data.type),
           toFrom: isExport ? "từ" : "tới",
@@ -492,7 +492,7 @@ export class StockDocumentService extends BaseService<StockDocument> {
     manager?: EntityManager,
     req?: RequestContext,
   ): Promise<StockDocument | null> {
-    const companyId = req?.companyContext?.companyId;
+    const storeId = req?.storeContext?.storeId;
     const trashFileIds = this.collectTrashFileIds(data as any);
 
     const run = async (trxManager: EntityManager) => {
@@ -502,11 +502,7 @@ export class StockDocumentService extends BaseService<StockDocument> {
 
       // Lấy document hiện tại để biết type & status thực tế
       const existingDoc = await this.repository.getById(id, trxManager);
-      if (
-        companyId &&
-        existingDoc.companyId &&
-        existingDoc.companyId !== companyId
-      ) {
+      if (storeId && existingDoc.storeId && existingDoc.storeId !== storeId) {
         throw new BadRequestError(
           "Dữ liệu không thuộc công ty của bạn, không thể cập nhật",
         );
@@ -711,7 +707,7 @@ export class StockDocumentService extends BaseService<StockDocument> {
 
     const gateLogRepo = this.repository.getGateLogRepository(manager);
     await gateLogRepo.save({
-      companyId: doc.companyId,
+      storeId: doc.storeId,
       code,
       timeAt: doc.effectiveDate ?? new Date(),
       type: gateLogType,

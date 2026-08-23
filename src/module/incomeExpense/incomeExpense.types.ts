@@ -1,6 +1,1 @@
-export const INCOME_EXPENSE_TYPES = {
-  IncomeExpenseController: Symbol.for("IncomeExpenseController"),
-  IncomeExpenseService: Symbol.for("IncomeExpenseService"),
-  IncomeExpenseRepository: Symbol.for("IncomeExpenseRepository"),
-  IncomeExpenseRouter: Symbol.for("IncomeExpenseRouter"),
-};
+export const INCOME_EXPENSE_TYPES = { Repository: Symbol.for("IncomeExpenseRepository"), Service: Symbol.for("IncomeExpenseService"), Controller: Symbol.for("IncomeExpenseController"), Router: Symbol.for("IncomeExpenseRouter") };

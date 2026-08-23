@@ -4,15 +4,18 @@ import { PARTNER_CONTACT_TYPES } from "./partnerContact.types";
 import { BaseController } from "@/shared/base/BaseController";
 import { PartnerContact } from "@/database/models/PartnerContact";
 
+/**
+ * PartnerContact Controller - Tenant Entity
+ */
 @injectable()
 export class PartnerContactController extends BaseController<PartnerContact> {
   protected service: PartnerContactService;
 
   constructor(
     @inject(PARTNER_CONTACT_TYPES.PartnerContactService)
-    service: PartnerContactService,
+    partnerContactService: PartnerContactService,
   ) {
     super();
-    this.service = service;
+    this.service = partnerContactService;
   }
 }

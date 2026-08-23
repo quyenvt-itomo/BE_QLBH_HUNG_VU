@@ -1,6 +1,1 @@
-export const USER_TYPES = {
-  UserController: Symbol.for("UserController"),
-  UserService: Symbol.for("UserService"),
-  UserRepository: Symbol.for("UserRepository"),
-  UserRouter: Symbol.for("UserRouter"),
-};
+export const USER_TYPES = { Repository: Symbol.for("UserRepository"), Service: Symbol.for("UserService"), Controller: Symbol.for("UserController"), Router: Symbol.for("UserRouter") };

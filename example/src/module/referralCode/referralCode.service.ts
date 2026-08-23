@@ -74,11 +74,11 @@ export class ReferralCodeService extends BaseService<ReferralCode> {
     if (!canCreate.can)
       throw new BadRequestError(canCreate.reason, "purchaseRequisitionId");
 
-    const companyId = req?.companyContext?.companyId;
+    const storeId = req?.storeContext?.storeId;
     // Kiểm tra đề nghị tồn tại và đã duyệt (dùng repository đã inject)
     const pr = await this.purchaseRequisitionRepository.findOne(
       {
-        where: { id: purchaseRequisitionId, companyId },
+        where: { id: purchaseRequisitionId, storeId },
       },
       manager,
     );
@@ -124,11 +124,11 @@ export class ReferralCodeService extends BaseService<ReferralCode> {
    */
   async validateAndResolve(
     id: string,
-    companyId: string,
+    storeId: string,
     manager?: EntityManager,
   ): Promise<ReferralCode> {
     const ref = await this.repository.findOne(
-      { where: { id, companyId } as any },
+      { where: { id, storeId } as any },
       manager,
     );
     if (!ref) throw new BadRequestError("Mã giới thiệu không hợp lệ");

@@ -1,0 +1,1 @@
+export const VAT_ADJUSTMENT_TYPES = { Repository: Symbol.for("VatAdjustmentRepository"), Service: Symbol.for("VatAdjustmentService"), Controller: Symbol.for("VatAdjustmentController"), Router: Symbol.for("VatAdjustmentRouter") };

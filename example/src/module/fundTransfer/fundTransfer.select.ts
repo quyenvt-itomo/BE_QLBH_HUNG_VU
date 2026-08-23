@@ -4,7 +4,7 @@ import { FindOptionsRelations, FindOptionsSelect } from "typeorm";
 
 export const FundTransferSelectFull: FindOptionsSelect<FundTransfer> = {
   ...BaseSelect,
-  companyId: true,
+  storeId: true,
   code: true,
   occurredAt: true,
   reason: true,

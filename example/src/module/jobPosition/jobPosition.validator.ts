@@ -8,7 +8,7 @@ import {
 } from "@/shared/base/BaseValidator";
 
 export const CreateJobPositionSchema = BaseCreateSchema.extend({
-  companyId: z.uuid(),
+  storeId: z.uuid(),
   code: BaseCodeSchema.optional(),
   name: z.string().trim().trim().max(255),
   level: z.string().trim().trim().max(255).nullish(),
@@ -23,7 +23,7 @@ export const UpdateJobPositionSchema = BaseUpdateSchema.extend({
 });
 
 export const JobPositionQuerySchema = BaseQuerySchema.extend({
-  companyId: z.uuid().optional(),
+  storeId: z.uuid().optional(),
   jobTitleId: z.uuid().optional(),
 });
 

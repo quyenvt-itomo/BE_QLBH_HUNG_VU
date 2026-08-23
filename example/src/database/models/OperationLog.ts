@@ -60,7 +60,7 @@ export class OperationLog extends BaseEntity {
   success: boolean;
 
   @Column({ type: "uuid", nullable: true, default: null })
-  companyId: string | null;
+  storeId: string | null;
 
   @Column({ type: "jsonb", nullable: true, default: null })
   error: OperationErrorItem | null;

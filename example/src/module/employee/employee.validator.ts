@@ -40,7 +40,7 @@ export const UpdateEmployeeContractSchema = CreateEmployeeContractSchema.extend(
 );
 
 export const CreateEmployeeSchema = BaseCreateSchema.extend({
-  companyId: z.uuid(),
+  storeId: z.uuid(),
   code: BaseCodeSchema.optional(),
   name: z.string().trim().max(255),
   gender: z.enum(Gender).nullish(),
@@ -101,7 +101,7 @@ export const UpdateEmployeeSchema = BaseUpdateSchema.extend({
 });
 
 export const EmployeeQuerySchema = BaseQuerySchema.extend({
-  companyId: z.uuid().optional(),
+  storeId: z.uuid().optional(),
   workingOrganizationId: z.uuid().optional(),
   jobPositionId: z.uuid().optional(),
   workingStatus: z.enum(WorkingStatusEnum).optional(),

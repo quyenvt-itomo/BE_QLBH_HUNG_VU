@@ -40,7 +40,7 @@ type CodeConfig = {
   prefix: string;
   length: number;
   resetPeriod: ResetPeriod;
-  /** true = mã toàn hệ thống, bỏ qua companyId dù có truyền. Mặc định false. */
+  /** true = mã toàn hệ thống, bỏ qua storeId dù có truyền. Mặc định false. */
   global?: boolean;
 };
 
@@ -299,14 +299,14 @@ async function getNextSequence(
 
 export const generateCode = async (
   type: string,
-  companyId?: string,
+  storeId?: string,
 ): Promise<string> => {
   try {
     const { prefix, length, resetPeriod = "none", global } = getConfig(type);
 
     const baseKey = type.toLowerCase();
-    // global entity: luôn dùng key toàn cục, bỏ qua companyId
-    const key = !global && companyId ? `${baseKey}_${companyId}` : baseKey;
+    // global entity: luôn dùng key toàn cục, bỏ qua storeId
+    const key = !global && storeId ? `${baseKey}_${storeId}` : baseKey;
 
     const { periodKey, codePrefix } = getPeriodInfo(resetPeriod);
 
@@ -330,7 +330,7 @@ export const generateCode = async (
 export async function getCode(req: Request, res: Response) {
   try {
     const type = req.query.type as string;
-    const companyId = req.query.companyId as string | undefined;
+    const storeId = req.query.storeId as string | undefined;
 
     if (!type) {
       return res.status(400).json({
@@ -339,7 +339,7 @@ export async function getCode(req: Request, res: Response) {
       });
     }
 
-    const code = await generateCode(type, companyId);
+    const code = await generateCode(type, storeId);
 
     return res.json({
       statusCode: 200,

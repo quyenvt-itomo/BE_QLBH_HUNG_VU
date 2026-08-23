@@ -1,6 +1,1 @@
-export const NOTIFICATION_TYPES = {
-  NotificationRepository: Symbol.for("NotificationRepository"),
-  NotificationService: Symbol.for("NotificationService"),
-  NotificationController: Symbol.for("NotificationController"),
-  NotificationRouter: Symbol.for("NotificationRouter"),
-};
+export const NOTIFICATION_TYPES = { Repository: Symbol.for("NotificationRepository"), Service: Symbol.for("NotificationService"), Controller: Symbol.for("NotificationController"), Router: Symbol.for("NotificationRouter") };

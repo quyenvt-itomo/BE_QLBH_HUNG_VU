@@ -7,7 +7,7 @@ import {
 } from "@/shared/constants/enum";
 
 @Entity("debt_transactions")
-export class PartnerDebtTransaction extends BaseEntity {
+export class DebtTransaction extends BaseEntity {
   @Column({ type: "timestamptz" })
   occurredAt: Date;
 

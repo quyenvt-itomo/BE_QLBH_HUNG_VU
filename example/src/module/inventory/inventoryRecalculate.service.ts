@@ -28,7 +28,7 @@ export interface InventoryTransactionParams {
   occurredAt: Date;
   amount?: number;
   unitCost?: number;
-  companyId: string;
+  storeId: string;
 }
 
 export interface InventoryState {
@@ -90,7 +90,7 @@ export class InventoryRecalculateService extends TransactionService {
       refType,
       refId,
       refCode,
-      companyId,
+      storeId,
     } = params;
 
     // 1. Lấy transaction gần nhất trước thời điểm này
@@ -113,7 +113,7 @@ export class InventoryRecalculateService extends TransactionService {
     const prevQty = prevTx ? Number(prevTx.quantityAfter) || 0 : 0;
     const prevValue = prevTx ? Number(prevTx.inventoryValueAfter) || 0 : 0;
 
-    const qty = Math.abs(quantity);
+    const quantity = Math.abs(quantity);
     let amount: number;
     let newFifo: FifoData[];
 
@@ -121,13 +121,13 @@ export class InventoryRecalculateService extends TransactionService {
       // Nhập kho: thêm vào cuối FIFO queue
       const unitPrice =
         unitCost ??
-        (paramAmount !== undefined ? Math.abs(paramAmount) / qty : 0);
-      amount = qty * unitPrice;
+        (paramAmount !== undefined ? Math.abs(paramAmount) / quantity : 0);
+      amount = quantity * unitPrice;
 
       newFifo = [
         ...prevFifo,
         {
-          quantity: qty,
+          quantity: quantity,
           unitPrice,
           occurredAt: occurredAt,
           refId: refId,
@@ -137,7 +137,7 @@ export class InventoryRecalculateService extends TransactionService {
       ];
     } else {
       // Xuất kho: tiêu thụ từ đầu FIFO queue
-      let remaining = qty;
+      let remaining = quantity;
       amount = 0;
       const consumed: FifoData[] = [];
 
@@ -156,14 +156,14 @@ export class InventoryRecalculateService extends TransactionService {
     }
 
     const sign = type === TransactionType.IN ? 1 : -1;
-    const quantityAfter = prevQty + sign * qty;
+    const quantityAfter = prevQty + sign * quantity;
     const inventoryValueAfter = prevValue + sign * amount;
 
     const tx = repo.create({
-      companyId: companyId,
+      storeId: storeId,
       productId: productId,
       warehouseId: warehouseId,
-      quantity: qty,
+      quantity: quantity,
       amount,
       type: type,
       refType: refType,
@@ -288,7 +288,7 @@ export class InventoryRecalculateService extends TransactionService {
       amount: number;
       unitCost: number;
       txType: TransactionType;
-      companyId: string;
+      storeId: string;
     }>
   > {
     const items: Array<{
@@ -303,7 +303,7 @@ export class InventoryRecalculateService extends TransactionService {
       amount: number;
       unitCost: number;
       txType: TransactionType;
-      companyId: string;
+      storeId: string;
     }> = [];
 
     // --- StockDocument IN (PURCHASE_RECEIPT, PRODUCTION_RECEIPT) ---
@@ -312,7 +312,7 @@ export class InventoryRecalculateService extends TransactionService {
       .select("sd.id", "refId")
       .addSelect("sd.code", "refCode")
       .addSelect('sd."actualImportDate"', "occurredAt")
-      .addSelect('sd."companyId"', "companyId")
+      .addSelect('sd."storeId"', "storeId")
       .addSelect("sd.type", "docType")
       .from("stock_documents", "sd")
       .innerJoin("stock_document_lines", "sdl", 'sdl."stockDocumentId" = sd.id')
@@ -349,7 +349,7 @@ export class InventoryRecalculateService extends TransactionService {
         .getRawMany();
 
       for (const line of lines) {
-        const qty = parseFloat(line.quantity) || 0;
+        const quantity = parseFloat(line.quantity) || 0;
         const unitCost = parseFloat(line.unitCost) || 0;
         const amount = parseFloat(line.amount) || 0;
 
@@ -363,11 +363,11 @@ export class InventoryRecalculateService extends TransactionService {
           occurredAt: new Date(doc.occurredAt),
           productId,
           warehouseId,
-          quantity: qty,
+          quantity: quantity,
           amount,
           unitCost,
           txType: TransactionType.IN,
-          companyId: doc.companyId,
+          storeId: doc.storeId,
         });
       }
     }
@@ -378,7 +378,7 @@ export class InventoryRecalculateService extends TransactionService {
       .select("sd.id", "refId")
       .addSelect("sd.code", "refCode")
       .addSelect('sd."actualExportDate"', "occurredAt")
-      .addSelect('sd."companyId"', "companyId")
+      .addSelect('sd."storeId"', "storeId")
       .addSelect("sd.type", "docType")
       .from("stock_documents", "sd")
       .innerJoin("stock_document_lines", "sdl", 'sdl."stockDocumentId" = sd.id')
@@ -401,7 +401,7 @@ export class InventoryRecalculateService extends TransactionService {
         .getRawMany();
 
       for (const line of lines) {
-        const qty = parseFloat(line.quantity) || 0;
+        const quantity = parseFloat(line.quantity) || 0;
         items.push({
           type: "STOCK_DOCUMENT",
           refType:
@@ -413,11 +413,11 @@ export class InventoryRecalculateService extends TransactionService {
           occurredAt: new Date(doc.occurredAt),
           productId,
           warehouseId,
-          quantity: qty,
+          quantity: quantity,
           amount: 0, // Will be calculated by FIFO
           unitCost: 0,
           txType: TransactionType.OUT,
-          companyId: doc.companyId,
+          storeId: doc.storeId,
         });
       }
     }
@@ -428,7 +428,7 @@ export class InventoryRecalculateService extends TransactionService {
       .select("wt.id", "refId")
       .addSelect("wt.code", "refCode")
       .addSelect('wt."importedAt"', "occurredAt")
-      .addSelect('wt."companyId"', "companyId")
+      .addSelect('wt."storeId"', "storeId")
       .from("warehouse_transfers", "wt")
       .innerJoin("warehouse_transfer_lines", "wtl", 'wtl."transferId" = wt.id')
       .where('wt."importedAt" IS NOT NULL')
@@ -448,7 +448,7 @@ export class InventoryRecalculateService extends TransactionService {
         .getRawMany();
 
       for (const line of lines) {
-        const qty = parseFloat(line.quantity) || 0;
+        const quantity = parseFloat(line.quantity) || 0;
         items.push({
           type: "WAREHOUSE_TRANSFER",
           refType: InventoryTransactionRefType.TRANSFER,
@@ -457,11 +457,11 @@ export class InventoryRecalculateService extends TransactionService {
           occurredAt: new Date(doc.occurredAt),
           productId,
           warehouseId,
-          quantity: qty,
+          quantity: quantity,
           amount: 0, // Will be calculated by FIFO
           unitCost: 0,
           txType: TransactionType.IN,
-          companyId: doc.companyId,
+          storeId: doc.storeId,
         });
       }
     }
@@ -472,7 +472,7 @@ export class InventoryRecalculateService extends TransactionService {
       .select("wt.id", "refId")
       .addSelect("wt.code", "refCode")
       .addSelect('wt."exportedAt"', "occurredAt")
-      .addSelect('wt."companyId"', "companyId")
+      .addSelect('wt."storeId"', "storeId")
       .from("warehouse_transfers", "wt")
       .innerJoin("warehouse_transfer_lines", "wtl", 'wtl."transferId" = wt.id')
       .where('wt."exportedAt" IS NOT NULL')
@@ -492,7 +492,7 @@ export class InventoryRecalculateService extends TransactionService {
         .getRawMany();
 
       for (const line of lines) {
-        const qty = parseFloat(line.quantity) || 0;
+        const quantity = parseFloat(line.quantity) || 0;
         items.push({
           type: "WAREHOUSE_TRANSFER",
           refType: InventoryTransactionRefType.TRANSFER,
@@ -501,11 +501,11 @@ export class InventoryRecalculateService extends TransactionService {
           occurredAt: new Date(doc.occurredAt),
           productId,
           warehouseId,
-          quantity: qty,
+          quantity: quantity,
           amount: 0,
           unitCost: 0,
           txType: TransactionType.OUT,
-          companyId: doc.companyId,
+          storeId: doc.storeId,
         });
       }
     }
@@ -516,7 +516,7 @@ export class InventoryRecalculateService extends TransactionService {
       .select("ia.id", "refId")
       .addSelect("ia.code", "refCode")
       .addSelect('ia."occurredAt"', "occurredAt")
-      .addSelect('ia."companyId"', "companyId")
+      .addSelect('ia."storeId"', "storeId")
       .from("inventory_adjustments", "ia")
       .innerJoin(
         "inventory_adjustment_lines",
@@ -560,7 +560,7 @@ export class InventoryRecalculateService extends TransactionService {
             amount: Math.abs(adjustmentAmount),
             unitCost,
             txType: isIn ? TransactionType.IN : TransactionType.OUT,
-            companyId: doc.companyId,
+            storeId: doc.storeId,
           });
         }
       }
@@ -588,7 +588,7 @@ export class InventoryRecalculateService extends TransactionService {
       amount: number;
       unitCost: number;
       txType: TransactionType;
-      companyId: string;
+      storeId: string;
     },
     manager: EntityManager,
   ): Promise<void> {
@@ -604,7 +604,7 @@ export class InventoryRecalculateService extends TransactionService {
         occurredAt: item.occurredAt,
         amount: item.amount,
         unitCost: item.unitCost,
-        companyId: item.companyId,
+        storeId: item.storeId,
       },
       manager,
     );

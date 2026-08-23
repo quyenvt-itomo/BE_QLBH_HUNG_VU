@@ -16,13 +16,13 @@ export interface ProductSnapshot {
 }
 export interface StockMetadata {
   total: {
-    qty: number;
+    quantity: number;
     value: number;
   };
   byWarehouse: Record<
     string,
     {
-      qty: number;
+      quantity: number;
       value: number;
     }
   >;
@@ -51,7 +51,8 @@ export class Product extends BaseEntityWithCompany {
   @Column({
     type: "jsonb",
     nullable: true,
-    default: () => '\'{"total":{"qty":0,"value":0},"byWarehouse":{}}\'::jsonb',
+    default: () =>
+      '\'{"total":{"quantity":0,"value":0},"byWarehouse":{}}\'::jsonb',
   })
   stockMetadata?: StockMetadata;
 

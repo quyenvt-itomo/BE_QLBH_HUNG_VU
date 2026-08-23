@@ -4,7 +4,7 @@ import { FindOptionsRelations, FindOptionsSelect } from "typeorm";
 
 export const WarehouseSelectFull: FindOptionsSelect<Warehouse> = {
   ...BaseSelect,
-  companyId: true,
+  storeId: true,
   code: true,
   name: true,
   phone: true,

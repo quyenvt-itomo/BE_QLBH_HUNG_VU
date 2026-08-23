@@ -24,10 +24,6 @@
     "typeRoots": ["./node_modules/@types", "./src/shared/types"],
     "types": ["node", "express"]
   },
-  "files": [
-    "src/module/inventory/inventoryRecalculate.service.ts",
-    "src/module/product/product.service.ts"
-  ],
   "include": [
     "src/**/*",
     "src/shared/types/**/*.d.ts",
@@ -36,9 +32,7 @@
   "exclude": [
     "node_modules",
     "dist",
-    "src/module/**",
     "src/job/**",
-    "src/database/seeders/**",
     "src/shared/middleware/auth.middleware.ts",
     "src/module/otherProject",
     "src/other"

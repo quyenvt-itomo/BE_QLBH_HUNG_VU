@@ -1,7 +1,19 @@
 // shared/middleware/partner-context.middleware.ts
-import { PartnerType } from "@/database/models/Partner";
-import { PartnerModule } from "@/shared/types/sub-context";
+import { PartnerType } from "@/database/models";
 import { Request, Response, NextFunction } from "express";
+
+export type PartnerModule = "customer" | "supplier" | "shipper";
+
+export interface PartnerContext {
+  module: PartnerModule;
+  type: PartnerModule;
+}
+
+declare module "express-serve-static-core" {
+  interface Request {
+    partnerContext?: PartnerContext;
+  }
+}
 
 export const partnerContextMiddleware =
   (module: PartnerModule) =>
@@ -13,7 +25,11 @@ export const partnerContextMiddleware =
 
     // OPTIONAL: nếu bạn muốn service nhận type từ body/query
     const mappedType =
-      module === "customer" ? PartnerType.CUSTOMER : PartnerType.SUPPLIER;
+      module === "customer"
+        ? PartnerType.CUSTOMER
+        : module === "supplier"
+          ? PartnerType.SUPPLIER
+          : PartnerType.SHIPPER;
 
     if (req.method === "GET") {
       const newQuery = Object.assign({}, req.query as any);

@@ -600,7 +600,10 @@ export class InventoryService extends TransactionService {
     // Opening: SUM of last quantityAfter/inventoryValueAfter before startAt per store
     const openingQb = manager
       .createQueryBuilder()
-      .select('COALESCE(SUM(last_per_store."quantityAfter"), 0)::float', "qty")
+      .select(
+        'COALESCE(SUM(last_per_store."quantityAfter"), 0)::float',
+        "quantity",
+      )
       .addSelect(
         'COALESCE(SUM(last_per_store."inventoryValueAfter"), 0)::float',
         "amount",
@@ -628,13 +631,16 @@ export class InventoryService extends TransactionService {
     }
     const openingResult = await openingQb.getRawOne();
 
-    const openingQty = parseFloat(openingResult?.qty || "0");
+    const openingQty = parseFloat(openingResult?.quantity || "0");
     const openingAmount = parseFloat(openingResult?.amount || "0");
 
     // Closing: SUM of last quantityAfter/inventoryValueAfter <= endAt per store
     const closingQb = manager
       .createQueryBuilder()
-      .select('COALESCE(SUM(last_per_store."quantityAfter"), 0)::float', "qty")
+      .select(
+        'COALESCE(SUM(last_per_store."quantityAfter"), 0)::float',
+        "quantity",
+      )
       .addSelect(
         'COALESCE(SUM(last_per_store."inventoryValueAfter"), 0)::float',
         "amount",
@@ -662,7 +668,7 @@ export class InventoryService extends TransactionService {
     }
     const closingResult = await closingQb.getRawOne();
 
-    const closingQty = parseFloat(closingResult?.qty || "0");
+    const closingQty = parseFloat(closingResult?.quantity || "0");
     const closingAmount = parseFloat(closingResult?.amount || "0");
 
     /* --------------------------------------------

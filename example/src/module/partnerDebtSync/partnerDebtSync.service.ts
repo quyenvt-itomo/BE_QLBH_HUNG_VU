@@ -3,8 +3,8 @@ import { EntityManager } from "typeorm";
 import {
   PartnerDebtRefTypeEnum,
   PartnerDebtSideEnum,
-  PartnerDebtTransaction,
-} from "@/database/models/company/PartnerDebtTransaction";
+  DebtTransaction,
+} from "@/database/models/company/DebtTransaction";
 import {
   Invoice,
   InvoiceStatus,
@@ -35,7 +35,7 @@ export class PartnerDebtSyncService {
     refId: string,
   ): Promise<void> {
     await manager
-      .getRepository(PartnerDebtTransaction)
+      .getRepository(DebtTransaction)
       .createQueryBuilder()
       .delete()
       .where("refType = :refType AND refId = :refId", { refType, refId })
@@ -53,12 +53,12 @@ export class PartnerDebtSyncService {
 
   private async insertMany(
     manager: EntityManager,
-    rows: Partial<PartnerDebtTransaction>[],
+    rows: Partial<DebtTransaction>[],
   ): Promise<void> {
     if (!rows.length) return;
-    const repo = manager.getRepository(PartnerDebtTransaction);
+    const repo = manager.getRepository(DebtTransaction);
     // lần lượt giữ thứ tự occurredAt (save giữ nguyên thứ tự)
-    await repo.save(rows as PartnerDebtTransaction[]);
+    await repo.save(rows as DebtTransaction[]);
   }
 
   /** Số dư công nợ của 1 đối tác tới thời điểm atDate (IN +, OUT -), theo side. */
@@ -69,7 +69,7 @@ export class PartnerDebtSyncService {
   ): Promise<{ payableDebtAmount: number; receivableDebtAmount: number }> {
     const m = manager || DatabaseConfig.manager;
     const rows = await m
-      .createQueryBuilder(PartnerDebtTransaction, "tx")
+      .createQueryBuilder(DebtTransaction, "tx")
       .select("tx.side", "side")
       .addSelect(
         `COALESCE(SUM(CASE WHEN tx.type = :inType THEN tx.amount ELSE -tx.amount END),0)::float`,
@@ -117,7 +117,7 @@ export class PartnerDebtSyncService {
 
     await this.insertMany(manager, [
       {
-        companyId: data.companyId,
+        storeId: data.storeId,
         occurredAt: data.invoiceDate,
         partnerId: data.partnerId,
         invoiceId: data.id,
@@ -145,7 +145,7 @@ export class PartnerDebtSyncService {
 
     if (!allocations?.length) return;
 
-    const rows: Partial<PartnerDebtTransaction>[] = [];
+    const rows: Partial<DebtTransaction>[] = [];
     for (const al of allocations) {
       if (!al.invoiceId || Number(al.amount || 0) <= 0) continue;
       const invoiceType = al.invoiceSnapshot?.type;
@@ -154,7 +154,7 @@ export class PartnerDebtSyncService {
           ? PartnerDebtSideEnum.PAYABLE
           : PartnerDebtSideEnum.RECEIVABLE;
       rows.push({
-        companyId: data.companyId,
+        storeId: data.storeId,
         occurredAt: data.occurredAt,
         partnerId: data.partnerId!,
         invoiceId: al.invoiceId,
@@ -182,10 +182,10 @@ export class PartnerDebtSyncService {
 
     if (!lines?.length) return;
 
-    const rows: Partial<PartnerDebtTransaction>[] = [];
+    const rows: Partial<DebtTransaction>[] = [];
     for (const line of lines) {
       rows.push({
-        companyId: data.companyId,
+        storeId: data.storeId,
         occurredAt: data.occurredAt,
         partnerId: data.partnerId,
         invoiceId: line.invoiceId,
@@ -214,7 +214,7 @@ export class PartnerDebtSyncService {
 
     await this.insertMany(manager, [
       {
-        companyId: data.companyId,
+        storeId: data.storeId,
         occurredAt: data.occurredAt,
         partnerId: data.partnerId,
         invoiceId: data.invoiceId || null,

@@ -12,7 +12,7 @@ import { EMPLOYEE_TYPES, EmployeeRepository } from "@/module/employee";
 export class InventoryConversionService extends BaseService<InventoryConversion> {
   protected repository: InventoryConversionRepository;
   protected uniqueFields: (keyof InventoryConversion)[] = ["code"];
-  protected uniqueScope?: (keyof InventoryConversion)[] = ["companyId"];
+  protected uniqueScope?: (keyof InventoryConversion)[] = ["storeId"];
   protected searchableFields = ["code", "reason"];
   protected timeField: keyof InventoryConversion = "timeAt";
 

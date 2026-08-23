@@ -14,7 +14,7 @@ export class ProductPriceHistory extends StoreEntity {
   productSnapshot: { id: string; code: string; name: string } | null;
   @ManyToOne(() => Product, (p) => p.priceHistories, { onDelete: "SET NULL" })
   @JoinColumn({ name: "productId" })
-  product: Product;
+  product: Product | null;
 
   @Column(BaseNumericColumnOptions)
   costPrice: number; // Giá vốn/ĐVT cơ bản

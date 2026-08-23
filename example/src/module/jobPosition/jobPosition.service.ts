@@ -8,7 +8,7 @@ import { JobPosition } from "@/database/models/company/JobPosition";
 export class JobPositionService extends BaseService<JobPosition> {
   protected repository: JobPositionRepository;
   protected uniqueFields: (keyof JobPosition)[] = ["name"];
-  protected uniqueScope?: (keyof JobPosition)[] | undefined = ["companyId"];
+  protected uniqueScope?: (keyof JobPosition)[] | undefined = ["storeId"];
   protected searchableFields = ["name", "level", "note"];
 
   constructor(

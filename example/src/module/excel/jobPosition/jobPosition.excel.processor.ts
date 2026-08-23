@@ -48,8 +48,8 @@ export class JobPositionExcelProcessor {
       result.totalRows = rows.length;
       if (!rows.length) return result;
 
-      const companyId = req.companyContext?.companyId;
-      if (!companyId) throw new BadRequestError("Thiếu thông tin công ty");
+      const storeId = req.storeContext?.storeId;
+      if (!storeId) throw new BadRequestError("Thiếu thông tin công ty");
 
       for (let i = 0; i < rows.length; i++) {
         const row = rows[i];
@@ -73,7 +73,7 @@ export class JobPositionExcelProcessor {
               | "jobTitleId"
               | "jobTitleSnapshot"
               | "note"
-              | "companyId"
+              | "storeId"
             >
           > = {
             name: row.name,
@@ -84,7 +84,7 @@ export class JobPositionExcelProcessor {
           };
           await withTransaction(async (manager) => {
             const existing = await this.jobPositionService.findOne({
-              where: { name: row.name, companyId },
+              where: { name: row.name, storeId },
             });
             if (existing && options.duplicateHandling === "update") {
               await this.jobPositionService.update(
@@ -99,7 +99,7 @@ export class JobPositionExcelProcessor {
             } else if (existing && options.duplicateHandling === "stop") {
               throw new Error(`Vị trí ${row.name} đã tồn tại`);
             } else {
-              data.companyId = companyId;
+              data.storeId = storeId;
               await this.jobPositionService.create(data, manager, req);
             }
           });

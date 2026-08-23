@@ -29,7 +29,7 @@ import { withTransaction } from "@/shared/base/TransactionManager";
 type UserWriteData = DeepPartial<User> & Record<string, any>;
 
 type CompanyUserWritePayload = {
-  companyId: string;
+  storeId: string;
   roleId: string | null;
   employeeId: string | null;
   employeeSnapshot: Awaited<
@@ -84,8 +84,8 @@ export class UserService extends BaseService<User> {
       return { can: true };
     }
     // User thường: chỉ sửa được user do chính công ty mình tạo
-    const companyId = req?.companyContext?.companyId;
-    if (entity.sourceCompanyId && entity.sourceCompanyId !== companyId) {
+    const storeId = req?.storeContext?.storeId;
+    if (entity.sourceCompanyId && entity.sourceCompanyId !== storeId) {
       return {
         can: false,
         reason: "Chỉ công ty sở hữu tài khoản này mới có thể sửa",
@@ -102,8 +102,8 @@ export class UserService extends BaseService<User> {
     if (req?.userContext?.isAdmin) {
       return { can: true };
     }
-    const companyId = req?.companyContext?.companyId;
-    if (entity.sourceCompanyId && entity.sourceCompanyId !== companyId) {
+    const storeId = req?.storeContext?.storeId;
+    if (entity.sourceCompanyId && entity.sourceCompanyId !== storeId) {
       return {
         can: false,
         reason: "Chỉ công ty sở hữu tài khoản này mới có thể xóa",
@@ -231,15 +231,15 @@ export class UserService extends BaseService<User> {
     data: { roleId?: string | null; employeeId?: string | null },
     req?: RequestContext,
   ): Promise<void> {
-    const companyId = req?.companyContext?.companyId;
-    if (!companyId) {
-      throw new ValidationError("Thiếu thông tin công ty", "companyId");
+    const storeId = req?.storeContext?.storeId;
+    if (!storeId) {
+      throw new ValidationError("Thiếu thông tin công ty", "storeId");
     }
 
     await withTransaction(async (manager) => {
       // Validate references thuộc công ty
       await this.validateCompanyUserReferences(
-        companyId,
+        storeId,
         data.roleId,
         data.employeeId,
         manager,
@@ -247,7 +247,7 @@ export class UserService extends BaseService<User> {
 
       // Chỉ cập nhật nếu user đã có CompanyUser trong công ty này
       const cu = await manager.findOne(CompanyUser, {
-        where: { userId, companyId } as any,
+        where: { userId, storeId } as any,
       });
 
       if (!cu) {
@@ -289,11 +289,7 @@ export class UserService extends BaseService<User> {
             field: `${p}.roleId`,
             message: "Vai trò không tồn tại",
           });
-        else if (
-          role.companyId &&
-          cu.companyId &&
-          role.companyId !== cu.companyId
-        )
+        else if (role.storeId && cu.storeId && role.storeId !== cu.storeId)
           errors.push({
             field: `${p}.roleId`,
             message: "Vai trò không thuộc công ty đã chọn",
@@ -308,7 +304,7 @@ export class UserService extends BaseService<User> {
             field: `${p}.employeeId`,
             message: "Nhân viên không tồn tại",
           });
-        else if (emp.companyId !== cu.companyId)
+        else if (emp.storeId !== cu.storeId)
           errors.push({
             field: `${p}.employeeId`,
             message: "Nhân viên không thuộc công ty đã chọn",
@@ -324,13 +320,13 @@ export class UserService extends BaseService<User> {
     req?: RequestContext,
   ): Promise<{
     isAdmin: boolean;
-    companyId: string | null;
+    storeId: string | null;
     companyUsers: DeepPartial<CompanyUser>[] | undefined;
     roleId: string | null | undefined;
     employeeId: string | null | undefined;
   }> {
     const isAdmin = !!req?.userContext?.isAdmin;
-    const companyId = req?.companyContext?.companyId || null;
+    const storeId = req?.storeContext?.storeId || null;
     const rawData = data as Record<string, any>;
     const companyUsers = rawData.companyUsers as
       | DeepPartial<CompanyUser>[]
@@ -342,18 +338,18 @@ export class UserService extends BaseService<User> {
     delete rawData.roleId;
     delete rawData.employeeId;
 
-    return { isAdmin, companyId, companyUsers, roleId, employeeId };
+    return { isAdmin, storeId, companyUsers, roleId, employeeId };
   }
 
   private buildCompanyUserPayload(
-    companyId: string,
+    storeId: string,
     roleId: string | null | undefined,
     employeeId: string | null | undefined,
     includeSnapshot: boolean,
     snapshot?: Awaited<ReturnType<EmployeeRepository["getSnapshot"]>> | null,
   ): CompanyUserWritePayload {
     return {
-      companyId,
+      storeId,
       roleId: roleId ?? null,
       employeeId: employeeId ?? null,
       employeeSnapshot: includeSnapshot ? (snapshot ?? null) : null,
@@ -367,15 +363,15 @@ export class UserService extends BaseService<User> {
     isUpdate: boolean = false,
     existing?: User | null,
   ): Promise<void> {
-    const { isAdmin, companyId, companyUsers, roleId, employeeId } =
+    const { isAdmin, storeId, companyUsers, roleId, employeeId } =
       await this.resolveCompanyUserInput(data, req);
 
-    if (!companyId) {
-      throw new ValidationError("Thiếu thông tin công ty", "companyId");
+    if (!storeId) {
+      throw new ValidationError("Thiếu thông tin công ty", "storeId");
     }
 
     const rawData = data as Record<string, any>;
-    rawData.sourceCompanyId = rawData.sourceCompanyId ?? companyId;
+    rawData.sourceCompanyId = rawData.sourceCompanyId ?? storeId;
 
     if (isAdmin) {
       if (!companyUsers?.length) return;
@@ -390,7 +386,7 @@ export class UserService extends BaseService<User> {
     }
 
     await this.validateCompanyUserReferences(
-      companyId,
+      storeId,
       roleId,
       employeeId,
       manager,
@@ -398,10 +394,10 @@ export class UserService extends BaseService<User> {
 
     if (isUpdate) {
       const existingCu = existing?.companyUsers?.find(
-        (cu) => cu.companyId === companyId,
+        (cu) => cu.storeId === storeId,
       );
       const payload = this.buildCompanyUserPayload(
-        companyId,
+        storeId,
         roleId,
         employeeId,
         false,
@@ -422,25 +418,21 @@ export class UserService extends BaseService<User> {
     }
 
     rawData.companyUsers = [
-      this.buildCompanyUserPayload(companyId, roleId, employeeId, false),
+      this.buildCompanyUserPayload(storeId, roleId, employeeId, false),
     ];
   }
 
   private assertNoDuplicateCompanyUsers(
     companyUsers: DeepPartial<CompanyUser>[],
   ): void {
-    const dup = this.checkDuplicate(
-      companyUsers,
-      ["companyId"],
-      "companyUsers",
-    );
+    const dup = this.checkDuplicate(companyUsers, ["storeId"], "companyUsers");
     if (dup.length > 0) {
       throw new ValidationError("Dữ liệu không hợp lệ", dup);
     }
   }
 
   private async validateCompanyUserReferences(
-    companyId: string,
+    storeId: string,
     roleId: string | null | undefined,
     employeeId: string | null | undefined,
     manager: EntityManager,
@@ -448,7 +440,7 @@ export class UserService extends BaseService<User> {
     if (roleId) {
       const role = await this.roleRepository.findById(roleId, manager);
       if (!role) throw new ValidationError("Vai trò không tồn tại", "roleId");
-      if (role.companyId && role.companyId !== companyId) {
+      if (role.storeId && role.storeId !== storeId) {
         throw new ValidationError(
           "Vai trò không thuộc công ty đang thao tác",
           "roleId",
@@ -463,7 +455,7 @@ export class UserService extends BaseService<User> {
       );
       if (!employee)
         throw new ValidationError("Nhân viên không tồn tại", "employeeId");
-      if (employee.companyId !== companyId) {
+      if (employee.storeId !== storeId) {
         throw new ValidationError(
           "Nhân viên không thuộc công ty đang thao tác",
           "employeeId",
@@ -522,7 +514,7 @@ export class UserService extends BaseService<User> {
     }
     const toSave = incoming.map((item) => ({
       id: item.id,
-      companyId: item.companyId,
+      storeId: item.storeId,
       userId,
       roleId: item.roleId || null,
       employeeId: item.employeeId || null,

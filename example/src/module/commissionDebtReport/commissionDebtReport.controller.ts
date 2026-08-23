@@ -16,10 +16,10 @@ export class CommissionDebtReportController {
 
   getReport = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const companyId = req.companyContext?.companyId;
+      const storeId = req.storeContext?.storeId;
       const query = {
         ...(req.query as unknown as CommissionDebtReportQueryDto),
-        companyId,
+        storeId,
       } as CommissionDebtReportQueryDto;
       const result = await this.service.getReport(query);
       return res.status(result.statusCode).json(result);
@@ -30,10 +30,10 @@ export class CommissionDebtReportController {
 
   getDetail = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const companyId = req.companyContext?.companyId;
+      const storeId = req.storeContext?.storeId;
       const query = {
         ...(req.query as unknown as CommissionDebtDetailQueryDto),
-        companyId,
+        storeId,
       } as CommissionDebtDetailQueryDto;
       const result = await this.service.getDetail(query);
       return res.status(result.statusCode).json(result);

@@ -62,7 +62,7 @@ export class OperationLogUtils {
         requestBody: this.toOperationRecord(params.requestBody),
         targetSnapshot: after || before || null,
         changes,
-        companyId: params.req?.companyContext?.companyId || null,
+        storeId: params.req?.storeContext?.storeId || null,
         creatorId: userContext?.userId || null,
         creatorSnapshot: creator,
         requestId: (params.req?.headers["x-request-id"] as string) || null,

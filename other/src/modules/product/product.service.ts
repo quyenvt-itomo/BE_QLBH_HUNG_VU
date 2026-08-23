@@ -56,7 +56,7 @@ export class ProductService extends BaseService<Product> {
       ? entity.stockMetadata?.byStore?.[storeId]
       : entity.stockMetadata?.total;
     return {
-      stockQty: Number(stockData?.qty ?? 0),
+      stockQty: Number(stockData?.quantity ?? 0),
       stockValue: Number(stockData?.value ?? 0),
     };
   }
@@ -70,12 +70,12 @@ export class ProductService extends BaseService<Product> {
 
     for (const entity of entities) {
       const { stockQty, stockValue } = this.getStockData(entity, storeId);
-      // (entity as any).totalStockQty = (entity as any).totalstockqty ?? 0;
+      // (entity as any).totalStockQty = (entity as any).totalstockquantity ?? 0;
       // (entity as any).totalStockValue = (entity as any).totalstockvalue ?? 0;
 
       (entity as any).totalStockQty = stockQty;
       (entity as any).totalStockValue = stockValue;
-      delete (entity as any).totalstockqty;
+      delete (entity as any).totalstockquantity;
       delete (entity as any).totalstockvalue;
 
       for (const variant of entity.variants || []) {
@@ -91,9 +91,9 @@ export class ProductService extends BaseService<Product> {
     }
 
     // entities.forEach((entity) => {
-    //   (entity as any).totalStockQty = (entity as any).totalstockqty ?? 0;
+    //   (entity as any).totalStockQty = (entity as any).totalstockquantity ?? 0;
     //   (entity as any).totalStockValue = (entity as any).totalstockvalue ?? 0;
-    //   delete (entity as any).totalstockqty;
+    //   delete (entity as any).totalstockquantity;
     //   delete (entity as any).totalstockvalue;
 
     // });
@@ -104,9 +104,9 @@ export class ProductService extends BaseService<Product> {
     req?: Request,
   ): Promise<void> {
     await super.attachMoreDataToEntity(entity, req);
-    (entity as any).totalStockQty = (entity as any).totalstockqty ?? 0;
+    (entity as any).totalStockQty = (entity as any).totalstockquantity ?? 0;
     (entity as any).totalStockValue = (entity as any).totalstockvalue ?? 0;
-    delete (entity as any).totalstockqty;
+    delete (entity as any).totalstockquantity;
     delete (entity as any).totalstockvalue;
   }
 

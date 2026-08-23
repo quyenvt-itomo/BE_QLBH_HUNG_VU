@@ -10,23 +10,23 @@ export const companyResolver = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    const companyId = req.headers["x-company-id"];
+    const storeId = req.headers["x-company-id"];
 
-    if (!companyId || typeof companyId !== "string") {
+    if (!storeId || typeof storeId !== "string") {
       return next();
     }
 
     const companyRepo = DatabaseConfig.getRepository(Organization);
     const company = await companyRepo.findOne({
-      where: { id: companyId, type: In(CompanyType) },
+      where: { id: storeId, type: In(CompanyType) },
     });
 
     if (!company) {
       throw new BadRequestError("Không tìm thấy thông tin công ty");
     }
 
-    req.companyContext = {
-      companyId: company.id,
+    req.storeContext = {
+      storeId: company.id,
       companyName: company.name,
       companyCode: company.code,
       companyType: company.type,

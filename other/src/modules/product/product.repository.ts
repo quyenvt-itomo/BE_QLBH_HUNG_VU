@@ -135,7 +135,7 @@ export class ProductRepository extends BaseRepository<Product> {
       // Specific store: Direct access to products.stockMetadata.byStore[storeId]
       totalStockQtyExpr = `
         COALESCE(
-          (${qb.alias}."stockMetadata"->'byStore'->:storeId->>'qty')::float,
+          (${qb.alias}."stockMetadata"->'byStore'->:storeId->>'quantity')::float,
           0
         )
       `;
@@ -152,7 +152,7 @@ export class ProductRepository extends BaseRepository<Product> {
       // All stores: Direct access to products.stockMetadata.total
       totalStockQtyExpr = `
         COALESCE(
-          (${qb.alias}."stockMetadata"->'total'->>'qty')::float,
+          (${qb.alias}."stockMetadata"->'total'->>'quantity')::float,
           0
         )
       `;
@@ -166,7 +166,7 @@ export class ProductRepository extends BaseRepository<Product> {
     }
 
     // totalStockQty: Tổng số lượng tồn kho của product (sum các variants)
-    qb.addSelect(`${totalStockQtyExpr}::float8`, "entity_totalstockqty");
+    qb.addSelect(`${totalStockQtyExpr}::float8`, "entity_totalstockquantity");
 
     // totalStockValue: Tổng giá trị tồn kho của product
     qb.addSelect(`${totalStockValueExpr}::float8`, "entity_totalstockvalue");
@@ -265,7 +265,7 @@ export class ProductRepository extends BaseRepository<Product> {
     // ===== Xử lý sắp xếp =====
     if (sortBy && sortOrder) {
       if (sortBy === "totalStockQty") {
-        qb.orderBy("entity_totalstockqty", sortOrder);
+        qb.orderBy("entity_totalstockquantity", sortOrder);
       } else if (sortBy === "totalStockValue") {
         qb.orderBy("entity_totalstockvalue", sortOrder);
       }
@@ -402,7 +402,7 @@ export class ProductRepository extends BaseRepository<Product> {
       `
       SELECT 
         pv."stockMetadata"->'byStore' as by_store_data,
-        pv."stockMetadata"->'total'->>'qty' as total_qty,
+        pv."stockMetadata"->'total'->>'quantity' as total_quantity,
         pv."stockMetadata"->'total'->>'value' as total_value
       FROM product_variants pv
       WHERE pv."productId" = $1
@@ -412,12 +412,12 @@ export class ProductRepository extends BaseRepository<Product> {
     );
 
     // Build metadata structure
-    const byStore: Record<string, { qty: number; value: number }> = {};
+    const byStore: Record<string, { quantity: number; value: number }> = {};
     let totalQty = 0;
     let totalValue = 0;
 
     result.forEach((row: any) => {
-      const variantTotalQty = parseFloat(row.total_qty) || 0;
+      const variantTotalQty = parseFloat(row.total_quantity) || 0;
       const variantTotalValue = parseFloat(row.total_value) || 0;
 
       totalQty += variantTotalQty;
@@ -427,18 +427,18 @@ export class ProductRepository extends BaseRepository<Product> {
       if (row.by_store_data) {
         const byStoreData = row.by_store_data;
         for (const [storeId, storeData] of Object.entries(byStoreData)) {
-          const data = storeData as { qty: number; value: number };
+          const data = storeData as { quantity: number; value: number };
           if (!byStore[storeId]) {
-            byStore[storeId] = { qty: 0, value: 0 };
+            byStore[storeId] = { quantity: 0, value: 0 };
           }
-          byStore[storeId].qty += data.qty || 0;
+          byStore[storeId].quantity += data.quantity || 0;
           byStore[storeId].value += data.value || 0;
         }
       }
     });
 
     const stockMetadata = {
-      total: { qty: totalQty, value: totalValue },
+      total: { quantity: totalQty, value: totalValue },
       byStore,
     };
 

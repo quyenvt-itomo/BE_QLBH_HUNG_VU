@@ -16,14 +16,14 @@ import {
   InvoiceRepository,
   InvoiceService,
 } from "@/module/invoice";
-import { PartnerDebtRefTypeEnum } from "@/database/models/company/PartnerDebtTransaction";
+import { PartnerDebtRefTypeEnum } from "@/database/models/company/DebtTransaction";
 import { VatTransactionType } from "@/database/models/company/VatDebtTransaction";
 
 @injectable()
 export class IncomeExpenseService extends BaseService<IncomeExpense> {
   protected repository: IncomeExpenseRepository;
   protected uniqueFields: (keyof IncomeExpense)[] = ["code"];
-  protected uniqueScope?: (keyof IncomeExpense)[] = ["companyId"];
+  protected uniqueScope?: (keyof IncomeExpense)[] = ["storeId"];
   protected searchableFields = ["code", "note"];
   protected timeField: keyof IncomeExpense = "occurredAt";
 

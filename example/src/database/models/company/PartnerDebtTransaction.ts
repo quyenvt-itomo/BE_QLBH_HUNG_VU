@@ -20,14 +20,14 @@ export enum PartnerDebtRefTypeEnum {
  * Idempotent qua (refType, refId).
  */
 @Entity("debt_transactions")
-@Index(["companyId", "occurredAt"])
+@Index(["storeId", "occurredAt"])
 @Index(["partnerId", "side", "occurredAt"])
 @Index(["refType", "refId"])
 @Index(["invoiceId", "side"])
-export class PartnerDebtTransaction extends BaseEntity {
+export class DebtTransaction extends BaseEntity {
   @Column({ type: "uuid" })
   @Index()
-  companyId: string;
+  storeId: string;
 
   @Column({ type: "enum", enum: PartnerDebtSideEnum })
   side: PartnerDebtSideEnum;

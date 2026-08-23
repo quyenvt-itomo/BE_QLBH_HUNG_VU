@@ -45,7 +45,7 @@ export interface MoreQueryOptions<T> {
   ids?: string[]; // Filter by multiple IDs
   creatorIds?: string[]; // Filter by multiple creator IDs
   updaterIds?: string[]; // Filter by multiple updater IDs
-  companyId?: string; // Example field for filtering by store ID
+  storeId?: string; // Example field for filtering by store ID
   filterOptions?: (keyof T)[]; // Additional filter options
 
   useFullDetail?: boolean; // Flag to indicate if full detail should be fetched
@@ -300,9 +300,9 @@ export abstract class BaseRepository<T extends ObjectLiteral> {
 
     const entityMetadata = repo.metadata;
     const hasCompanyIdColumn = entityMetadata.columns.some(
-      (col) => col.propertyName === "companyId",
+      (col) => col.propertyName === "storeId",
     );
-    const companyId = req?.companyContext?.companyId;
+    const storeId = req?.storeContext?.storeId;
 
     // Nếu không có extendQueryBuilder thì dùng find với select
     if (
@@ -314,8 +314,8 @@ export abstract class BaseRepository<T extends ObjectLiteral> {
         relations: this.relations,
       };
 
-      if (companyId && hasCompanyIdColumn) {
-        options.where = { ...options.where, companyId } as any;
+      if (storeId && hasCompanyIdColumn) {
+        options.where = { ...options.where, storeId } as any;
       }
 
       if (!includeDeleted) {
@@ -335,13 +335,10 @@ export abstract class BaseRepository<T extends ObjectLiteral> {
     const qb = repo.createQueryBuilder("entity");
     qb.where("entity.id = :id", { id });
 
-    if (companyId && hasCompanyIdColumn) {
-      qb.andWhere(
-        "(entity.companyId = :companyId OR entity.companyId IS NULL)",
-        {
-          companyId,
-        },
-      );
+    if (storeId && hasCompanyIdColumn) {
+      qb.andWhere("(entity.storeId = :storeId OR entity.storeId IS NULL)", {
+        storeId,
+      });
     }
 
     // Xử lý soft delete
@@ -523,7 +520,7 @@ export abstract class BaseRepository<T extends ObjectLiteral> {
         const fieldParts = field.split(".");
         const rootField = fieldParts[0];
 
-        // Hỗ trợ JSON path: creatorSnapshot.name, stockMetadata.total.qty...
+        // Hỗ trợ JSON path: creatorSnapshot.name, stockMetadata.total.quantity...
         const rootColumn =
           repository.metadata.findColumnWithPropertyName(rootField);
         if (rootColumn && fieldParts.length > 1) {
@@ -620,19 +617,16 @@ export abstract class BaseRepository<T extends ObjectLiteral> {
     await this.extendQueryBuilder(qb, options);
 
     // ===== Filters =====
-    // nếu trong options có companyId thì và entity có companyId thì filter theo companyId
-    if (options.companyId) {
+    // nếu trong options có storeId thì và entity có storeId thì filter theo storeId
+    if (options.storeId) {
       const entityMetadata = repository.metadata;
       const hasCompanyIdColumn = entityMetadata.columns.some(
-        (col) => col.propertyName === "companyId",
+        (col) => col.propertyName === "storeId",
       );
       if (hasCompanyIdColumn) {
-        qb.andWhere(
-          "(entity.companyId = :companyId OR entity.companyId IS NULL)",
-          {
-            companyId: options.companyId,
-          },
-        );
+        qb.andWhere("(entity.storeId = :storeId OR entity.storeId IS NULL)", {
+          storeId: options.storeId,
+        });
       }
     }
 
@@ -947,7 +941,7 @@ export abstract class BaseRepository<T extends ObjectLiteral> {
     manager?: EntityManager,
     req?: RequestContext,
   ): Promise<T> {
-    const companyId = req?.companyContext?.companyId;
+    const storeId = req?.storeContext?.storeId;
 
     const repo = this.getRepository(manager);
     const entityInfo = repo.metadata;
@@ -957,7 +951,7 @@ export abstract class BaseRepository<T extends ObjectLiteral> {
     );
 
     const hasCompanyIdColumn = entityInfo?.columns?.some(
-      (column) => column.propertyName === "companyId",
+      (column) => column.propertyName === "storeId",
     );
 
     if (!(data as any).sortOrder && hasSortOrderColumn) {
@@ -967,7 +961,7 @@ export abstract class BaseRepository<T extends ObjectLiteral> {
           } as FindOptionsWhere<T>)
         : hasCompanyIdColumn
           ? ({
-              companyId: (data as any).companyId,
+              storeId: (data as any).storeId,
             } as FindOptionsWhere<T>)
           : undefined;
       (data as any).sortOrder = await this.getNextSortOrder(
@@ -977,15 +971,15 @@ export abstract class BaseRepository<T extends ObjectLiteral> {
     }
 
     if (hasCompanyIdColumn) {
-      (data as any).companyId = companyId || (data as any).companyId;
+      (data as any).storeId = storeId || (data as any).storeId;
     }
 
     const hasCodeColumn = entityInfo?.columns?.some(
       (column) => column.propertyName === "code",
     );
     if (hasCodeColumn && !(data as any).code) {
-      const companyId = (data as any).companyId;
-      const code = await generateCode(entityInfo.name, companyId);
+      const storeId = (data as any).storeId;
+      const code = await generateCode(entityInfo.name, storeId);
       (data as any).code = code;
     }
     const entity = repo.create(data);
@@ -1020,7 +1014,7 @@ export abstract class BaseRepository<T extends ObjectLiteral> {
       (column) => column.propertyName === "code",
     );
     const hasCompanyIdColumn = entityInfo?.columns?.some(
-      (column) => column.propertyName === "companyId",
+      (column) => column.propertyName === "storeId",
     );
 
     if (hasSortOrderColumn) {
@@ -1030,7 +1024,7 @@ export abstract class BaseRepository<T extends ObjectLiteral> {
           } as FindOptionsWhere<T>)
         : hasCompanyIdColumn
           ? ({
-              companyId: (data as any)[0]?.companyId,
+              storeId: (data as any)[0]?.storeId,
             } as FindOptionsWhere<T>)
           : undefined;
       const newNextSortOrder = await this.getNextSortOrder(
@@ -1048,16 +1042,16 @@ export abstract class BaseRepository<T extends ObjectLiteral> {
     if (hasCodeColumn) {
       for (const item of data) {
         if (!(item as any).code) {
-          const companyId = (item as any).companyId;
-          (item as any).code = await generateCode(entityInfo?.name, companyId);
+          const storeId = (item as any).storeId;
+          (item as any).code = await generateCode(entityInfo?.name, storeId);
         }
       }
     }
 
     if (hasCompanyIdColumn) {
-      const companyId = req?.companyContext?.companyId;
+      const storeId = req?.storeContext?.storeId;
       data.forEach((item) => {
-        (item as any).companyId = companyId || (item as any).companyId;
+        (item as any).storeId = storeId || (item as any).storeId;
       });
     }
 

@@ -15,7 +15,7 @@ export class VatDebtReportService extends TransactionService {
    */
   async getReport(params: VatDebtReportQueryDto): Promise<ApiResponse> {
     const {
-      companyId,
+      storeId,
       startAt = new Date(new Date().getFullYear(), 0, 1),
       endAt = new Date(),
     } = params;
@@ -40,7 +40,7 @@ export class VatDebtReportService extends TransactionService {
         `COALESCE(SUM(CASE WHEN tx.type = :inType AND tx."occurredAt" <= :endAt THEN tx.amount WHEN tx.type = :outType AND tx."occurredAt" <= :endAt THEN -tx.amount ELSE 0 END), 0)::float`,
         "closingAmount",
       )
-      .where("tx.companyId = :companyId", { companyId })
+      .where("tx.storeId = :storeId", { storeId })
       .andWhere("tx.deletedAt IS NULL")
       .setParameters({
         inType: TransactionType.IN,
@@ -64,7 +64,7 @@ export class VatDebtReportService extends TransactionService {
    */
   async getDetail(params: VatDebtDetailQueryDto): Promise<ApiResponse> {
     const {
-      companyId,
+      storeId,
       page = 1,
       size = 20,
       startAt,
@@ -76,7 +76,7 @@ export class VatDebtReportService extends TransactionService {
 
     const qb = manager
       .createQueryBuilder(VatDebtTransaction, "tx")
-      .where("tx.companyId = :companyId", { companyId })
+      .where("tx.storeId = :storeId", { storeId })
       .andWhere("tx.deletedAt IS NULL")
       .orderBy("tx.occurredAt", sortOrder);
 

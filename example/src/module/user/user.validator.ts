@@ -9,7 +9,7 @@ import {
 
 export const CompanyUserItemSchema = z.object({
   id: z.uuid().optional(),
-  companyId: z.uuid(),
+  storeId: z.uuid(),
   roleId: z.uuid().nullish(),
   employeeId: z.uuid().nullish(),
 });

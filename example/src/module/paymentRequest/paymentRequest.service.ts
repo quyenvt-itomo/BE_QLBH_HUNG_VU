@@ -22,7 +22,7 @@ import { EMPLOYEE_TYPES, EmployeeRepository } from "@/module/employee";
 export class PaymentRequestService extends BaseService<PaymentRequest> {
   protected repository: PaymentRequestRepository;
   protected uniqueFields: (keyof PaymentRequest)[] = ["code"];
-  protected uniqueScope?: (keyof PaymentRequest)[] = ["companyId"];
+  protected uniqueScope?: (keyof PaymentRequest)[] = ["storeId"];
   protected searchableFields = ["code", "note"];
   protected timeField: keyof PaymentRequest = "timeAt";
 

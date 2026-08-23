@@ -1,0 +1,1 @@
+export const DEBT_ADJUSTMENT_TYPES = { Repository: Symbol.for("DebtAdjustmentRepository"), Service: Symbol.for("DebtAdjustmentService"), Controller: Symbol.for("DebtAdjustmentController"), Router: Symbol.for("DebtAdjustmentRouter") };

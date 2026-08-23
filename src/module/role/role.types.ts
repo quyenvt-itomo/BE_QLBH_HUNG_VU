@@ -1,6 +1,1 @@
-export const ROLE_TYPES = {
-  RoleController: Symbol.for("RoleController"),
-  RoleService: Symbol.for("RoleService"),
-  RoleRepository: Symbol.for("RoleRepository"),
-  RoleRouter: Symbol.for("RoleRouter"),
-};
+export const ROLE_TYPES = { Repository: Symbol.for("RoleRepository"), Service: Symbol.for("RoleService"), Controller: Symbol.for("RoleController"), Router: Symbol.for("RoleRouter") };

@@ -1,34 +1,157 @@
 import { injectable } from "inversify";
 import { DeepPartial, EntityManager } from "typeorm";
 import { BaseRepository } from "@/shared/base/BaseRepository";
-import { Product, ProductSnapshot } from "@/database/models/Product";
+import { Product, ProductSnapshot, StoreProduct } from "@/database/models";
+import { ProductRelations, ProductSelectFull } from "./product.select";
 
 @injectable()
 export class ProductRepository extends BaseRepository<Product> {
   protected entityClass = Product;
-  async getSnapshot(productId: string, manager?: EntityManager): Promise<ProductSnapshot | null> {
-    const product = await this.getRepository(manager).findOne({ where: { id: productId } as any });
-    return product ? { id: product.id, code: product.code, name: product.name } : null;
+  protected selectedFields = ProductSelectFull;
+  protected relations = ProductRelations;
+
+  /**
+   * Tính tồn cho một variant của product
+   * @param variantId
+   * @param storeId
+   * @returns
+   */
+  async calculateStock(
+    data: Product | string,
+    storeId?: string,
+  ): Promise<{
+    stockQuantity: number;
+    stockValue: number;
+  }> {
+    const product = typeof data === "string" ? await this.getById(data) : data;
+    return storeId
+      ? {
+          stockQuantity:
+            Number(product?.stockMetadata?.byStore?.[storeId]?.quantity) || 0,
+          stockValue:
+            Number(product?.stockMetadata?.byStore?.[storeId]?.value) || 0,
+        }
+      : {
+          stockQuantity: Number(product?.stockMetadata?.total?.quantity) || 0,
+          stockValue: Number(product?.stockMetadata?.total?.value) || 0,
+        };
   }
-  async attachInfo<T extends { productId?: string | null; productSnapshot?: DeepPartial<ProductSnapshot> | null }>(data: T, manager?: EntityManager): Promise<void> {
-    if (data.productId) data.productSnapshot = await this.getSnapshot(data.productId, manager);
+
+  async attachInfo<
+    T extends {
+      productId?: string | null;
+      productSnapshot?: DeepPartial<ProductSnapshot> | null;
+    },
+  >(
+    data: T,
+    manager?: EntityManager,
+    rawProduct?: Product | null,
+  ): Promise<void> {
+    if (
+      data.productId &&
+      (!data.productSnapshot || data.productSnapshot.id !== data.productId)
+    )
+      data.productSnapshot = await this.getSnapshot(
+        rawProduct || data.productId,
+        manager,
+      );
   }
-  async attachUnitConversion<T extends { productId?: string | null; unitId?: string | null; conversionRateAtTime?: number | null }>(data: T, manager?: EntityManager): Promise<void> {
-    if (!data.productId || !data.unitId) { data.conversionRateAtTime = 1; return; }
-    const product = await this.getRepository(manager).findOne({ where: { id: data.productId } as any, relations: { extraUnits: true } });
-    const unit = product?.extraUnits?.find((item) => item.unitId === data.unitId);
-    data.conversionRateAtTime = product?.baseUnitId === data.unitId ? 1 : (Number(unit?.conversionRate) || 1);
+
+  async attachUnitConversion<
+    T extends {
+      productId?: string | null;
+      unitId?: string | null;
+      conversionRateAtTime?: number | null;
+    },
+  >(
+    data: T,
+    manager?: EntityManager,
+    rawProduct?: Product | null,
+  ): Promise<void> {
+    if (!data.productId || !data.unitId) {
+      data.conversionRateAtTime = 1;
+      return;
+    }
+    const product = rawProduct
+      ? rawProduct
+      : await this.getRepository(manager).findOne({
+          where: { id: data.productId },
+          relations: { extraUnits: true },
+        });
+
+    const unit = product?.extraUnits?.find(
+      (item) => item.unitId === data.unitId,
+    );
+    data.conversionRateAtTime =
+      product?.baseUnitId === data.unitId
+        ? 1
+        : Number(unit?.conversionRate) || 1;
   }
-  async getUnitCost(productId: string, unitId: string, manager?: EntityManager): Promise<number> {
-    const product = await this.getRepository(manager).findOne({ where: { id: productId } as any, relations: { extraUnits: true } });
+
+  async getUnitCost(
+    productId: string,
+    unitId: string,
+    storeId?: string,
+    manager?: EntityManager,
+    rawProduct?: Product | null,
+  ): Promise<number> {
+    if (storeId) {
+      const storeProduct = await this.getRepository(manager)
+        .manager.getRepository(StoreProduct)
+        .findOne({ where: { productId, storeId } });
+      if (storeProduct) return Number(storeProduct.costPrice) || 0;
+    }
+    const product = rawProduct
+      ? rawProduct
+      : await this.getRepository(manager).findOne({
+          where: { id: productId },
+          relations: { extraUnits: true },
+        });
     if (!product) return 0;
     const extra = product.extraUnits?.find((item) => item.unitId === unitId);
     return product.baseUnitId === unitId ? 0 : Number(extra?.salePrice) || 0;
   }
-  async attachCostInfo<T extends { productId?: string | null; unitId?: string | null; quantity?: number | null; costPriceAtTime?: number | null; totalCost?: number | null }>(data: T, manager?: EntityManager): Promise<void> {
+
+  async attachCostInfo<
+    T extends {
+      productId?: string | null;
+      unitId?: string | null;
+      storeId?: string | null;
+      quantity?: number | null;
+      costPriceAtTime?: number | null;
+      totalCost?: number | null;
+    },
+  >(
+    data: T,
+    manager?: EntityManager,
+    rawProduct?: Product | null,
+  ): Promise<void> {
     if (!data.productId || !data.unitId) return;
-    await this.attachUnitConversion(data, manager);
-    data.costPriceAtTime = await this.getUnitCost(data.productId, data.unitId, manager);
-    data.totalCost = (Number(data.quantity) || 0) * (Number(data.costPriceAtTime) || 0);
+    await this.attachUnitConversion(data, manager, rawProduct);
+    data.costPriceAtTime = await this.getUnitCost(
+      data.productId,
+      data.unitId,
+      data.storeId || undefined,
+      manager,
+      rawProduct,
+    );
+    data.totalCost =
+      (Number(data.quantity) || 0) * (Number(data.costPriceAtTime) || 0);
+  }
+
+  async getSnapshot(
+    data: Product | string,
+    manager?: EntityManager,
+  ): Promise<ProductSnapshot | null> {
+    const isString = typeof data === "string";
+    const product = isString
+      ? await this.getRepository(manager).findOne({
+          where: { id: data } as any,
+        })
+      : data;
+
+    return product
+      ? { id: product.id, code: product.code, name: product.name }
+      : null;
   }
 }

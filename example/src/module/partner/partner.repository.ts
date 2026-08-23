@@ -48,10 +48,10 @@ export class PartnerRepository extends BaseRepository<Partner> {
 
   async findByTaxCode(
     taxCode: string,
-    companyId: string,
+    storeId: string,
     manager?: EntityManager,
   ): Promise<Partner | null> {
-    return this.findOne({ where: { taxCode, companyId } as any }, manager);
+    return this.findOne({ where: { taxCode, storeId } as any }, manager);
   }
 
   async attachInfo<
@@ -140,7 +140,7 @@ export class PartnerRepository extends BaseRepository<Partner> {
         }>
       | null
       | undefined,
-    companyId: string,
+    storeId: string,
     partnerType: PartnerType,
     manager?: EntityManager,
   ): Promise<{ partnerId: string; contactId: string | null }> {
@@ -150,7 +150,7 @@ export class PartnerRepository extends BaseRepository<Partner> {
     // --- Tìm partner theo taxCode ---
     let partner: Partner | null = null;
     if (tax) {
-      partner = await this.findByTaxCode(tax, companyId, manager);
+      partner = await this.findByTaxCode(tax, storeId, manager);
     }
 
     // --- CASE 1: Chưa có partner → tạo partner + contact cùng lúc ---
@@ -162,7 +162,7 @@ export class PartnerRepository extends BaseRepository<Partner> {
         email: partnerSnapshot?.email || null,
         phone: partnerSnapshot?.phone || null,
         types: [partnerType],
-        companyId,
+        storeId,
       };
 
       if (hasContactSnapshot) {
@@ -227,7 +227,7 @@ export class PartnerRepository extends BaseRepository<Partner> {
    */
   async ensureFromSnapshot(
     snapshot: Partial<PartnerSnapshot> | null | undefined,
-    companyId: string,
+    storeId: string,
     partnerType: PartnerType,
     manager?: EntityManager,
   ): Promise<Partner | null> {
@@ -236,7 +236,7 @@ export class PartnerRepository extends BaseRepository<Partner> {
     const result = await this.ensurePartnerWithContact(
       snapshot,
       null,
-      companyId,
+      storeId,
       partnerType,
       manager,
     );

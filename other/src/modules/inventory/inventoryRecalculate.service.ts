@@ -943,7 +943,7 @@ export class InventoryRecalculateService extends TransactionService {
     },
     manager: EntityManager,
   ): Promise<InventoryTransaction> {
-    const qty = Math.abs(params.quantity || 0);
+    const quantity = Math.abs(params.quantity || 0);
     const current = await this.getLatestStateAt(
       params.productVariantId,
       params.storeId,
@@ -957,12 +957,12 @@ export class InventoryRecalculateService extends TransactionService {
       params.amount !== undefined
         ? Math.abs(params.amount)
         : params.type === InventoryTransactionType.IN
-          ? qty * Math.abs(params.unitCost ?? averageBefore)
-          : qty * Math.abs(averageBefore);
+          ? quantity * Math.abs(params.unitCost ?? averageBefore)
+          : quantity * Math.abs(averageBefore);
 
     const sign = params.type === InventoryTransactionType.IN ? 1 : -1;
 
-    let quantityAfter = current.quantity + sign * qty;
+    let quantityAfter = current.quantity + sign * quantity;
     let inventoryValueAfter = current.value + sign * amount;
 
     // Clamp về phạm vi NUMERIC(15,2) an toàn để tránh "numeric field overflow"
@@ -987,7 +987,7 @@ export class InventoryRecalculateService extends TransactionService {
       occurredAt: params.occurredAt,
       productVariantId: params.productVariantId,
       storeId: params.storeId,
-      quantity: qty,
+      quantity: quantity,
       amount,
       type: params.type,
       refType: params.refType,
@@ -1069,10 +1069,10 @@ export class InventoryRecalculateService extends TransactionService {
         return averageFromTx;
       }
 
-      const qtyAfter = Math.abs(Number(latestTx.quantityAfter) || 0);
+      const quantityAfter = Math.abs(Number(latestTx.quantityAfter) || 0);
       const valueAfter = Math.abs(Number(latestTx.inventoryValueAfter) || 0);
-      if (qtyAfter > 0 && valueAfter > 0) {
-        return valueAfter / qtyAfter;
+      if (quantityAfter > 0 && valueAfter > 0) {
+        return valueAfter / quantityAfter;
       }
     }
 
@@ -1532,7 +1532,7 @@ export class InventoryRecalculateService extends TransactionService {
     );
 
     // logger.info(
-    //   `  [ADJUSTMENT TOTALS] qty=${totalAdjustmentQty.toFixed(2)}, value=${totalAdjustmentValue.toFixed(2)}`,
+    //   `  [ADJUSTMENT TOTALS] quantity=${totalAdjustmentQty.toFixed(2)}, value=${totalAdjustmentValue.toFixed(2)}`,
     // );
   }
 

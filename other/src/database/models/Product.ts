@@ -29,7 +29,7 @@ export class Product extends BaseEntity {
   @Column({
     type: "jsonb",
     nullable: true,
-    default: () => '\'{"total":{"qty":0,"value":0},"byStore":{}}\'::jsonb',
+    default: () => '\'{"total":{"quantity":0,"value":0},"byStore":{}}\'::jsonb',
   })
   stockMetadata?: StockMetadata;
 

@@ -12,7 +12,7 @@ import { withTransaction } from "@/shared/base/TransactionManager";
 export class ServiceService extends BaseService<Service> {
   protected repository: ServiceRepository;
   protected uniqueFields: (keyof Service)[] = ["code"];
-  protected uniqueScope?: (keyof Service)[] = ["companyId"];
+  protected uniqueScope?: (keyof Service)[] = ["storeId"];
   protected searchableFields = ["name", "code", "note"];
 
   constructor(

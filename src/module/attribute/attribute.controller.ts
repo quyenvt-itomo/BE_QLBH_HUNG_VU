@@ -7,7 +7,9 @@ import { ATTRIBUTE_TYPES } from "./attribute.types";
 @injectable()
 export class AttributeController extends BaseController<Attribute> {
   protected service: AttributeService;
-  constructor(@inject(ATTRIBUTE_TYPES.AttributeService) service: AttributeService) {
+  constructor(
+    @inject(ATTRIBUTE_TYPES.AttributeService) service: AttributeService,
+  ) {
     super();
     this.service = service;
   }

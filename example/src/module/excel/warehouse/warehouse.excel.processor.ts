@@ -19,7 +19,7 @@ import { parseAddressFromExcel } from "@/shared/utils/address.util";
 type WarehouseImportData = Partial<
   Pick<
     Warehouse,
-    "code" | "name" | "phone" | "address" | "note" | "managerId" | "companyId"
+    "code" | "name" | "phone" | "address" | "note" | "managerId" | "storeId"
   >
 >;
 
@@ -55,8 +55,8 @@ export class WarehouseExcelProcessor {
       result.totalRows = rows.length;
       if (!rows.length) return result;
 
-      const companyId = req.companyContext?.companyId;
-      if (!companyId) throw new BadRequestError("Thiếu thông tin công ty");
+      const storeId = req.storeContext?.storeId;
+      if (!storeId) throw new BadRequestError("Thiếu thông tin công ty");
 
       for (let i = 0; i < rows.length; i++) {
         const row = rows[i];
@@ -67,7 +67,7 @@ export class WarehouseExcelProcessor {
           let managerId: string | null = null;
           if (row.managerCode) {
             const manager = await this.employeeService.findOne({
-              where: { code: row.managerCode, companyId },
+              where: { code: row.managerCode, storeId },
             });
             managerId = manager?.id || null;
           }
@@ -82,7 +82,7 @@ export class WarehouseExcelProcessor {
           };
           await withTransaction(async (manager) => {
             const existing = await this.warehouseService.findOne({
-              where: { code: row.code, companyId },
+              where: { code: row.code, storeId },
             });
             if (existing && options.duplicateHandling === "update") {
               await this.warehouseService.update(
@@ -97,7 +97,7 @@ export class WarehouseExcelProcessor {
             } else if (existing && options.duplicateHandling === "stop") {
               throw new Error(`Mã kho ${row.code} đã tồn tại`);
             } else {
-              data.companyId = companyId;
+              data.storeId = storeId;
               await this.warehouseService.create(data, manager, req);
             }
           });

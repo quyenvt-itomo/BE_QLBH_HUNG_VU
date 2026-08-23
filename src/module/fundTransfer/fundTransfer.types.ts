@@ -1,6 +1,1 @@
-export const FUND_TRANSFER_TYPES = {
-  FundTransferController: Symbol.for("FundTransferController"),
-  FundTransferService: Symbol.for("FundTransferService"),
-  FundTransferRepository: Symbol.for("FundTransferRepository"),
-  FundTransferRouter: Symbol.for("FundTransferRouter"),
-};
+export const FUND_TRANSFER_TYPES = { Repository: Symbol.for("FundTransferRepository"), Service: Symbol.for("FundTransferService"), Controller: Symbol.for("FundTransferController"), Router: Symbol.for("FundTransferRouter") };

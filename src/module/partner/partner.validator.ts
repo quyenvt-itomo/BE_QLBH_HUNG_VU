@@ -1,74 +1,59 @@
+import * as z from "zod";
+import { PartnerType } from "@/database/models";
 import {
   AddressSchema,
   BankAccountSchema,
-  BaseCodeSchema,
   BaseCreateSchema,
   BaseParamsSchema,
   BaseQuerySchema,
   BaseUpdateSchema,
+  DateTransform,
   RepresentativeSchema,
-  zBooleanLike,
 } from "@/shared/base/BaseValidator";
-import * as z from "zod";
-import { PartnerType } from "@/database/models/Partner";
-
-export const PartnerContactSchema = z.object({
-  id: z.uuid().optional(),
-  name: z.string().trim().nonempty(),
-  phone: z.string().trim().nullish(),
-  email: z.email().nullish(),
-  banks: z.array(BankAccountSchema).optional().default([]),
-});
+import { CreatePartnerContactSchema } from "../partnerContact/partnerContact.validator";
 
 export const CreatePartnerSchema = BaseCreateSchema.extend({
-  companyId: z.uuid(),
-  types: z.array(z.enum(PartnerType)).min(1),
-  groupId: z.uuid().nullish(),
-  staffId: z.uuid().nullish(),
-  paymentTermId: z.uuid().nullish(),
+  type: z.enum(PartnerType),
+  groupId: z.uuid(),
 
-  name: z.string().trim().nonempty(),
-  code: BaseCodeSchema.optional(),
+  isOrganization: z.boolean().default(true),
+
+  name: z.string().nonempty(),
+  code: z.string().optional(),
   email: z.email().nullish(),
-  phone: z.string().trim().nullish(),
-  zaloLink: z.string().trim().nullish(),
-  taxCode: z.string().trim().nullish(),
-  address: AddressSchema.nullish(),
+  phone: z.string().nullish(),
+  taxCode: z.string().nullish(),
+  addresses: z.array(AddressSchema).optional(),
   representative: RepresentativeSchema.nullish(),
-  banks: z.array(BankAccountSchema).optional().default([]),
-  contacts: z.array(PartnerContactSchema).optional().default([]),
+  banks: z.array(BankAccountSchema).optional(),
+
+  contacts: z.array(CreatePartnerContactSchema).optional().default([]),
 });
 
 export const UpdatePartnerSchema = BaseUpdateSchema.extend({
-  types: z.array(z.enum(PartnerType)).min(1).optional(),
-  groupId: z.uuid().nullish(),
-  staffId: z.uuid().nullish(),
-  paymentTermId: z.uuid().nullish(),
+  groupId: z.uuid().optional(),
 
-  name: z.string().trim().nonempty().optional(),
-  code: BaseCodeSchema.optional(),
+  isOrganization: z.boolean().optional(),
+
+  name: z.string().nonempty().optional(),
+  code: z.string().optional(),
   email: z.email().nullish(),
-  phone: z.string().trim().nullish(),
-  zaloLink: z.string().trim().nullish(),
-  taxCode: z.string().trim().nullish(),
-  address: AddressSchema.nullish(),
+  phone: z.string().nullish(),
+  taxCode: z.string().nullish(),
+  addresses: z.array(AddressSchema).optional(),
   representative: RepresentativeSchema.nullish(),
   banks: z.array(BankAccountSchema).optional(),
-  contacts: z.array(PartnerContactSchema).optional(),
 });
 
+// Extend BaseQuerySchema with Partner-specific filters
 export const PartnerQuerySchema = BaseQuerySchema.extend({
-  type: z.enum(PartnerType).optional(),
-  groupId: z.uuid().optional(),
+  type: z.enum(PartnerType),
+  offsetAt: DateTransform.optional(),
 });
 
 export const PartnerParamsSchema = BaseParamsSchema;
-export const PartnerPublicParamsSchema = z.object({
-  taxCode: z.string().trim().min(1),
-});
 
 export type CreatePartnerDto = z.infer<typeof CreatePartnerSchema>;
 export type UpdatePartnerDto = z.infer<typeof UpdatePartnerSchema>;
 export type PartnerQueryDto = z.infer<typeof PartnerQuerySchema>;
 export type PartnerParamsDto = z.infer<typeof PartnerParamsSchema>;
-export type PartnerPublicParamsDto = z.infer<typeof PartnerPublicParamsSchema>;

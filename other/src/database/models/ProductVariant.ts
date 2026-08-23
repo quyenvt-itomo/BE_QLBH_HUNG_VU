@@ -12,13 +12,13 @@ import { ProductOption } from "./ProductOption";
 
 export interface StockMetadata {
   total: {
-    qty: number;
+    quantity: number;
     value: number;
   };
   byStore: Record<
     string,
     {
-      qty: number;
+      quantity: number;
       value: number;
     }
   >;
@@ -47,12 +47,12 @@ export class ProductVariant extends BaseEntity {
   /**
    * 🚀 Denormalized stock data for high-performance queries
    * Updated automatically after stock_trackings changes
-   * Structure: { total: { qty, value }, byStore: { [storeId]: { qty, value } } }
+   * Structure: { total: { quantity, value }, byStore: { [storeId]: { quantity, value } } }
    */
   @Column({
     type: "jsonb",
     nullable: true,
-    default: () => '\'{"total":{"qty":0,"value":0},"byStore":{}}\'::jsonb',
+    default: () => '\'{"total":{"quantity":0,"value":0},"byStore":{}}\'::jsonb',
   })
   stockMetadata?: StockMetadata;
 

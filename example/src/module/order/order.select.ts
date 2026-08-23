@@ -4,7 +4,7 @@ import { FindOptionsRelations, FindOptionsSelect } from "typeorm";
 
 export const OrderSelectList: FindOptionsSelect<Order> = {
   ...BaseSelect,
-  companyId: true,
+  storeId: true,
   code: true,
   timeAt: true,
   quotationId: true,

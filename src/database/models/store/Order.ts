@@ -18,6 +18,10 @@ export enum OrderType {
   PURCHASE_RETURN = "purchase_return", // trả NCC
   SALE_RETURN = "sale_return", // khách trả
 }
+export const ReturnOrderTypes = [
+  OrderType.PURCHASE_RETURN,
+  OrderType.SALE_RETURN,
+];
 
 export enum OrderStatus {
   DRAFT = "draft", // Vừa tạo, chưa hoàn thành

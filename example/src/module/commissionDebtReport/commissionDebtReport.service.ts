@@ -17,7 +17,7 @@ export class CommissionDebtReportService extends TransactionService {
    */
   async getReport(params: CommissionDebtReportQueryDto): Promise<ApiResponse> {
     const {
-      companyId,
+      storeId,
       page = 1,
       size = 20,
       partnerContactIds,
@@ -33,7 +33,7 @@ export class CommissionDebtReportService extends TransactionService {
     const contactsQb = manager
       .createQueryBuilder(PartnerContact, "pc")
       .innerJoin(Partner, "p", "p.id = pc.partnerId AND p.deletedAt IS NULL")
-      .where("p.companyId = :companyId", { companyId })
+      .where("p.storeId = :storeId", { storeId })
       .andWhere("pc.deletedAt IS NULL");
 
     if (this.checkArrayFilter(partnerContactIds)) {
@@ -140,7 +140,7 @@ export class CommissionDebtReportService extends TransactionService {
    */
   async getDetail(params: CommissionDebtDetailQueryDto): Promise<ApiResponse> {
     const {
-      companyId,
+      storeId,
       partnerContactId,
       page = 1,
       size = 20,
@@ -155,7 +155,7 @@ export class CommissionDebtReportService extends TransactionService {
       .createQueryBuilder(CommissionDebtTransaction, "tx")
       .innerJoin(PartnerContact, "pc", "pc.id = tx.partnerContactId")
       .innerJoin(Partner, "p", "p.id = pc.partnerId AND p.deletedAt IS NULL")
-      .where("p.companyId = :companyId", { companyId })
+      .where("p.storeId = :storeId", { storeId })
       .andWhere("tx.deletedAt IS NULL")
       .orderBy("tx.occurredAt", sortOrder);
 

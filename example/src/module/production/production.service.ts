@@ -20,7 +20,7 @@ export class ProductionService extends BaseService<Production> {
   protected repository: ProductionRepository;
   protected targetEntity = "Production";
   protected uniqueFields: (keyof Production)[] = ["code"];
-  protected uniqueScope?: (keyof Production)[] = ["companyId"];
+  protected uniqueScope?: (keyof Production)[] = ["storeId"];
   protected searchableFields = ["code", "name", "note"];
   protected timeField: keyof Production = "timeAt";
 

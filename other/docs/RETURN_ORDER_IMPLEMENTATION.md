@@ -11,7 +11,7 @@ Implement nghiệp vụ **hoàn trả hàng** với 2 loại:
 
 ### 1. FIFO Logic cho hoàn trả
 
-- **Xuất kho**: Lưu metadata chứa thông tin FIFO `[[qty, cost], [qty, cost], ...]`
+- **Xuất kho**: Lưu metadata chứa thông tin FIFO `[[quantity, cost], [quantity, cost], ...]`
 - **Hoàn trả**: Hoàn theo thứ tự **NGƯỢC LẠI** (LIFO của đợt xuất)
 - **VD**: Xuất 5 = `[3@100k, 2@105k]` → Hoàn 3 = `[2@105k, 1@100k]`
 
@@ -66,7 +66,7 @@ export enum InventoryRefTypeEnum {
 **Methods mới:**
 
 - `processReturnWithMetadata()`: Xử lý hoàn trả theo metadata từ đơn gốc
-- `convertToMetadata()`: Convert FifoResult → metadata format `[[qty, cost], ...]`
+- `convertToMetadata()`: Convert FifoResult → metadata format `[[quantity, cost], ...]`
 
 **Logic:**
 
@@ -323,7 +323,7 @@ private async processNormalOrderLine(
 ```typescript
 // Trong query transactions, thêm filter cho return orders
 const transactions = await manager
-  .createQueryBuilder(PartnerDebtTransaction, "tx")
+  .createQueryBuilder(DebtTransaction, "tx")
   // ... existing conditions
   .andWhere("tx.refType IN (:...refTypes)", {
     refTypes: [
@@ -604,7 +604,7 @@ const returnOrder = await orderService.create({
 
 ## ⚠️ Lưu ý quan trọng
 
-1. **Metadata format**: `[[qty, cost], [qty, cost], ...]`
+1. **Metadata format**: `[[quantity, cost], [quantity, cost], ...]`
 2. **TaxRate**: Bắt buộc lấy từ `refOrderLineId`, không nhận mới
 3. **Quantity validation**: Cần check tổng đã hoàn không vượt quá gốc
 4. **FIFO reverse**: Hoàn theo thứ tự NGƯỢC LẠI (LIFO của đợt xuất)

@@ -14,7 +14,7 @@ import { TransactionType } from "@/shared/constants/enum";
 export class VatDebtAdjustmentService extends BaseService<VatDebtAdjustment> {
   protected repository: VatDebtAdjustmentRepository;
   protected uniqueFields: (keyof VatDebtAdjustment)[] = ["code"];
-  protected uniqueScope?: (keyof VatDebtAdjustment)[] = ["companyId"];
+  protected uniqueScope?: (keyof VatDebtAdjustment)[] = ["storeId"];
   protected searchableFields = ["code"];
 
   constructor(
@@ -92,9 +92,9 @@ export class VatDebtAdjustmentService extends BaseService<VatDebtAdjustment> {
     data: DeepPartial<VatDebtAdjustment>,
     manager: EntityManager,
   ): Promise<void> {
-    if (!data.companyId || !data.occurredAt) return;
+    if (!data.storeId || !data.occurredAt) return;
     const counted = await this.vatDebtSync.getBalanceAtDate(
-      data.companyId,
+      data.storeId,
       data.occurredAt,
       manager,
     );

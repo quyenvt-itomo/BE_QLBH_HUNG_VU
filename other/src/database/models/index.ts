@@ -33,7 +33,7 @@ import { FundTransaction } from "./FundTransaction";
 import { FundSnapshot } from "./FundSnapshot";
 import { PartnerDebtAdjustment } from "./store/PartnerDebtAdjustment";
 import { PartnerDebtOffset } from "./store/PartnerDebtOffset";
-import { PartnerDebtTransaction } from "./store/PartnerDebtTransaction";
+import { DebtTransaction } from "./store/DebtTransaction";
 import { PartnerDebtSnapshot } from "./store/PartnerDebtSnapshot";
 import { VatDebtTransaction } from "./store/VatDebtTransaction";
 import { VatDebtSnapshot } from "./store/VatDebtSnapshot";
@@ -91,7 +91,7 @@ export const entities = [
   PartnerDebtAdjustment,
   PartnerDebtOffset,
 
-  PartnerDebtTransaction,
+  DebtTransaction,
   PartnerDebtSnapshot,
 
   VatDebtAdjustment,

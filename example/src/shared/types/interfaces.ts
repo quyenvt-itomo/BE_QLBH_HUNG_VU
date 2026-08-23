@@ -110,7 +110,7 @@ export interface UserContext {
 }
 
 export interface CompanyContext {
-  companyId: string;
+  storeId: string;
   companyName: string;
   companyCode: string;
   companyType: OrganizationTypeEnum;
@@ -160,7 +160,7 @@ export interface RequestContext {
   query?: any;
   permissions?: PermissionStructure;
   userContext?: UserContext;
-  companyContext?: CompanyContext;
+  storeContext?: CompanyContext;
 }
 
 export interface AuthTokens {

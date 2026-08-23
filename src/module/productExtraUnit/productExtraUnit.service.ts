@@ -1,19 +1,4 @@
-import { injectable, inject } from "inversify";
-import { BaseService } from "@/shared/base/BaseService";
-import { ProductExtraUnitRepository } from "./productExtraUnit.repository";
-import { PRODUCT_EXTRA_UNIT_TYPES } from "./productExtraUnit.types";
 import { ProductExtraUnit } from "@/database/models/ProductExtraUnit";
-
-@injectable()
-export class ProductExtraUnitService extends BaseService<ProductExtraUnit> {
-  protected repository: ProductExtraUnitRepository;
-  protected searchableFields = [];
-
-  constructor(
-    @inject(PRODUCT_EXTRA_UNIT_TYPES.ProductExtraUnitRepository)
-    repository: ProductExtraUnitRepository,
-  ) {
-    super();
-    this.repository = repository;
-  }
-}
+import { SimpleService } from "../_shared/simple.service";
+import { ProductExtraUnitRepository } from "./productExtraUnit.repository";
+export class ProductExtraUnitService extends SimpleService<ProductExtraUnit> { constructor(repository: ProductExtraUnitRepository) { super(repository, "global"); } }

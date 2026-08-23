@@ -11,7 +11,7 @@ declare module "express-serve-static-core" {
   interface Request {
     user?: JwtPayload;
     userContext?: UserContext | null;
-    companyContext?: CompanyContext | null;
+    storeContext?: CompanyContext | null;
     permissions?: PermissionStructure;
     partnerContext?: PartnerContext;
     importExcel?: Module[];

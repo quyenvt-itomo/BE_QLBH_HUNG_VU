@@ -72,7 +72,7 @@ import {
   VatDebtService,
 } from "../vatDebt";
 import dayjs from "dayjs";
-import { PartnerDebtTransaction } from "@/database/models/store/PartnerDebtTransaction";
+import { DebtTransaction } from "@/database/models/store/DebtTransaction";
 import { VatDebtTransaction } from "@/database/models/store/VatDebtTransaction";
 import { Store } from "@/database/models/Store";
 import { StoreTransfer } from "@/database/models/StoreTransfer";
@@ -1196,7 +1196,7 @@ export class DashboardRepository {
     const netDebt = totalReceivable - totalPayable;
 
     const partnerDebtAdjustmentQb = this.dataSource
-      .createQueryBuilder(PartnerDebtTransaction, "pdt")
+      .createQueryBuilder(DebtTransaction, "pdt")
       .where('pdt."occurredAt" BETWEEN :startAt AND :endAt', { startAt, endAt })
       .andWhere("pdt.refType = :refType", {
         refType: DebtRefTypeEnum.ADJUSTMENT,
@@ -1531,14 +1531,14 @@ export class DashboardRepository {
         p.name,
         p.code,
         c.name as "categoryName",
-        COALESCE(${storeId ? "(COALESCE(p.\"stockMetadata\", '{}'::jsonb)->'byStore'-> ($3::text) ->> 'qty')::numeric" : "(COALESCE(p.\"stockMetadata\", '{}'::jsonb)->'total'->> 'qty')::numeric"}, 0) as "currentStock",
+        COALESCE(${storeId ? "(COALESCE(p.\"stockMetadata\", '{}'::jsonb)->'byStore'-> ($3::text) ->> 'quantity')::numeric" : "(COALESCE(p.\"stockMetadata\", '{}'::jsonb)->'total'->> 'quantity')::numeric"}, 0) as "currentStock",
         COALESCE(s."totalSold", 0) as "totalSold"
       FROM products p
       LEFT JOIN attributes c ON c.id = p."categoryId"
       LEFT JOIN sales_30d s ON s."productId" = p.id
       WHERE p."deletedAt" IS NULL
-        AND COALESCE(${storeId ? "(COALESCE(p.\"stockMetadata\", '{}'::jsonb)->'byStore'-> ($3::text) ->> 'qty')::numeric" : "(COALESCE(p.\"stockMetadata\", '{}'::jsonb)->'total'->> 'qty')::numeric"}, 0) > 0
-        AND COALESCE(${storeId ? "(COALESCE(p.\"stockMetadata\", '{}'::jsonb)->'byStore'-> ($3::text) ->> 'qty')::numeric" : "(COALESCE(p.\"stockMetadata\", '{}'::jsonb)->'total'->> 'qty')::numeric"}, 0) < $${storeId ? "4" : "3"}
+        AND COALESCE(${storeId ? "(COALESCE(p.\"stockMetadata\", '{}'::jsonb)->'byStore'-> ($3::text) ->> 'quantity')::numeric" : "(COALESCE(p.\"stockMetadata\", '{}'::jsonb)->'total'->> 'quantity')::numeric"}, 0) > 0
+        AND COALESCE(${storeId ? "(COALESCE(p.\"stockMetadata\", '{}'::jsonb)->'byStore'-> ($3::text) ->> 'quantity')::numeric" : "(COALESCE(p.\"stockMetadata\", '{}'::jsonb)->'total'->> 'quantity')::numeric"}, 0) < $${storeId ? "4" : "3"}
       ORDER BY "currentStock" ASC
       LIMIT $${storeId ? "5" : "4"}
       `,
@@ -3604,7 +3604,7 @@ export class DashboardRepository {
     productId: string,
     date: Date,
     storeId?: string,
-  ): Promise<{ qty: number; value: number }> {
+  ): Promise<{ quantity: number; value: number }> {
     const qb = this.dataSource
       .createQueryBuilder(InventoryTransaction, "it")
       .innerJoin(ProductVariant, "pv", 'pv.id = it."productVariantId"')
@@ -3624,7 +3624,7 @@ export class DashboardRepository {
               WHEN it.type = :outType THEN -it.quantity
               ELSE 0
             END
-          ), 0) as qty
+          ), 0) as quantity
         `,
         `
           COALESCE(SUM(
@@ -3643,7 +3643,7 @@ export class DashboardRepository {
       .getRawOne();
 
     return {
-      qty: Number(row?.qty || 0),
+      quantity: Number(row?.quantity || 0),
       value: Number(row?.value || 0),
     };
   }
@@ -3766,7 +3766,7 @@ export class DashboardRepository {
         totalQuantitySold > 0 ? totalRevenue / totalQuantitySold : 0,
       averageCostPrice:
         totalQuantitySold > 0 ? totalCost / totalQuantitySold : 0,
-      endingInventory: inventory.qty,
+      endingInventory: inventory.quantity,
       endingInventoryGrowth: 0,
       endingInventoryValue: inventory.value,
       endingInventoryValueGrowth: 0,
@@ -3991,7 +3991,7 @@ export class DashboardRepository {
       SELECT
         p.id,
         p.name,
-        COALESCE(${storeId ? "(COALESCE(p.\"stockMetadata\",'{}'::jsonb)->'byStore'-> ($3::text) ->> 'qty')::numeric" : "(COALESCE(p.\"stockMetadata\",'{}'::jsonb)->'total'->> 'qty')::numeric"}, 0) as "currentStock",
+        COALESCE(${storeId ? "(COALESCE(p.\"stockMetadata\",'{}'::jsonb)->'byStore'-> ($3::text) ->> 'quantity')::numeric" : "(COALESCE(p.\"stockMetadata\",'{}'::jsonb)->'total'->> 'quantity')::numeric"}, 0) as "currentStock",
         COALESCE(${storeId ? "(COALESCE(p.\"stockMetadata\",'{}'::jsonb)->'byStore'-> ($3::text) ->> 'value')::numeric" : "(COALESCE(p.\"stockMetadata\",'{}'::jsonb)->'total'->> 'value')::numeric"}, 0) as "stockValue",
         ls."lastSoldDate",
         COALESCE(sp."soldQty", 0) as "soldQty"
@@ -3999,7 +3999,7 @@ export class DashboardRepository {
       LEFT JOIN sold_in_period sp ON sp."productId" = p.id
       LEFT JOIN last_sale ls ON ls."productId" = p.id
       WHERE p."deletedAt" IS NULL
-        AND COALESCE(${storeId ? "(COALESCE(p.\"stockMetadata\",'{}'::jsonb)->'byStore'-> ($3::text) ->> 'qty')::numeric" : "(COALESCE(p.\"stockMetadata\",'{}'::jsonb)->'total'->> 'qty')::numeric"}, 0) > 0
+        AND COALESCE(${storeId ? "(COALESCE(p.\"stockMetadata\",'{}'::jsonb)->'byStore'-> ($3::text) ->> 'quantity')::numeric" : "(COALESCE(p.\"stockMetadata\",'{}'::jsonb)->'total'->> 'quantity')::numeric"}, 0) > 0
         AND COALESCE(sp."soldQty", 0) = 0
       ORDER BY "stockValue" DESC
       LIMIT $${storeId ? "4" : "3"}

@@ -1,7 +1,7 @@
 import { inject, injectable } from "inversify";
 import { Request, Response, NextFunction } from "express";
 import { BaseController } from "@/shared/base/BaseController";
-import { File } from "@/database/models/File";
+import { File } from "@/database/models";
 import { FileService } from "./file.service";
 import { FILE_TYPES } from "./file.types";
 import {

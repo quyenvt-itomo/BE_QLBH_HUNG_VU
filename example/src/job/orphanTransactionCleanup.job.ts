@@ -23,14 +23,14 @@ async function cleanupOrphanInventoryTransactions(): Promise<void> {
       WHERE tx."deletedAt" IS NULL
         AND (
           tx."productIdId" IS NULL
-          OR tx."companyId" IS NULL
+          OR tx."storeId" IS NULL
           OR NOT EXISTS (
             SELECT 1 FROM productIds i
             WHERE i.id = tx."productIdId" AND i."deletedAt" IS NULL
           )
           OR NOT EXISTS (
             SELECT 1 FROM stores s
-            WHERE s.id = tx."companyId" AND s."deletedAt" IS NULL
+            WHERE s.id = tx."storeId" AND s."deletedAt" IS NULL
           )
         )
       `,

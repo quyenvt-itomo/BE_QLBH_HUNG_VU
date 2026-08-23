@@ -18,13 +18,13 @@ export interface DeviceInfo {
 
 @Entity("login_approvals")
 @Index(["userId", "deviceId"])
-@Index(["companyId", "status"])
+@Index(["storeId", "status"])
 export class LoginApproval extends BaseEntity {
   @Column({ type: "uuid" })
   userId: string;
 
   @Column({ type: "uuid" })
-  companyId: string;
+  storeId: string;
 
   @Column({ type: "varchar", length: 255 })
   deviceId: string;

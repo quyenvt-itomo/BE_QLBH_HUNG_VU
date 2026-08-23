@@ -4,7 +4,7 @@ import { FindOptionsRelations, FindOptionsSelect } from "typeorm";
 
 export const JobPositionSelectBasic: FindOptionsSelect<JobPosition> = {
   ...BaseSelect,
-  companyId: true,
+  storeId: true,
   name: true,
   level: true,
   jobTitleId: true,

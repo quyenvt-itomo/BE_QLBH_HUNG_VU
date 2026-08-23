@@ -6,7 +6,7 @@ export const RoleSelectBasic: FindOptionsSelect<Role> = {
   ...BaseSelect,
   name: true,
   permissions: true,
-  companyId: true,
+  storeId: true,
   importExcel: true,
   exportExcel: true,
 };

@@ -1,0 +1,1 @@
+export const PRODUCT_PRICE_HISTORY_TYPES = { Repository: Symbol.for("ProductPriceHistoryRepository"), Service: Symbol.for("ProductPriceHistoryService"), Controller: Symbol.for("ProductPriceHistoryController"), Router: Symbol.for("ProductPriceHistoryRouter") };

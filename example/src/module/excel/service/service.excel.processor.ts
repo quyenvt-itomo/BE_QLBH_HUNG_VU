@@ -58,8 +58,8 @@ export class ServiceExcelProcessor {
       // Parse units sheet
       const unitsMap = this.parseUnits(workbook);
 
-      const companyId = req.companyContext?.companyId;
-      if (!companyId) throw new BadRequestError("Thiếu thông tin công ty");
+      const storeId = req.storeContext?.storeId;
+      if (!storeId) throw new BadRequestError("Thiếu thông tin công ty");
 
       for (let i = 0; i < rows.length; i++) {
         const row = rows[i];
@@ -71,7 +71,7 @@ export class ServiceExcelProcessor {
           const data: Partial<
             Pick<
               Service,
-              "code" | "name" | "type" | "taxRate" | "note" | "companyId"
+              "code" | "name" | "type" | "taxRate" | "note" | "storeId"
             >
           > = {
             code: row.code,
@@ -83,7 +83,7 @@ export class ServiceExcelProcessor {
           let savedService: Service | null = null;
           await withTransaction(async (manager) => {
             const existing = await this.serviceService.findOne({
-              where: { code: row.code, companyId },
+              where: { code: row.code, storeId },
             });
             if (existing && options.duplicateHandling === "update") {
               savedService = await this.serviceService.update(
@@ -98,7 +98,7 @@ export class ServiceExcelProcessor {
             } else if (existing && options.duplicateHandling === "stop") {
               throw new Error(`Mã ${row.code} đã tồn tại`);
             } else {
-              data.companyId = companyId;
+              data.storeId = storeId;
               savedService = await this.serviceService.create(
                 data,
                 manager,

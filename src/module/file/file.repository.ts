@@ -1,18 +1,15 @@
 import { injectable } from "inversify";
-import {
-  BaseRepository,
-  IFindPaginationOptions,
-} from "@/shared/base/BaseRepository";
+import { BaseRepository } from "@/shared/base/BaseRepository";
 import { File } from "@/database/models/File";
 import { FileSelectFull, FileRelations } from "./file.select";
-import { Brackets, IsNull, LessThan, SelectQueryBuilder } from "typeorm";
+import { Brackets, IsNull, LessThan } from "typeorm";
 import { StorageStats } from "./file.types";
 import {
   EntityType,
   FileCategory,
   FileStatus,
   FileType,
-} from "@/database/models/File";
+} from "@/database/models";
 
 /**
  * File Repository -  scoped
@@ -23,24 +20,6 @@ export class FileRepository extends BaseRepository<File> {
   protected entityClass = File;
   protected selectedFields = FileSelectFull;
   protected relations = FileRelations;
-
-  // protected async extendQueryBuilder(
-  //   qb: SelectQueryBuilder<File>,
-  //   options: IFindPaginationOptions<File>,
-  // ): Promise<void> {
-  //   super.extendQueryBuilder?.(qb, options);
-  //   if (options?.moreQuery?.groupId) {
-  //     qb.andWhere("entity.groupId = :groupId", {
-  //       groupId: options.moreQuery.groupId,
-  //     });
-  //   }
-
-  //   if (options.type === FileType.IMAGE)
-  //     qb.andWhere("entity.type = :image", { image: FileType.IMAGE });
-  //   else qb.andWhere("entity.type <> :image", { image: FileType.IMAGE });
-
-  //   qb.andWhere("entity.status = :active", { active: FileStatus.ACTIVE });
-  // }
 
   // Set main file (đặt isMain=true, còn lại=false)
   async setMainFile(

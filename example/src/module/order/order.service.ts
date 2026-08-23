@@ -34,7 +34,7 @@ import { OrderLineRepository } from "../orderLine/orderLine.repository";
 export class OrderService extends BaseService<Order> {
   protected repository: OrderRepository;
   protected uniqueFields: (keyof Order)[] = ["code"];
-  protected uniqueScope?: (keyof Order)[] = ["companyId"];
+  protected uniqueScope?: (keyof Order)[] = ["storeId"];
   protected searchableFields = ["code", "note"];
   protected timeField: keyof Order = "timeAt";
 

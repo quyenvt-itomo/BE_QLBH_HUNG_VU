@@ -1,18 +1,14 @@
+import { DeepPartial, EntityManager, SelectQueryBuilder } from "typeorm";
 import {
   BaseRepository,
   IFindPaginationOptions,
 } from "@/shared/base/BaseRepository";
-import { EntityManager, In, SelectQueryBuilder } from "typeorm";
 import {
   Attribute,
   AttributeSnapshot,
   AttributeType,
-  DEFAULT_AREA_UNIT,
-  DEFAULT_MESH_UNIT,
-  DEFAULT_WEIGHT_UNIT,
 } from "@/database/models/Attribute";
 import { AttributeRelations, AttributeSelectFull } from "./attribute.select";
-import { DeepPartial } from "typeorm";
 
 export class AttributeRepository extends BaseRepository<Attribute> {
   protected entityClass = Attribute;
@@ -48,31 +44,6 @@ export class AttributeRepository extends BaseRepository<Attribute> {
     return {
       id: attribute.id,
       name: attribute.name,
-    };
-  }
-
-  async getDefaultProductUnit() {
-    const defaultUnits = await this.findByOptions({
-      where: {
-        name: In([DEFAULT_WEIGHT_UNIT, DEFAULT_MESH_UNIT, DEFAULT_AREA_UNIT]),
-        type: AttributeType.UNIT,
-      },
-    });
-
-    const defaultWeightUnit = defaultUnits.find(
-      (unit) => unit.name === DEFAULT_WEIGHT_UNIT,
-    );
-    const defaultMeshUnit = defaultUnits.find(
-      (unit) => unit.name === DEFAULT_MESH_UNIT,
-    );
-    const defaultAreaUnit = defaultUnits.find(
-      (unit) => unit.name === DEFAULT_AREA_UNIT,
-    );
-
-    return {
-      defaultWeightUnit,
-      defaultMeshUnit,
-      defaultAreaUnit,
     };
   }
 

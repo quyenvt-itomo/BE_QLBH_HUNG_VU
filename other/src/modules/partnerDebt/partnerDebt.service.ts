@@ -1,5 +1,5 @@
 import { inject, injectable } from "inversify";
-import { PartnerDebtTransaction } from "@/database/models/store/PartnerDebtTransaction";
+import { DebtTransaction } from "@/database/models/store/DebtTransaction";
 
 import { EntityManager, In } from "typeorm";
 import { Partner } from "@/database/models/Partner";
@@ -290,7 +290,7 @@ export class PartnerDebtService extends TransactionService {
     }
 
     const txQb = manager
-      .createQueryBuilder(PartnerDebtTransaction, "tx")
+      .createQueryBuilder(DebtTransaction, "tx")
       .where("tx.partnerId IN (:...partnerIds)", { partnerIds })
       .andWhere("tx.side = :side", { side })
       .andWhere("tx.occurredAt >= :earliestSnapshotAt", {
@@ -445,7 +445,7 @@ export class PartnerDebtService extends TransactionService {
      * ===== 4. Lấy transaction
      */
     const txQb = manager
-      .createQueryBuilder(PartnerDebtTransaction, "tx")
+      .createQueryBuilder(DebtTransaction, "tx")
       .where("tx.partnerId = :partnerId", { partnerId })
       .andWhere("tx.side = :side", { side })
       .andWhere("tx.occurredAt >= :earliestSnapshotAt", {
@@ -465,7 +465,7 @@ export class PartnerDebtService extends TransactionService {
      */
     let totalIncreaseAmount = 0;
     let totalDecreaseAmount = 0;
-    const dataRes: PartnerDebtTransaction[] = [];
+    const dataRes: DebtTransaction[] = [];
 
     transactions.forEach((tx) => {
       const snapshotAt =
@@ -639,7 +639,7 @@ export class PartnerDebtService extends TransactionService {
        * ===== 4. Lấy transaction từ snapshot → atDate
        */
       const txQb = mainManager
-        .createQueryBuilder(PartnerDebtTransaction, "tx")
+        .createQueryBuilder(DebtTransaction, "tx")
         .where("tx.partnerId = :partnerId", { partnerId })
         .andWhere("tx.side = :side", { side })
         .andWhere("tx.occurredAt >= :earliestSnapshotAt", {

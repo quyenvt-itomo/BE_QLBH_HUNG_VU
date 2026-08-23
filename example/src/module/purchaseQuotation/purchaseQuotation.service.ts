@@ -38,7 +38,7 @@ import { NotificationType } from "@/database/models/Notification";
 export class PurchaseQuotationService extends BaseService<PurchaseQuotation> {
   protected repository: PurchaseQuotationRepository;
   protected uniqueFields: (keyof PurchaseQuotation)[] = ["code"];
-  protected uniqueScope?: (keyof PurchaseQuotation)[] = ["companyId"];
+  protected uniqueScope?: (keyof PurchaseQuotation)[] = ["storeId"];
   protected searchableFields = ["code", "note"];
   protected timeField: keyof PurchaseQuotation = "timeAt";
 
@@ -87,7 +87,7 @@ export class PurchaseQuotationService extends BaseService<PurchaseQuotation> {
     if (data.referralCodeId) {
       const ref = await this.referralCodeService.validateAndResolve(
         data.referralCodeId,
-        data.companyId || req?.companyContext?.companyId || "",
+        data.storeId || req?.storeContext?.storeId || "",
         manager,
       );
 
@@ -374,7 +374,7 @@ export class PurchaseQuotationService extends BaseService<PurchaseQuotation> {
       await this.partnerRepository.ensurePartnerWithContact(
         pq.supplierSnapshot,
         pq.quoterSnapshot,
-        pq.companyId,
+        pq.storeId,
         PartnerType.SUPPLIER,
         manager,
       );

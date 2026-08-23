@@ -21,7 +21,7 @@ export const PartnerContactSchema = z.object({
 });
 
 export const CreatePartnerSchema = BaseCreateSchema.extend({
-  companyId: z.uuid(),
+  storeId: z.uuid(),
   types: z.array(z.enum(PartnerType)).min(1),
   groupId: z.uuid().nullish(),
   staffId: z.uuid().nullish(),

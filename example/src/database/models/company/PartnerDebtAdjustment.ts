@@ -3,7 +3,7 @@ import { Column, Entity, JoinColumn, ManyToOne } from "typeorm";
 import { Partner, PartnerSnapshot } from "./Partner";
 import { TransactionType } from "@/shared/constants/enum";
 import { BaseEntityWithCompany } from "./BaseEntityWithCompany";
-import { PartnerDebtSideEnum } from "./PartnerDebtTransaction";
+import { PartnerDebtSideEnum } from "./DebtTransaction";
 import { InvoiceSnapshot } from "./Invoice";
 
 /**

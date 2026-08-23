@@ -1,91 +1,95 @@
+import { injectable } from "inversify";
+import { SelectQueryBuilder } from "typeorm";
 import {
   BaseRepository,
   IFindPaginationOptions,
 } from "@/shared/base/BaseRepository";
-import { Order, OrderSnapshot } from "@/database/models/store/Order";
-import {
-  OrderSelectFull,
-  OrderSelectList,
-  OrderRelations,
-  OrderRelationsList,
-  OrderRelationSelects,
-  OrderRelationSelectsForList,
-} from "./order.select";
-import { injectable } from "inversify";
-import { DeepPartial, EntityManager, SelectQueryBuilder } from "typeorm";
+import { IncomeExpense, Order, OrderLine, OrderType } from "@/database/models";
 import { OrderQueryDto } from "./order.validator";
 
 @injectable()
 export class OrderRepository extends BaseRepository<Order> {
   protected entityClass = Order;
-  protected selectedFields = OrderSelectFull;
-  protected selectedFieldsForList = OrderSelectList;
-  protected relations = OrderRelations;
-  protected relationsForList = OrderRelationsList;
-  protected relationSelects = OrderRelationSelects;
-  protected relationSelectsForList = OrderRelationSelectsForList;
-
-  protected multipleFile: boolean = true;
+  protected relations = {
+    partner: true,
+    shipper: true,
+    lines: { product: true, unit: true },
+    refOrder: true,
+  } as any;
 
   protected async extendQueryBuilder(
     qb: SelectQueryBuilder<Order>,
     options: IFindPaginationOptions<Order>,
   ): Promise<void> {
     const alias = qb.alias;
-    const { customerId, staffId, isCompleted, quotationId } =
-      (options?.moreQuery as OrderQueryDto) || {};
+    const {
+      partnerIds,
+      supplierIds,
+      customerIds,
+      shipperIds,
+      productIds,
+      fundIds,
+    } = (options.moreQuery as OrderQueryDto) || {};
+    const partnerId = (options.moreQuery as any)?.partnerId as string | undefined;
 
-    if (customerId) {
-      qb.andWhere(`${alias}.customerId = :customerId`, { customerId });
-    }
-    if (staffId) {
-      qb.andWhere(`${alias}.staffId = :staffId`, { staffId });
-    }
-    if (typeof isCompleted === "boolean") {
-      qb.andWhere(`${alias}.isCompleted = :isCompleted`, { isCompleted });
-    }
-    if (quotationId) {
-      qb.andWhere(`${alias}.quotationId = :quotationId`, {
-        quotationId,
+    if (partnerId) {
+      qb.andWhere(`${alias}.partnerId = :partnerId`, {
+        partnerId,
+      });
+    } else if (this.checkArrayFilter(partnerIds)) {
+      qb.andWhere(`${alias}.partnerId IN (:...partnerIds)`, {
+        partnerIds,
       });
     }
-  }
+    if (this.checkArrayFilter(supplierIds)) {
+      qb.andWhere(`${alias}.partnerId IN (:...supplierIds)`, {
+        supplierIds,
+      });
+    }
+    if (this.checkArrayFilter(customerIds)) {
+      qb.andWhere(`${alias}.partnerId IN (:...customerIds)`, {
+        customerIds,
+      });
+    }
 
-  async attachInfo<
-    T extends {
-      orderId?: string | null;
-      orderSnapshot?: DeepPartial<OrderSnapshot> | null;
-    },
-  >(data: T, manager?: EntityManager): Promise<void> {
-    if (
-      data.orderId &&
-      (!data.orderSnapshot || data.orderSnapshot.id !== data.orderId)
-    )
-      data.orderSnapshot = await this.getSnapshot(data.orderId, manager);
-  }
+    // shipper filter
+    if (this.checkArrayFilter(shipperIds)) {
+      qb.andWhere(`${alias}.shipperId IN (:...shipperIds)`, {
+        shipperIds,
+      });
+    }
 
-  async getSnapshot(
-    id?: string | null,
-    manager?: EntityManager,
-  ): Promise<OrderSnapshot | null> {
-    if (!id) return null;
-    const order = await this.findById(id, manager);
-    if (!order) return null;
-    return {
-      id: order.id,
-      code: order.code,
-      timeAt: order.timeAt,
-      customerId: order.customerId,
-      customerSnapshot: order.customerSnapshot,
-      staffId: order.staffId,
-      staffSnapshot: order.staffSnapshot,
-      commissionMode: order.commissionMode,
-      subTotal: order.subTotal,
-      discountAmount: order.discountAmount,
-      taxType: order.taxType,
-      taxValue: order.taxValue,
-      taxAmount: order.taxAmount,
-      totalAmount: order.totalAmount,
-    };
+    // product filter
+    // trong order có lines, lines có productVariant, productVariant có productId
+    if (this.checkArrayFilter(productIds)) {
+      qb.andWhere((qb1) => {
+        const subQuery = qb1
+          .subQuery()
+          .select("1")
+          .from(OrderLine, "ol")
+          .where(`ol.orderId = ${alias}.id`)
+          .andWhere("ol.productId IN (:...productIds)")
+          .andWhere("ol.deletedAt IS NULL")
+          .getQuery();
+
+        return `EXISTS ${subQuery}`;
+      }).setParameter("productIds", productIds);
+    }
+
+    // fund filter
+    if (this.checkArrayFilter(fundIds)) {
+      qb.andWhere((qb1) => {
+        const subQuery = qb1
+          .subQuery()
+          .select("1")
+          .from(IncomeExpense, "ie")
+          .where(`ie.orderId = ${alias}.id`)
+          .andWhere("ie.fundId IN (:...fundIds)")
+          .andWhere("ie.deletedAt IS NULL")
+          .getQuery();
+
+        return `EXISTS ${subQuery}`;
+      }).setParameter("fundIds", fundIds);
+    }
   }
 }

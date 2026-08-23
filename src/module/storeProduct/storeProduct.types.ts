@@ -1,0 +1,1 @@
+export const STORE_PRODUCT_TYPES = { Repository: Symbol.for("StoreProductRepository"), Service: Symbol.for("StoreProductService"), Controller: Symbol.for("StoreProductController"), Router: Symbol.for("StoreProductRouter") };

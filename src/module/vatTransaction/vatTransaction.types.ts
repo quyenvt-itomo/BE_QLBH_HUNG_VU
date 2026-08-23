@@ -1,0 +1,1 @@
+export const VAT_TRANSACTION_TYPES = { Repository: Symbol.for("VatTransactionRepository"), Service: Symbol.for("VatTransactionService"), Controller: Symbol.for("VatTransactionController"), Router: Symbol.for("VatTransactionRouter") };

@@ -15,7 +15,7 @@ import { ForbiddenError } from "@/shared/types/errors";
 export class RoleService extends BaseService<Role> {
   protected repository: RoleRepository;
   protected uniqueFields: (keyof Role)[] = ["name"];
-  protected uniqueScope?: (keyof Role)[] | undefined = ["companyId"];
+  protected uniqueScope?: (keyof Role)[] | undefined = ["storeId"];
   protected searchableFields = ["name"];
 
   constructor(
@@ -67,7 +67,7 @@ export class RoleService extends BaseService<Role> {
     req?: RequestContext,
   ): Promise<Role | null> {
     const existing = await this.repository.findById(id);
-    if (existing && !existing.companyId) {
+    if (existing && !existing.storeId) {
       throw new ForbiddenError("Không thể sửa vai trò mặc định của hệ thống");
     }
     return super.update(id, data, manager, req);
@@ -79,7 +79,7 @@ export class RoleService extends BaseService<Role> {
     req?: RequestContext,
   ): Promise<boolean> {
     const existing = await this.repository.findById(id);
-    if (existing && !existing.companyId) {
+    if (existing && !existing.storeId) {
       throw new ForbiddenError("Không thể xóa vai trò mặc định của hệ thống");
     }
     return super.delete(id, manager, req);

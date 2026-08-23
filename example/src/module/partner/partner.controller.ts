@@ -25,8 +25,8 @@ export class PartnerController extends BaseController<Partner> {
 
   getPublicByTaxCode = asyncHandler(async (req, res, _next) => {
     const { taxCode } = req.params as unknown as PartnerPublicParamsDto;
-    const companyId = req.headers["x-company-id"] as string;
-    const data = await this.service.getPublicByTaxCode(taxCode, companyId);
+    const storeId = req.headers["x-company-id"] as string;
+    const data = await this.service.getPublicByTaxCode(taxCode, storeId);
     this.sendResponse({ res, data });
   });
 

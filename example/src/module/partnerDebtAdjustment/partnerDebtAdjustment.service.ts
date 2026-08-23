@@ -15,13 +15,13 @@ import {
   PARTNER_DEBT_SYNC_TYPES,
   PartnerDebtSyncService,
 } from "@/module/partnerDebtSync";
-import { PartnerDebtRefTypeEnum } from "@/database/models/company/PartnerDebtTransaction";
+import { PartnerDebtRefTypeEnum } from "@/database/models/company/DebtTransaction";
 
 @injectable()
 export class PartnerDebtAdjustmentService extends BaseService<PartnerDebtAdjustment> {
   protected repository: PartnerDebtAdjustmentRepository;
   protected uniqueFields: (keyof PartnerDebtAdjustment)[] = ["code"];
-  protected uniqueScope?: (keyof PartnerDebtAdjustment)[] = ["companyId"];
+  protected uniqueScope?: (keyof PartnerDebtAdjustment)[] = ["storeId"];
   protected searchableFields = ["code"];
 
   constructor(

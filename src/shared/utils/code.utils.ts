@@ -13,7 +13,6 @@ import { FundAdjustment } from "@/database/models/FundAdjustment";
 import { FundTransfer } from "@/database/models/FundTransfer";
 import { Partner } from "@/database/models/Partner";
 import { Product } from "@/database/models/Product";
-import { ProductExtraUnit } from "@/database/models/ProductExtraUnit";
 import { Role } from "@/database/models/Role";
 import { Store } from "@/database/models/Store";
 import { StoreTransfer } from "@/database/models/StoreTransfer";
@@ -46,7 +45,6 @@ export const codeConfig: Record<string, CodeConfig> = {
   store: { entity: Store, prefix: "CH", length: 3, resetPeriod: "none", global: true },
   partner: { entity: Partner, prefix: "DT", length: 5, resetPeriod: "none", global: true },
   product: { entity: Product, prefix: "HH", length: 5, resetPeriod: "none", global: true },
-  productextraunit: { entity: ProductExtraUnit, prefix: "DVT", length: 4, resetPeriod: "none", global: true },
   pricehistory: { entity: ProductPriceHistory, prefix: "GVC", length: 4, resetPeriod: "monthly" },
   fund: { entity: Fund, prefix: "QTK", length: 2, resetPeriod: "none", global: true },
   fundadjustment: { entity: FundAdjustment, prefix: "DCQ", length: 3, resetPeriod: "monthly" },
@@ -61,7 +59,6 @@ export const codeConfig: Record<string, CodeConfig> = {
   purchasereturn: { entity: Order, prefix: "THN", length: 3, resetPeriod: "monthly" },
   salereturn: { entity: Order, prefix: "THK", length: 3, resetPeriod: "monthly" },
   debtadjustment: { entity: DebtAdjustment, prefix: "DCN", length: 3, resetPeriod: "monthly" },
-  partnerdebtadjustment: { entity: DebtAdjustment, prefix: "DCN", length: 3, resetPeriod: "monthly" },
   vatadjustment: { entity: VatAdjustment, prefix: "DCVAT", length: 3, resetPeriod: "monthly" },
 };
 

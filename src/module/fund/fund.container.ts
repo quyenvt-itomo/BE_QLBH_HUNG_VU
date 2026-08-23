@@ -1,13 +1,7 @@
 import { ContainerModule } from "inversify";
 import { FUND_TYPES } from "./fund.types";
-import { FundController } from "./fund.controller";
-import { FundService } from "./fund.service";
 import { FundRepository } from "./fund.repository";
+import { FundService } from "./fund.service";
+import { FundController } from "./fund.controller";
 import { FundRouter } from "./fund.route";
-
-export const fundModule = new ContainerModule((bind) => {
-  bind<FundController>(FUND_TYPES.FundController).to(FundController);
-  bind<FundService>(FUND_TYPES.FundService).to(FundService);
-  bind<FundRepository>(FUND_TYPES.FundRepository).to(FundRepository);
-  bind<FundRouter>(FUND_TYPES.FundRouter).to(FundRouter);
-});
+export const fundModule = new ContainerModule((bind) => { bind(FUND_TYPES.Repository).to(FundRepository); bind(FUND_TYPES.Service).to(FundService); bind(FUND_TYPES.Controller).to(FundController); bind(FUND_TYPES.Router).to(FundRouter); });

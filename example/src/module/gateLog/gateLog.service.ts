@@ -14,7 +14,7 @@ import { GateEntryDto, GateExitDto, LinkGateLogDto } from "./gateLog.validator";
 export class GateLogService extends BaseService<GateLog> {
   protected repository: GateLogRepository;
   protected uniqueFields: (keyof GateLog)[] = ["code"];
-  protected uniqueScope?: (keyof GateLog)[] = ["companyId"];
+  protected uniqueScope?: (keyof GateLog)[] = ["storeId"];
   protected searchableFields = ["code", "vehiclePlate"];
   protected timeField: keyof GateLog = "timeAt";
 

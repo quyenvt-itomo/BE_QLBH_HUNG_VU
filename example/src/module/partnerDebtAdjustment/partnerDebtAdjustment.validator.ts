@@ -7,7 +7,7 @@ import {
   DateTransform,
 } from "@/shared/base/BaseValidator";
 import { TransactionType } from "@/shared/constants/enum";
-import { PartnerDebtSideEnum } from "@/database/models/company/PartnerDebtTransaction";
+import { PartnerDebtSideEnum } from "@/database/models/company/DebtTransaction";
 
 export const CreatePartnerDebtAdjustmentSchema = BaseCreateSchema.extend({
   code: z.string().min(1).max(25),

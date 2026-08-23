@@ -3,7 +3,7 @@ import { BaseQuerySchema, BaseParamsSchema } from "@/shared/base/BaseValidator";
 import { LoginApprovalStatusEnum } from "@/database/models/LoginApproval";
 
 export const LoginApprovalQuerySchema = BaseQuerySchema.extend({
-  companyId: z.uuid().optional(),
+  storeId: z.uuid().optional(),
   userId: z.uuid().optional(),
   status: z.enum(LoginApprovalStatusEnum).optional(),
 });

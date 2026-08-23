@@ -24,7 +24,7 @@ export class StockMetadataHelper {
         .select('it."warehouseId"', "warehouseId")
         .addSelect(
           `SUM(CASE WHEN it.type = ${TransactionType.IN} THEN it.quantity ELSE -it.quantity END)`,
-          "qty",
+          "quantity",
         )
         .addSelect(
           `SUM(CASE WHEN it.type = ${TransactionType.IN} THEN it.amount ELSE -it.amount END)`,
@@ -34,22 +34,23 @@ export class StockMetadataHelper {
         .where('it."productId" = :productId', { productId })
         .andWhere('it."deletedAt" IS NULL')
         .groupBy('it."warehouseId"')
-        .getRawMany<{ warehouseId: string; qty: string; value: string }>();
+        .getRawMany<{ warehouseId: string; quantity: string; value: string }>();
 
-      const byWarehouse: Record<string, { qty: number; value: number }> = {};
+      const byWarehouse: Record<string, { quantity: number; value: number }> =
+        {};
       let totalQty = 0;
       let totalValue = 0;
 
       for (const row of result) {
-        const qty = parseFloat(row.qty) || 0;
+        const quantity = parseFloat(row.quantity) || 0;
         const value = parseFloat(row.value) || 0;
-        byWarehouse[row.warehouseId] = { qty, value };
-        totalQty += qty;
+        byWarehouse[row.warehouseId] = { quantity, value };
+        totalQty += quantity;
         totalValue += value;
       }
 
       const stockMetadata = {
-        total: { qty: totalQty, value: totalValue },
+        total: { quantity: totalQty, value: totalValue },
         byWarehouse,
         lastCalculatedAt: new Date().toISOString(),
       };
@@ -87,7 +88,7 @@ export class StockMetadataHelper {
         typeof product.stockMetadata === "string"
           ? JSON.parse(product.stockMetadata)
           : product.stockMetadata || {
-              total: { qty: 0, value: 0 },
+              total: { quantity: 0, value: 0 },
               byWarehouse: {},
             };
 
@@ -96,7 +97,7 @@ export class StockMetadataHelper {
         .createQueryBuilder()
         .select(
           `SUM(CASE WHEN it.type = :inTransactionType THEN it.quantity ELSE -it.quantity END)`,
-          "qty",
+          "quantity",
         )
         .addSelect(
           `SUM(CASE WHEN it.type = :inTransactionType THEN it.amount ELSE -it.amount END)`,
@@ -111,22 +112,22 @@ export class StockMetadataHelper {
           productId,
           warehouseId,
         })
-        .getRawOne<{ qty: string; value: string }>();
+        .getRawOne<{ quantity: string; value: string }>();
 
-      const qty = parseFloat(pairResult?.qty || "0");
+      const quantity = parseFloat(pairResult?.quantity || "0");
       const value = parseFloat(pairResult?.value || "0");
 
-      currentMetadata.byWarehouse[warehouseId] = { qty, value };
+      currentMetadata.byWarehouse[warehouseId] = { quantity, value };
 
       // Recompute total
       let totalQty = 0;
       let totalValue = 0;
       for (const [, data] of Object.entries(currentMetadata.byWarehouse)) {
-        const d = data as { qty: number; value: number };
-        totalQty += d.qty;
+        const d = data as { quantity: number; value: number };
+        totalQty += d.quantity;
         totalValue += d.value;
       }
-      currentMetadata.total = { qty: totalQty, value: totalValue };
+      currentMetadata.total = { quantity: totalQty, value: totalValue };
       currentMetadata.lastCalculatedAt = new Date().toISOString();
 
       await manager.query(

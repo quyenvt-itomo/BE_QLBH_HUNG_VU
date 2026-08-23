@@ -113,7 +113,7 @@ export class AuthService extends BaseService<User> {
           const pendingApprovals = companyUsers.map((cu) =>
             approvalRepo.create({
               userId: user.id,
-              companyId: cu.companyId,
+              storeId: cu.storeId,
               deviceId: loginData.deviceId as string,
               deviceInfo: (loginData.deviceInfo as DeviceInfo) ?? null,
               status: LoginApprovalStatusEnum.PENDING,
@@ -145,7 +145,7 @@ export class AuthService extends BaseService<User> {
     await this.repository.updateRefreshToken(userId, null);
   }
 
-  async getCurrent(userId: string, companyId?: string) {
+  async getCurrent(userId: string, storeId?: string) {
     const user = await this.repository.findById(userId);
     if (!user) {
       throw new NotFoundError("Người dùng không tồn tại", "userId");
@@ -169,7 +169,7 @@ export class AuthService extends BaseService<User> {
     } else {
       // Lọc đi những công ty mà user không có quyền truy cập
       allCompanys = allCompanys.filter((company) =>
-        user.companyUsers?.some((cu) => cu.companyId === company.id),
+        user.companyUsers?.some((cu) => cu.storeId === company.id),
       );
     }
 
@@ -177,10 +177,10 @@ export class AuthService extends BaseService<User> {
       throw new ForbiddenError("Tài khoản không có quyền truy cập công ty nào");
     }
 
-    const finalCompanyId = companyId || allCompanys[0]?.id;
+    const finalCompanyId = storeId || allCompanys[0]?.id;
 
     const companyUser = user.companyUsers?.find(
-      (cu) => cu.companyId === finalCompanyId,
+      (cu) => cu.storeId === finalCompanyId,
     );
 
     currentCompany = allCompanys.find((c) => c.id === finalCompanyId);

@@ -62,8 +62,8 @@ export class ProductExcelProcessor {
       for (const [k, v] of Object.entries(productTypeMap))
         reverseTypeMap[v] = k as ProductType;
 
-      const companyId = req.companyContext?.companyId;
-      if (!companyId) throw new BadRequestError("Thiếu thông tin công ty");
+      const storeId = req.storeContext?.storeId;
+      if (!storeId) throw new BadRequestError("Thiếu thông tin công ty");
 
       for (let i = 0; i < rows.length; i++) {
         const row = rows[i];
@@ -112,7 +112,7 @@ export class ProductExcelProcessor {
           let saved: Product | null = null;
           await withTransaction(async (manager) => {
             const existing = await this.productService.findOne({
-              where: { code: row.code, companyId },
+              where: { code: row.code, storeId },
             });
             if (existing && options.duplicateHandling === "update") {
               saved = await this.productService.update(
@@ -127,7 +127,7 @@ export class ProductExcelProcessor {
             } else if (existing && options.duplicateHandling === "stop") {
               throw new Error(`Mã ${row.code} đã tồn tại`);
             } else {
-              (data as DeepPartial<Product>).companyId = companyId;
+              (data as DeepPartial<Product>).storeId = storeId;
               saved = await this.productService.create(data, manager, req);
             }
 

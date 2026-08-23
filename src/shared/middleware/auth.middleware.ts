@@ -1,15 +1,12 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { UnauthorizedError } from "@/shared/types/errors";
-
-//import { createFullPermissions } from "./permission.middleware";
-import logger from "../utils/logger";
 import { config } from "@/config/env";
-import { AuthUtils } from "../utils/auth.utils";
-import { JwtPayload } from "../types/interfaces";
+import { AuthUtils } from "@/shared/utils/auth.utils";
+import { JwtPayload } from "@/shared/types/interfaces";
 import DatabaseConfig from "@/config/database";
 import { User } from "@/database/models/User";
-import { getUserSnapshot } from "../utils/utils";
+import { getUserSnapshot } from "@/shared/utils/utils";
 import { createPermissions, MODULES } from "./permission.middleware";
 
 export const authenticate = (
@@ -18,116 +15,81 @@ export const authenticate = (
   next: NextFunction,
 ): void => {
   try {
-    const refreshToken = req.cookies?.refreshToken;
     const accessToken = req.cookies?.accessToken;
-
-    if (!refreshToken && !accessToken) {
+    const refreshToken = req.cookies?.refreshToken;
+    if (!accessToken && !refreshToken)
       throw new UnauthorizedError("Authentication required");
-    }
 
-    // Ưu tiên access token
     if (accessToken) {
-      const decoded = jwt.verify(
+      req.user = jwt.verify(
         accessToken,
         config.JWT_ACCESS_SECRET,
       ) as JwtPayload;
-
-      req.user = decoded;
       return next();
     }
 
-    // Fallback sang refresh token
     const decoded = jwt.verify(
       refreshToken,
       config.JWT_REFRESH_SECRET,
     ) as JwtPayload;
-
-    const newAccessToken = AuthUtils.generateAccessToken({
+    const renewedAccessToken = AuthUtils.generateAccessToken({
       userId: decoded.userId,
       username: decoded.username,
     });
-
     AuthUtils.setTokenCookies(res, {
-      accessToken: newAccessToken,
+      accessToken: renewedAccessToken,
       refreshToken,
     });
-
     req.user = decoded;
     next();
-  } catch (error) {
+  } catch {
     next(new UnauthorizedError("Invalid or expired token"));
   }
 };
 
 export const authorization = async (
   req: Request,
-  res: Response,
+  _res: Response,
   next: NextFunction,
 ): Promise<void> => {
   try {
     const userId = req.user?.userId;
-    const companyId = req.companyContext?.companyId;
+    if (!userId) throw new UnauthorizedError("User not authenticated");
 
-    if (!userId) {
-      throw new UnauthorizedError("User not authenticated");
-    }
-
-    const userRepo = DatabaseConfig.getRepository(User);
-
-    const user = await userRepo.findOne({
-      where: { id: userId },
-      relations: {
-        companyUsers: {
-          company: true,
-          role: true,
-          employee: true,
-        },
-      },
+    const user = await DatabaseConfig.getRepository(User).findOne({
+      where: { id: userId, deletedAt: null } as any,
+      relations: { role: true, storeUsers: true },
     });
+    if (!user || !user.isActive)
+      throw new UnauthorizedError("User is inactive or not found");
 
-    if (!user) {
-      throw new UnauthorizedError("Không tìm thấy thông tin người dùng");
+    const isAdmin = AuthUtils.isAdmin(user);
+    const storeId = req.storeContext?.storeId || req.storeContext?.storeId;
+    if (
+      storeId &&
+      !isAdmin &&
+      !(user.storeUsers || []).some(
+        (membership) => membership.storeId === storeId,
+      )
+    ) {
+      throw new UnauthorizedError("User has no access to this store");
     }
 
-    const userSnapshot = getUserSnapshot(user);
-    req.userContext = userSnapshot
-      ? {
-          userId: user.id,
-          userSnapshot,
-          isAdmin: AuthUtils.isAdmin(user),
-        }
+    const snapshot = getUserSnapshot(user);
+    req.userContext = snapshot
+      ? { userId: user.id, userSnapshot: snapshot, isAdmin }
       : null;
-
-    if (AuthUtils.isAdmin(user)) {
-      req.permissions = createPermissions();
-      req.importExcel = [...MODULES];
-      req.exportExcel = [...MODULES];
-      return next();
-    }
-
-    if (companyId) {
-      const companyUser = user.companyUsers?.find(
-        (cu) => cu.companyId === companyId,
-      );
-
-      if (!companyUser) {
-        throw new UnauthorizedError(
-          "Bạn không có quyền truy cập vào công ty này",
-        );
-      }
-
-      req.permissions = companyUser.role?.permissions;
-      req.importExcel = companyUser.role?.importExcel || [];
-      req.exportExcel = companyUser.role?.exportExcel || [];
-
-      if (companyUser?.employeeId && req.userContext) {
-        req.userContext.employeeId = companyUser.employeeId;
-      }
-    }
-
+    req.permissions = isAdmin
+      ? createPermissions()
+      : user.role?.permissions || {};
+    req.importExcel = isAdmin ? [...MODULES] : [];
+    req.exportExcel = isAdmin ? [...MODULES] : [];
     next();
   } catch (error) {
-    logger.error("Authorization error:", error);
-    next(new UnauthorizedError("Authorization failed"));
+    next(
+      error instanceof UnauthorizedError
+        ? error
+        : new UnauthorizedError("Authorization failed"),
+    );
   }
 };

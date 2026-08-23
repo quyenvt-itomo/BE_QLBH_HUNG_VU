@@ -42,7 +42,7 @@ export interface EmployeeSnapshot {
   name: string;
   gender: Gender | null;
   dob: Date | null;
-  companyId: string;
+  storeId: string;
 }
 
 @Entity("employees")

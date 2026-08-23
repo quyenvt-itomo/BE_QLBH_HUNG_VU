@@ -60,8 +60,8 @@ export class StoreTransferService extends BaseService<StoreTransfer> {
 
       data.lines = await Promise.all(
         data.lines.map(async (line, idx) => {
-          const qty = Number(line.quantity || 0);
-          if (qty <= 0) {
+          const quantity = Number(line.quantity || 0);
+          if (quantity <= 0) {
             errors.push({
               field: `lines.${idx}.quantity`,
               code: ErrorsMessages.min,
@@ -71,7 +71,7 @@ export class StoreTransferService extends BaseService<StoreTransfer> {
           if (line.productVariantId) {
             requestedByVariant.set(
               line.productVariantId,
-              (requestedByVariant.get(line.productVariantId) || 0) + qty,
+              (requestedByVariant.get(line.productVariantId) || 0) + quantity,
             );
           }
 
@@ -102,14 +102,14 @@ export class StoreTransferService extends BaseService<StoreTransfer> {
             .createQueryBuilder(InventoryTransaction, "it")
             .select(
               "COALESCE(SUM(CASE WHEN it.type = 'in' THEN it.quantity ELSE -it.quantity END), 0)",
-              "qty",
+              "quantity",
             )
             .where("it.productVariantId = :variantId", { variantId })
             .andWhere("it.storeId = :storeId", { storeId: data.fromStoreId })
             .andWhere("it.deletedAt IS NULL")
             .getRawOne();
 
-          const availableQty = parseFloat(stockResult?.qty || "0");
+          const availableQty = parseFloat(stockResult?.quantity || "0");
 
           // TODO: Tạm tắt chặn tồn âm
           // if (availableQty < requestedQty) {

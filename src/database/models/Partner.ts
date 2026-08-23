@@ -75,4 +75,8 @@ export class Partner extends BaseEntity {
 
   @OneToMany(() => DebtAdjustment, (da) => da.partner, { cascade: true })
   debtAdjustments: DebtAdjustment[];
+
+  // TODO: More fields
+  payableDebtAmount?: number;
+  receivableDebtAmount?: number;
 }

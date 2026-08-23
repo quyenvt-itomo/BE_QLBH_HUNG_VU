@@ -15,7 +15,7 @@ import { ConfirmTransferDto } from "./warehouseTransfer.validator";
 export class WarehouseTransferService extends BaseService<WarehouseTransfer> {
   protected repository: WarehouseTransferRepository;
   protected uniqueFields: (keyof WarehouseTransfer)[] = ["code"];
-  protected uniqueScope?: (keyof WarehouseTransfer)[] = ["companyId"];
+  protected uniqueScope?: (keyof WarehouseTransfer)[] = ["storeId"];
   protected searchableFields = ["code", "reason"];
   protected timeField: keyof WarehouseTransfer = "timeAt";
 

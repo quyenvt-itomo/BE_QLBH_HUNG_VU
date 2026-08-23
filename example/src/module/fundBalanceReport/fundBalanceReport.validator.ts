@@ -2,14 +2,14 @@ import { z } from "zod";
 import { BaseQuerySchema, DateTransform } from "@/shared/base/BaseValidator";
 
 export const FundBalanceReportQuerySchema = BaseQuerySchema.extend({
-  companyId: z.uuid(),
+  storeId: z.uuid(),
   fundIds: z.array(z.uuid()).optional(),
   startAt: DateTransform.optional(),
   endAt: DateTransform.optional(),
 });
 
 export const FundBalanceDetailQuerySchema = BaseQuerySchema.extend({
-  companyId: z.uuid(),
+  storeId: z.uuid(),
   fundId: z.uuid().optional(),
   startAt: DateTransform.optional(),
   endAt: DateTransform.optional(),

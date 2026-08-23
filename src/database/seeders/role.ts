@@ -1,21 +1,26 @@
-import {
-  createPermissions,
-  MODULES,
-} from "@/shared/middleware/permission.middleware";
-import { Role } from "../models/company/Role";
 import { DeepPartial } from "typeorm";
+import { Role, RoleType } from "../models/Role";
+import { createPermissions, MODULES } from "@/shared/middleware/permission.middleware";
 
-export const roleSeeder: DeepPartial<Role>[] = [
+export const roleSeeders: DeepPartial<Role>[] = [
   {
-    name: "Quản trị viên",
+    name: "Quản trị hệ thống",
+    type: RoleType.SYSTEM,
     permissions: createPermissions(),
     isDefault: true,
-    importExcel: [...MODULES],
-    exportExcel: [...MODULES],
   },
   {
-    name: "Nhân viên",
+    name: "Quản lý cửa hàng",
+    type: RoleType.STORE,
+    permissions: createPermissions(),
+    isDefault: false,
+  },
+  {
+    name: "Nhân viên cửa hàng",
+    type: RoleType.STORE,
     permissions: createPermissions("empty"),
-    isDefault: true,
+    isDefault: false,
   },
 ];
+
+export { MODULES };

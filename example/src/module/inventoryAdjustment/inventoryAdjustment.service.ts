@@ -13,7 +13,7 @@ import { withTransaction } from "@/shared/base/TransactionManager";
 export class InventoryAdjustmentService extends BaseService<InventoryAdjustment> {
   protected repository: InventoryAdjustmentRepository;
   protected uniqueFields: (keyof InventoryAdjustment)[] = ["code"];
-  protected uniqueScope?: (keyof InventoryAdjustment)[] = ["companyId"];
+  protected uniqueScope?: (keyof InventoryAdjustment)[] = ["storeId"];
   protected searchableFields = ["code", "reason"];
   protected timeField: keyof InventoryAdjustment = "occurredAt";
 

@@ -4,7 +4,7 @@ import { FindOptionsRelations, FindOptionsSelect } from "typeorm";
 
 export const PaymentRequestSelectFull: FindOptionsSelect<PaymentRequest> = {
   ...BaseSelect,
-  companyId: true,
+  storeId: true,
   timeAt: true,
   code: true,
   type: true,

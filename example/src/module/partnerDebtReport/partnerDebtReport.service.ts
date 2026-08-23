@@ -1,7 +1,7 @@
 import { injectable } from "inversify";
 import { Brackets, EntityManager, In, MoreThan } from "typeorm";
 import { TransactionService } from "@/shared/base/TransactionService";
-import { PartnerDebtTransaction } from "@/database/models/company/PartnerDebtTransaction";
+import { DebtTransaction } from "@/database/models/company/DebtTransaction";
 import { Partner } from "@/database/models/company/Partner";
 import {
   Invoice,
@@ -25,7 +25,7 @@ export class PartnerDebtReportService extends TransactionService {
    */
   async getReport(params: PartnerDebtReportQueryDto): Promise<ApiResponse> {
     const {
-      companyId,
+      storeId,
       keyword,
       page = 1,
       size = 20,
@@ -40,10 +40,10 @@ export class PartnerDebtReportService extends TransactionService {
 
     const manager = await this.getManager();
 
-    // Filter partners by companyId and optional keyword
+    // Filter partners by storeId and optional keyword
     const partnersQb = manager
       .createQueryBuilder(Partner, "partner")
-      .where("partner.companyId = :companyId", { companyId })
+      .where("partner.storeId = :storeId", { storeId })
       .andWhere("partner.deletedAt IS NULL")
       // Lấy thêm group
       .leftJoinAndSelect("partner.group", "group");
@@ -83,7 +83,7 @@ export class PartnerDebtReportService extends TransactionService {
     const partnerMap = new Map(filteredPartners.map((p) => [p.id, p]));
 
     const qb = manager
-      .createQueryBuilder(PartnerDebtTransaction, "tx")
+      .createQueryBuilder(DebtTransaction, "tx")
       .select("tx.partnerId", "partnerId")
       .addSelect(
         `COALESCE(SUM(CASE WHEN tx.type = :inType AND tx."occurredAt" < :startAt THEN tx.amount WHEN tx.type = :outType AND tx."occurredAt" < :startAt THEN -tx.amount ELSE 0 END), 0)::float`,
@@ -174,7 +174,7 @@ export class PartnerDebtReportService extends TransactionService {
    */
   async getDetail(params: PartnerDebtDetailQueryDto): Promise<ApiResponse> {
     const {
-      companyId,
+      storeId,
       partnerId,
       side,
       page = 1,
@@ -190,7 +190,7 @@ export class PartnerDebtReportService extends TransactionService {
 
     // 1) Dư nợ đầu kỳ (trước startAt) theo (partnerId, side)
     const openingQb = manager
-      .createQueryBuilder(PartnerDebtTransaction, "tx")
+      .createQueryBuilder(DebtTransaction, "tx")
       .select("tx.partnerId", "partnerId")
       .addSelect("tx.side", "side")
       .addSelect(
@@ -202,7 +202,7 @@ export class PartnerDebtReportService extends TransactionService {
         "partner",
         "partner.id = tx.partnerId AND partner.deletedAt IS NULL",
       )
-      .where("partner.companyId = :companyId", { companyId })
+      .where("partner.storeId = :storeId", { storeId })
       .andWhere("tx.deletedAt IS NULL")
       .andWhere("tx.occurredAt < :startAt", { startAt: effectiveStartAt })
       .setParameters({ inType: TransactionType.IN })
@@ -227,13 +227,13 @@ export class PartnerDebtReportService extends TransactionService {
 
     // 2) Tất cả transactions trong kỳ, sắp ASC để tính dư nợ chạy
     const qb = manager
-      .createQueryBuilder(PartnerDebtTransaction, "tx")
+      .createQueryBuilder(DebtTransaction, "tx")
       .leftJoin(
         Partner,
         "partner",
         "partner.id = tx.partnerId AND partner.deletedAt IS NULL",
       )
-      .where("partner.companyId = :companyId", { companyId })
+      .where("partner.storeId = :storeId", { storeId })
       .andWhere("tx.deletedAt IS NULL")
       .andWhere("tx.occurredAt BETWEEN :startAt AND :endAt", {
         startAt: effectiveStartAt,
@@ -266,9 +266,9 @@ export class PartnerDebtReportService extends TransactionService {
       currentPage * size,
     );
 
-    // 5) Summary (cùng scope: companyId, partnerId?, side?)
+    // 5) Summary (cùng scope: storeId, partnerId?, side?)
     const summaryQb = manager
-      .createQueryBuilder(PartnerDebtTransaction, "tx")
+      .createQueryBuilder(DebtTransaction, "tx")
       .select(
         `COALESCE(SUM(CASE WHEN tx.type = :inType AND tx."occurredAt" < :startAt THEN tx.amount WHEN tx.type = :outType AND tx."occurredAt" < :startAt THEN -tx.amount ELSE 0 END), 0)::float`,
         "openingAmount",
@@ -291,7 +291,7 @@ export class PartnerDebtReportService extends TransactionService {
         "partner",
         "partner.id = tx.partnerId AND partner.deletedAt IS NULL",
       )
-      .where("partner.companyId = :companyId", { companyId })
+      .where("partner.storeId = :storeId", { storeId })
       .andWhere("tx.deletedAt IS NULL")
       .andWhere("tx.occurredAt <= :endAt", { endAt: effectiveEndAt })
       .setParameters({
@@ -330,7 +330,7 @@ export class PartnerDebtReportService extends TransactionService {
     params: PartnerDebtListQueryDto,
   ): Promise<ApiResponse> {
     const {
-      companyId,
+      storeId,
       invoiceType,
       keyword,
       partnerIds,
@@ -346,7 +346,7 @@ export class PartnerDebtReportService extends TransactionService {
     // 1) Filter partners
     const partners = await this.getFilteredPartners(
       manager,
-      companyId,
+      storeId,
       keyword,
       partnerIds,
     );
@@ -384,7 +384,7 @@ export class PartnerDebtReportService extends TransactionService {
         "inv.invoiceDate",
         "inv.totalRemainingAmount",
       ])
-      .where("inv.companyId = :companyId", { companyId })
+      .where("inv.storeId = :storeId", { storeId })
       .andWhere("inv.partnerId IN (:...partnerIds)", {
         partnerIds: partnerIdList,
       })
@@ -488,11 +488,11 @@ export class PartnerDebtReportService extends TransactionService {
   async getPartnerInvoices(
     params: PartnerDebtInvoiceListQueryDto,
   ): Promise<ApiResponse> {
-    const { companyId, invoiceType, partnerId, page = 1, size = 20 } = params;
+    const { storeId, invoiceType, partnerId, page = 1, size = 20 } = params;
     const manager = await this.getManager();
 
     const countWhere = {
-      companyId,
+      storeId,
       partnerId,
       type: invoiceType,
       status: In([InvoiceStatus.EFFECTIVE, InvoiceStatus.PARTIALLY_PAID]),
@@ -515,9 +515,9 @@ export class PartnerDebtReportService extends TransactionService {
 
     // Load các bút toán giảm trừ gắn theo từng hóa đơn (đối trừ / điều chỉnh / thu chi)
     const invoiceIds = invoices.map((i) => i.id);
-    const txByInvoice = new Map<string, PartnerDebtTransaction[]>();
+    const txByInvoice = new Map<string, DebtTransaction[]>();
     if (invoiceIds.length) {
-      const txs = await manager.getRepository(PartnerDebtTransaction).find({
+      const txs = await manager.getRepository(DebtTransaction).find({
         where: { invoiceId: In(invoiceIds), deletedAt: undefined as any },
       });
       for (const t of txs) {
@@ -552,13 +552,13 @@ export class PartnerDebtReportService extends TransactionService {
   // ================================================================
   private async getFilteredPartners(
     manager: EntityManager,
-    companyId: string,
+    storeId: string,
     keyword?: string,
     partnerIds?: string[],
   ): Promise<Partner[]> {
     const qb = manager
       .createQueryBuilder(Partner, "partner")
-      .where("partner.companyId = :companyId", { companyId })
+      .where("partner.storeId = :storeId", { storeId })
       .andWhere("partner.deletedAt IS NULL")
       .leftJoinAndSelect("partner.group", "group"); // Lấy thêm group
     if (keyword) {

@@ -14,7 +14,7 @@ export const PartnerContactSelect: FindOptionsSelect<PartnerContact> = {
 
 export const PartnerSelectBasic: FindOptionsSelect<Partner> = {
   ...BaseSelect,
-  companyId: true,
+  storeId: true,
   types: true,
   groupId: true,
   name: true,
