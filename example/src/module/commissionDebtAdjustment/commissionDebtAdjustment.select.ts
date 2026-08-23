@@ -15,7 +15,7 @@ export const CommissionDebtAdjustmentSelectFull: FindOptionsSelect<CommissionDeb
     deltaAmount: true,
     type: true,
     reason: true,
-    isInitialAdjustment: true,
+    isInitial: true,
     partnerContact: {
       id: true,
       name: true,

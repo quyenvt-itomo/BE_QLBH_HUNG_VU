@@ -2,7 +2,7 @@ import {
   BaseRepository,
   IFindPaginationOptions,
 } from "@/shared/base/BaseRepository";
-import { FundAdjustment } from "@/database/models/company/FundAdjustment";
+import { FundAdjustment } from "@/database/models/FundAdjustment";
 import {
   FundAdjustmentSelectFull,
   FundAdjustmentRelations,
@@ -22,7 +22,7 @@ export class FundAdjustmentRepository extends BaseRepository<FundAdjustment> {
     options: IFindPaginationOptions<FundAdjustment>,
   ): Promise<void> {
     const alias = qb.alias;
-    const { fundId, type, isInitialAdjustment } =
+    const { fundId, type, isInitial } =
       (options?.moreQuery as FundAdjustmentQueryDto) || {};
 
     if (fundId) {
@@ -31,9 +31,9 @@ export class FundAdjustmentRepository extends BaseRepository<FundAdjustment> {
     if (type) {
       qb.andWhere(`${alias}.type = :type`, { type });
     }
-    if (isInitialAdjustment !== undefined) {
-      qb.andWhere(`${alias}.isInitialAdjustment = :isInitialAdjustment`, {
-        isInitialAdjustment,
+    if (isInitial !== undefined) {
+      qb.andWhere(`${alias}.isInitial = :isInitial`, {
+        isInitial,
       });
     }
   }

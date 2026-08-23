@@ -14,7 +14,7 @@ export const CreateInventoryAdjustmentSchema = BaseCreateSchema.extend({
   storeId: z.uuid(),
   reason: z.string().optional(),
   adjustedById: z.string(),
-  isInitialAdjustment: z.boolean().optional(),
+  isInitial: z.boolean().optional(),
   lines: z.array(CreateInventoryAdjustmentLineSchema).min(1),
 });
 
@@ -24,7 +24,7 @@ export const UpdateInventoryAdjustmentSchema = BaseUpdateSchema.extend({
   storeId: z.uuid(),
   adjustedById: z.uuid().optional(),
   reason: z.string().nullish(),
-  isInitialAdjustment: z.boolean().optional(),
+  isInitial: z.boolean().optional(),
 });
 
 export const InventoryAdjustmentQuerySchema = BaseQuerySchema.extend({

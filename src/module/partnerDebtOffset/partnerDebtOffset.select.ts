@@ -1,4 +1,4 @@
-import { PartnerDebtOffset } from "@/database/models/company/PartnerDebtOffset";
+import { PartnerDebtOffset } from "@/database/models/PartnerDebtOffset";
 import { BaseSelect } from "@/shared/base/BaseSelect";
 import { FindOptionsRelations, FindOptionsSelect } from "typeorm";
 

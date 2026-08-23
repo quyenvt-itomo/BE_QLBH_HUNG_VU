@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { IdentificationTypeEnum } from "../constants/enum";
+import { IdentificationType } from "../constants/enum";
 
 export const DateTransform = z.coerce.date();
 
@@ -252,10 +252,7 @@ export const InsuranceInfoSchema = z.object({
 export type InsuranceInfo = z.infer<typeof InsuranceInfoSchema>;
 
 export const IdentificationSchema = z.object({
-  type: z
-    .enum(IdentificationTypeEnum)
-    .optional()
-    .default(IdentificationTypeEnum.CCCD), // Loại giấy tờ (CCCD, CMND, HC)
+  type: z.enum(IdentificationType).optional().default(IdentificationType.CCCD), // Loại giấy tờ (CCCD, CMND, HC)
   identityCode: z.string().trim().optional(), // Số CMND/CCCD
   issuedPlace: z.string().trim().optional(), // Nơi cấp CMND/CCCD
   issuedDate: DateTransform.optional(), // Ngày cấp CMND/CCCD

@@ -6,30 +6,30 @@ import {
   PartnerDebtSideEnum,
 } from "@/shared/constants/enum";
 
-@Entity("partner_debt_transactions")
+@Entity("debt_transactions")
 export class PartnerDebtTransaction extends BaseEntity {
   @Column({ type: "timestamptz" })
-  occurredAt!: Date;
+  occurredAt: Date;
 
   @Column({ type: "uuid" })
-  partnerId!: string;
+  partnerId: string;
 
   @Column({ type: "uuid" })
-  storeId!: string;
+  storeId: string;
 
   @Column({ type: "enum", enum: PartnerDebtSideEnum })
-  side!: PartnerDebtSideEnum;
+  side: PartnerDebtSideEnum;
 
   @Column({ type: "enum", enum: DebtDirectionEnum })
-  direction!: DebtDirectionEnum;
+  direction: DebtDirectionEnum;
 
   @Column(BaseNumericColumnOptions)
-  amount!: number;
+  amount: number;
 
   @Column({ type: "enum", enum: DebtRefTypeEnum })
-  refType!: DebtRefTypeEnum;
+  refType: DebtRefTypeEnum;
   @Column({ type: "uuid" })
-  refId!: string;
+  refId: string;
   @Column({ type: "varchar", length: 50, nullable: true, default: null })
   refCode?: string | null;
 }

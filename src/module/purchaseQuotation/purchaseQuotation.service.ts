@@ -1,4 +1,4 @@
-﻿import type {
+import type {
   RequestContext,
   ActionMap,
   ActionValue,
@@ -28,7 +28,7 @@ import { ProductRepository } from "@/module/product/product.repository";
 import { ATTRIBUTE_TYPES } from "@/module/attribute/attribute.types";
 import { AttributeRepository } from "@/module/attribute/attribute.repository";
 import { CalculationUtil } from "@/shared/utils/calculation.util";
-import { Partner, PartnerType } from "@/database/models/company/Partner";
+import { Partner, PartnerType } from "@/database/models/Partner";
 import { ApproveRejectDto } from "./purchaseQuotation.validator";
 import { NotificationService } from "@/module/notification/notification.service";
 import { NOTIFICATION_TYPES } from "@/module/notification/notification.types";

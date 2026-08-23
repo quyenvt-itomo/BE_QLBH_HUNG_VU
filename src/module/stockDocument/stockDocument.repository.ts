@@ -116,8 +116,8 @@ export class StockDocumentRepository extends BaseRepository<StockDocument> {
       partnerId: stockDocument.partnerId,
       partnerSnapshot: stockDocument.partnerSnapshot,
 
-      shippingProviderId: stockDocument.shippingProviderId,
-      shippingProviderSnapshot: stockDocument.shippingProviderSnapshot,
+      shipperId: stockDocument.shipperId,
+      shipperSnapshot: stockDocument.shipperSnapshot,
 
       shippingPlanId: stockDocument.shippingPlanId,
       shippingPlanSnapshot: stockDocument.shippingPlanSnapshot,

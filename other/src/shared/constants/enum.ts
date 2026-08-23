@@ -81,7 +81,7 @@ export enum EntityTypeEnum {
   EXCEL_IMPORT = "excelImport",
 }
 
-export enum GenderEnum {
+export enum Gender {
   MALE = "male",
   FEMALE = "female",
   OTHER = "other",
@@ -160,7 +160,7 @@ export enum OrderStatusEnum {
 }
 
 // Loyalty Points Transaction Type
-export enum LoyaltyPointTransactionTypeEnum {
+export enum LoyaltyPointTransactionType {
   INCREASE = "increase", // Tăng điểm
   DECREASE = "decrease", // Giảm điểm
 }
@@ -171,7 +171,7 @@ export enum LoyaltyPointRefTypeEnum {
 }
 
 // TODO: Inventory
-export enum InventoryTransactionTypeEnum {
+export enum InventoryTransactionType {
   IN = "in",
   OUT = "out",
 }
@@ -193,7 +193,7 @@ export enum IncomeExpenseTypeEnum {
   INCOME = "income", // Thu
   EXPENSE = "expense", // Chi
 }
-export enum FundTransactionTypeEnum {
+export enum FundTransactionType {
   INCREASE = "increase",
   DECREASE = "decrease",
 }

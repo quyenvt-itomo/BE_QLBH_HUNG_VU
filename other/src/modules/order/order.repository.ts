@@ -70,7 +70,7 @@ export class OrderRepository extends BaseRepository<Order> {
 
     // shipper filter
     if (this.checkArrayFilter(shipperIds)) {
-      qb.andWhere(`${qb.alias}.shippingProviderId IN (:...shipperIds)`, {
+      qb.andWhere(`${qb.alias}.shipperId IN (:...shipperIds)`, {
         shipperIds,
       });
     }

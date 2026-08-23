@@ -6,8 +6,8 @@ import {
   Partner,
   PartnerSnapshot,
   PartnerType,
-} from "@/database/models/company/Partner";
-import { PartnerContact } from "@/database/models/company/PartnerContact";
+} from "@/database/models/Partner";
+import { PartnerContact } from "@/database/models/PartnerContact";
 import { PartnerSelectFull, PartnerRelations } from "./partner.select";
 import { inject, injectable } from "inversify";
 import { DeepPartial, EntityManager, SelectQueryBuilder } from "typeorm";
@@ -60,8 +60,8 @@ export class PartnerRepository extends BaseRepository<Partner> {
       supplierSnapshot?: DeepPartial<PartnerSnapshot> | null;
       customerId?: string | null;
       customerSnapshot?: DeepPartial<PartnerSnapshot> | null;
-      shippingProviderId?: string | null;
-      shippingProviderSnapshot?: DeepPartial<PartnerSnapshot> | null;
+      shipperId?: string | null;
+      shipperSnapshot?: DeepPartial<PartnerSnapshot> | null;
       partnerId?: string | null;
       partnerSnapshot?: DeepPartial<PartnerSnapshot> | null;
     },
@@ -80,16 +80,12 @@ export class PartnerRepository extends BaseRepository<Partner> {
     )
       data.customerSnapshot = await this.getSnapshot(data.customerId, manager);
 
-    // shippingProviderId → shippingProviderSnapshot
+    // shipperId → shipperSnapshot
     if (
-      data.shippingProviderId &&
-      (!data.shippingProviderSnapshot ||
-        data.shippingProviderSnapshot.id !== data.shippingProviderId)
+      data.shipperId &&
+      (!data.shipperSnapshot || data.shipperSnapshot.id !== data.shipperId)
     )
-      data.shippingProviderSnapshot = await this.getSnapshot(
-        data.shippingProviderId,
-        manager,
-      );
+      data.shipperSnapshot = await this.getSnapshot(data.shipperId, manager);
 
     // partnerId → partnerSnapshot
     if (

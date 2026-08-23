@@ -14,7 +14,7 @@ import {
 import { ApiResponse } from "@/shared/types/interfaces";
 import {
   InventoryRefTypeEnum,
-  InventoryTransactionTypeEnum,
+  InventoryTransactionType,
 } from "@/shared/constants/enum";
 import { TransactionService } from "@/shared/base/TransactionService";
 import { FileHelper } from "@/shared/utils/file.helper";
@@ -115,8 +115,8 @@ export class InventoryService extends TransactionService {
       // --- CTE: variant_stock ---
       const startAtIdx = $(startAt);
       const endAtIdx = $(endAt);
-      const inTypeIdx = $(InventoryTransactionTypeEnum.IN);
-      const outTypeIdx = $(InventoryTransactionTypeEnum.OUT);
+      const inTypeIdx = $(InventoryTransactionType.IN);
+      const outTypeIdx = $(InventoryTransactionType.OUT);
       const storeArrIdx = $(resolvedStoreIds);
 
       // Excluded transfer filter
@@ -728,7 +728,7 @@ export class InventoryService extends TransactionService {
     let totalOutAmount = 0;
 
     allTransactions.forEach((tx) => {
-      const isIn = tx.type === InventoryTransactionTypeEnum.IN;
+      const isIn = tx.type === InventoryTransactionType.IN;
       runningQuantity += isIn ? tx.quantity : -tx.quantity;
       runningAmount += isIn ? tx.amount : -tx.amount;
 
@@ -913,7 +913,7 @@ export class InventoryService extends TransactionService {
       .createQueryBuilder(InventoryTransaction, "tx")
       .where("tx.productVariantId IN (:...variantIds)", { variantIds })
       .andWhere("tx.type = :type", {
-        type: InventoryTransactionTypeEnum.OUT,
+        type: InventoryTransactionType.OUT,
       })
       .andWhere("tx.refType = :refType", {
         refType: InventoryRefTypeEnum.SALE,

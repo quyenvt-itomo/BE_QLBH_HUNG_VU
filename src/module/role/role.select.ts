@@ -1,4 +1,4 @@
-import { Role } from "@/database/models/company/Role";
+import { Role } from "@/database/models/Role";
 import { BaseSelect } from "@/shared/base/BaseSelect";
 import { FindOptionsRelations, FindOptionsSelect } from "typeorm";
 

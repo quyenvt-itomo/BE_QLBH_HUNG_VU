@@ -12,16 +12,16 @@ import { ProductVariantSnapshot } from "@/modules/product";
 @Entity("store_transfer_lines")
 export class StoreTransferLine extends BaseEntity {
   @Column({ type: "uuid" })
-  transferId!: string;
+  transferId: string;
 
   @Column({ type: "uuid" })
-  productVariantId!: string;
+  productVariantId: string;
   @Column({ type: "jsonb" })
-  productVariantSnapshot!: ProductVariantSnapshot;
+  productVariantSnapshot: ProductVariantSnapshot;
 
   // Số lượng chuyển
   @Column(BaseNumericColumnOptions)
-  quantity!: number;
+  quantity: number;
 
   @Column(BaseSortOrderColumnOptions)
   sortOrder: number;

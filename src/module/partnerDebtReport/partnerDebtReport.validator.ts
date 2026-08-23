@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { BaseQuerySchema, DateTransform } from "@/shared/base/BaseValidator";
-import { PartnerDebtSideEnum } from "@/database/models/company/PartnerDebtTransaction";
+import { PartnerDebtSideEnum } from "@/database/models/PartnerDebtTransaction";
 import { InvoiceType } from "@/database/models/company/Invoice";
 
 export const PartnerDebtReportQuerySchema = BaseQuerySchema.extend({

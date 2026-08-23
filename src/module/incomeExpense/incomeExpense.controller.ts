@@ -2,7 +2,7 @@ import { injectable, inject } from "inversify";
 import { IncomeExpenseService } from "./incomeExpense.service";
 import { INCOME_EXPENSE_TYPES } from "./incomeExpense.types";
 import { BaseController } from "@/shared/base/BaseController";
-import { IncomeExpense } from "@/database/models/company/IncomeExpense";
+import { IncomeExpense } from "@/database/models/store/IncomeExpense";
 
 @injectable()
 export class IncomeExpenseController extends BaseController<IncomeExpense> {

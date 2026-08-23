@@ -30,7 +30,7 @@ export const CreateOrderSchema = BaseCreateSchema.extend({
     .default(DiscountTypeEnum.AMOUNT),
   discountValue: z.number().nullish(),
 
-  shippingProviderId: z.uuid().nullish(),
+  shipperId: z.uuid().nullish(),
   shippingFee: z.number().min(0).nullish(),
   isFreeShipping: z.boolean().optional().default(false),
 
@@ -78,7 +78,7 @@ export const UpdateOrderSchema = BaseUpdateSchema.extend({
   discountType: z.enum(DiscountTypeEnum).optional(),
   discountValue: z.number().optional(),
 
-  shippingProviderId: z.uuid().nullish(),
+  shipperId: z.uuid().nullish(),
   shippingFee: z.number().min(0).nullish(),
   isFreeShipping: z.boolean().optional(),
   loyaltyPointsUsed: z.number().min(0).optional(),

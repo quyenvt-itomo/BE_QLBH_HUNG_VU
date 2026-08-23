@@ -1,4 +1,4 @@
-import { PartnerContact } from "@/database/models/company/PartnerContact";
+import { PartnerContact } from "@/database/models/PartnerContact";
 import { BaseSelect } from "@/shared/base/BaseSelect";
 import { FindOptionsRelations, FindOptionsSelect } from "typeorm";
 

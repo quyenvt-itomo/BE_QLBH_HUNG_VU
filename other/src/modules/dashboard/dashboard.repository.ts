@@ -8,10 +8,10 @@ import {
   OrderTypeEnum,
   OrderStatusEnum,
   PartnerTypeEnum,
-  InventoryTransactionTypeEnum,
+  InventoryTransactionType,
   InventoryRefTypeEnum,
   FundTypeEnum,
-  FundTransactionTypeEnum,
+  FundTransactionType,
   IncomeExpenseTypeEnum,
   DebtDirectionEnum,
   PartnerDebtSideEnum,
@@ -194,7 +194,7 @@ export class DashboardRepository {
       .groupBy('t."productVariantId"')
       .setParameters({
         endAt,
-        typeIn: InventoryTransactionTypeEnum.IN,
+        typeIn: InventoryTransactionType.IN,
         snapStartAt: startAt,
       });
 
@@ -558,7 +558,7 @@ export class DashboardRepository {
       .createQueryBuilder(InventoryTransaction, "it")
       .select(['DATE(it."occurredAt") as date', 'SUM(it."amount") as cost'])
       .where('it."occurredAt" BETWEEN :startAt AND :endAt', { startAt, endAt })
-      .andWhere("it.type = :type", { type: InventoryTransactionTypeEnum.OUT })
+      .andWhere("it.type = :type", { type: InventoryTransactionType.OUT })
       .andWhere("it.refType = :refType", {
         refType: InventoryRefTypeEnum.SALE,
       })
@@ -579,7 +579,7 @@ export class DashboardRepository {
         'SUM(it."amount") as returnCost',
       ])
       .where('it."occurredAt" BETWEEN :startAt AND :endAt', { startAt, endAt })
-      .andWhere("it.type = :type", { type: InventoryTransactionTypeEnum.IN })
+      .andWhere("it.type = :type", { type: InventoryTransactionType.IN })
       .andWhere("it.refType = :refType", {
         refType: InventoryRefTypeEnum.SALE_RETURN,
       })
@@ -1127,8 +1127,8 @@ export class DashboardRepository {
         'COUNT(CASE WHEN it.type = :out THEN 1 END) as "negativeAdjustments"',
       ])
       .setParameters({
-        in: InventoryTransactionTypeEnum.IN,
-        out: InventoryTransactionTypeEnum.OUT,
+        in: InventoryTransactionType.IN,
+        out: InventoryTransactionType.OUT,
       })
       .getRawOne();
     const totalAdjustmentValue = Number(
@@ -1616,7 +1616,7 @@ export class DashboardRepository {
           SUM(it.amount) as cost
         FROM inventory_transactions it
         INNER JOIN orders o ON o.id = it."refId"
-        WHERE it.type = '${InventoryTransactionTypeEnum.OUT}'
+        WHERE it.type = '${InventoryTransactionType.OUT}'
           AND it."refType" = '${InventoryRefTypeEnum.SALE}'
           AND it."occurredAt" BETWEEN $1 AND $2
           AND o.status = 'posted'
@@ -2284,8 +2284,8 @@ export class DashboardRepository {
         `,
       ])
       .setParameters({
-        inType: InventoryTransactionTypeEnum.IN,
-        outType: InventoryTransactionTypeEnum.OUT,
+        inType: InventoryTransactionType.IN,
+        outType: InventoryTransactionType.OUT,
       })
       .getRawOne();
 
@@ -2296,7 +2296,7 @@ export class DashboardRepository {
         startAt,
         endAt,
       })
-      .andWhere('ia."isInitialAdjustment" = :isInitial', { isInitial: false });
+      .andWhere('ia."isInitial" = :isInitial', { isInitial: false });
     if (storeId) {
       adjustmentQb.andWhere('ia."storeId" = :storeId', { storeId });
     }
@@ -2319,7 +2319,7 @@ export class DashboardRepository {
           startAt,
           endAt,
         })
-        .andWhere('fa."isInitialAdjustment" = :isInitial', { isInitial: false })
+        .andWhere('fa."isInitial" = :isInitial', { isInitial: false })
         .select([
           `
           COALESCE(SUM(
@@ -2331,8 +2331,8 @@ export class DashboardRepository {
           `,
         ])
         .setParameters({
-          increase: FundTransactionTypeEnum.INCREASE,
-          decrease: FundTransactionTypeEnum.DECREASE,
+          increase: FundTransactionType.INCREASE,
+          decrease: FundTransactionType.DECREASE,
         })
         .getRawOne();
 
@@ -2346,7 +2346,7 @@ export class DashboardRepository {
         startAt,
         endAt,
       })
-      .andWhere('pda."isInitialAdjustment" = :isInitial', { isInitial: false });
+      .andWhere('pda."isInitial" = :isInitial', { isInitial: false });
 
     if (storeId) {
       debtAdjustmentQb.andWhere('pda."storeId" = :storeId', { storeId });
@@ -2518,8 +2518,8 @@ export class DashboardRepository {
         `,
       ])
       .setParameters({
-        inType: InventoryTransactionTypeEnum.IN,
-        outType: InventoryTransactionTypeEnum.OUT,
+        inType: InventoryTransactionType.IN,
+        outType: InventoryTransactionType.OUT,
       })
       .groupBy('DATE(it."occurredAt")')
       .getRawMany();
@@ -3283,8 +3283,8 @@ export class DashboardRepository {
         `,
       ])
       .setParameters({
-        inType: InventoryTransactionTypeEnum.IN,
-        outType: InventoryTransactionTypeEnum.OUT,
+        inType: InventoryTransactionType.IN,
+        outType: InventoryTransactionType.OUT,
       })
       .getRawOne();
 
@@ -3391,8 +3391,8 @@ export class DashboardRepository {
         `,
       ])
       .setParameters({
-        inType: InventoryTransactionTypeEnum.IN,
-        outType: InventoryTransactionTypeEnum.OUT,
+        inType: InventoryTransactionType.IN,
+        outType: InventoryTransactionType.OUT,
       })
       .groupBy('DATE(o."orderAt")')
       .getRawMany();
@@ -3637,8 +3637,8 @@ export class DashboardRepository {
         `,
       ])
       .setParameters({
-        inType: InventoryTransactionTypeEnum.IN,
-        outType: InventoryTransactionTypeEnum.OUT,
+        inType: InventoryTransactionType.IN,
+        outType: InventoryTransactionType.OUT,
       })
       .getRawOne();
 
@@ -3725,8 +3725,8 @@ export class DashboardRepository {
       `,
       ])
       .setParameters({
-        inType: InventoryTransactionTypeEnum.IN,
-        outType: InventoryTransactionTypeEnum.OUT,
+        inType: InventoryTransactionType.IN,
+        outType: InventoryTransactionType.OUT,
       })
       .getRawOne();
 
@@ -3836,8 +3836,8 @@ export class DashboardRepository {
         ), 0) as cost`,
       ])
       .setParameters({
-        inType: InventoryTransactionTypeEnum.IN,
-        outType: InventoryTransactionTypeEnum.OUT,
+        inType: InventoryTransactionType.IN,
+        outType: InventoryTransactionType.OUT,
       })
       .groupBy('DATE(it."occurredAt")')
       .getRawMany();
@@ -4650,8 +4650,8 @@ export class DashboardRepository {
         `,
       ])
       .setParameters({
-        inType: InventoryTransactionTypeEnum.IN,
-        outType: InventoryTransactionTypeEnum.OUT,
+        inType: InventoryTransactionType.IN,
+        outType: InventoryTransactionType.OUT,
       })
       .groupBy('DATE(it."occurredAt")')
       .getRawMany();
@@ -4806,8 +4806,8 @@ export class DashboardRepository {
         `,
       ])
       .setParameters({
-        inType: InventoryTransactionTypeEnum.IN,
-        outType: InventoryTransactionTypeEnum.OUT,
+        inType: InventoryTransactionType.IN,
+        outType: InventoryTransactionType.OUT,
       })
       .groupBy('DATE(it."occurredAt")')
       .getRawMany();
@@ -4867,7 +4867,7 @@ export class DashboardRepository {
         startAt,
         endAt,
       })
-      .andWhere('ia."isInitialAdjustment" = :isInitial', { isInitial: false });
+      .andWhere('ia."isInitial" = :isInitial', { isInitial: false });
 
     if (storeId) {
       inventoryAdjQb.andWhere('ia."storeId" = :storeId', { storeId });
@@ -4888,7 +4888,7 @@ export class DashboardRepository {
         startAt,
         endAt,
       })
-      .andWhere('pda."isInitialAdjustment" = :isInitial', { isInitial: false });
+      .andWhere('pda."isInitial" = :isInitial', { isInitial: false });
 
     if (storeId) {
       debtAdjQb.andWhere('pda."storeId" = :storeId', { storeId });
@@ -4925,7 +4925,7 @@ export class DashboardRepository {
         startAt,
         endAt,
       })
-      .andWhere('fa."isInitialAdjustment" = :isInitial', { isInitial: false });
+      .andWhere('fa."isInitial" = :isInitial', { isInitial: false });
 
     if (storeId) {
       fundAdjQb.andWhere('f."storeId" = :storeId', { storeId });
@@ -4944,8 +4944,8 @@ export class DashboardRepository {
         `,
       ])
       .setParameters({
-        increase: FundTransactionTypeEnum.INCREASE,
-        decrease: FundTransactionTypeEnum.DECREASE,
+        increase: FundTransactionType.INCREASE,
+        decrease: FundTransactionType.DECREASE,
       })
       .groupBy('DATE(fa."occurredAt")')
       .getRawMany();

@@ -21,16 +21,16 @@ CREATE INDEX IF NOT EXISTS "IDX_inventory_transactions_company"
   WHERE "deletedAt" IS NULL;
 
 -- PartnerDebtTransaction: truy vấn công nợ đối tác
-CREATE INDEX IF NOT EXISTS "IDX_partner_debt_transactions_partner_side_time"
-  ON partner_debt_transactions ("partnerId", "side", "occurredAt" DESC)
+CREATE INDEX IF NOT EXISTS "IDX_debt_transactions_partner_side_time"
+  ON debt_transactions ("partnerId", "side", "occurredAt" DESC)
   WHERE "deletedAt" IS NULL;
 
-CREATE INDEX IF NOT EXISTS "IDX_partner_debt_transactions_ref"
-  ON partner_debt_transactions ("refType", "refId")
+CREATE INDEX IF NOT EXISTS "IDX_debt_transactions_ref"
+  ON debt_transactions ("refType", "refId")
   WHERE "deletedAt" IS NULL;
 
-CREATE INDEX IF NOT EXISTS "IDX_partner_debt_transactions_company"
-  ON partner_debt_transactions ("companyId", "occurredAt" DESC)
+CREATE INDEX IF NOT EXISTS "IDX_debt_transactions_company"
+  ON debt_transactions ("companyId", "occurredAt" DESC)
   WHERE "deletedAt" IS NULL;
 
 -- CommissionDebtTransaction: truy vấn công nợ hoa hồng

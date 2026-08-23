@@ -2,7 +2,7 @@ import { injectable } from "inversify";
 import { EntityManager } from "typeorm";
 import {
   VatDebtTransaction,
-  VatTransactionTypeEnum,
+  VatTransactionType,
 } from "@/database/models/company/VatDebtTransaction";
 import {
   Invoice,
@@ -14,7 +14,7 @@ import {
   IncomeExpenseTypeEnum,
 } from "@/database/models/company/IncomeExpense";
 import { VatDebtAdjustment } from "@/database/models/company/VatDebtAdjustment";
-import { TransactionTypeEnum } from "@/shared/constants/enum";
+import { TransactionType } from "@/shared/constants/enum";
 import DatabaseConfig from "@/config/database";
 
 /**
@@ -30,7 +30,7 @@ import DatabaseConfig from "@/config/database";
 export class VatDebtSyncService {
   private async deleteByRef(
     manager: EntityManager,
-    refType: VatTransactionTypeEnum,
+    refType: VatTransactionType,
     refId: string,
   ): Promise<void> {
     await manager
@@ -44,7 +44,7 @@ export class VatDebtSyncService {
   /** Xóa toàn bộ phát sinh VAT theo nguồn (dùng khi xóa nguồn gốc). */
   async removeByRef(
     manager: EntityManager,
-    refType: VatTransactionTypeEnum,
+    refType: VatTransactionType,
     refId: string,
   ): Promise<void> {
     await this.deleteByRef(manager, refType, refId);
@@ -76,7 +76,7 @@ export class VatDebtSyncService {
       .where("tx.companyId = :companyId", { companyId })
       .andWhere("tx.occurredAt <= :atDate", { atDate })
       .andWhere("tx.deletedAt IS NULL")
-      .setParameters({ inType: TransactionTypeEnum.IN })
+      .setParameters({ inType: TransactionType.IN })
       .getRawOne<{ balance: string }>();
     return Number(row?.balance || 0);
   }
@@ -85,8 +85,8 @@ export class VatDebtSyncService {
   async syncForInvoice(data: Invoice, manager: EntityManager): Promise<void> {
     const refType =
       data.type === InvoiceType.INPUT
-        ? VatTransactionTypeEnum.PURCHASE_INVOICE
-        : VatTransactionTypeEnum.SALES_INVOICE;
+        ? VatTransactionType.PURCHASE_INVOICE
+        : VatTransactionType.SALES_INVOICE;
     await this.deleteByRef(manager, refType, data.id);
 
     if (
@@ -98,8 +98,8 @@ export class VatDebtSyncService {
 
     const type =
       data.type === InvoiceType.INPUT
-        ? TransactionTypeEnum.IN
-        : TransactionTypeEnum.OUT;
+        ? TransactionType.IN
+        : TransactionType.OUT;
 
     await this.insertMany(manager, [
       {
@@ -119,7 +119,7 @@ export class VatDebtSyncService {
     data: IncomeExpense,
     manager: EntityManager,
   ): Promise<void> {
-    const refType = VatTransactionTypeEnum.EXPENSE;
+    const refType = VatTransactionType.EXPENSE;
     await this.deleteByRef(manager, refType, data.id);
 
     const isVatPayment =
@@ -130,7 +130,7 @@ export class VatDebtSyncService {
       {
         companyId: data.companyId,
         occurredAt: data.occurredAt,
-        type: TransactionTypeEnum.IN,
+        type: TransactionType.IN,
         amount: Number(data.amount),
         refType,
         refId: data.id,
@@ -144,7 +144,7 @@ export class VatDebtSyncService {
     data: VatDebtAdjustment,
     manager: EntityManager,
   ): Promise<void> {
-    const refType = VatTransactionTypeEnum.ADJUSTMENT;
+    const refType = VatTransactionType.ADJUSTMENT;
     await this.deleteByRef(manager, refType, data.id);
 
     if (Number(data.deltaAmount || 0) <= 0) return;

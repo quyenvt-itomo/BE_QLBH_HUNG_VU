@@ -6,17 +6,17 @@ import { BaseEntity } from "@/shared/base/BaseEntity";
 @Entity("tokens")
 export class Token extends BaseEntity {
   @Column({ type: "uuid" })
-  userId!: string;
+  userId: string;
 
   @Column({ type: "varchar" })
-  refreshToken!: string;
+  refreshToken: string;
 
   @Column({ type: "time with time zone", default: () => "CURRENT_TIMESTAMP" })
-  expiresAt!: Date;
+  expiresAt: Date;
 
   @ManyToOne(() => User, {
     onDelete: "CASCADE",
   })
   @JoinColumn({ name: "userId" })
-  user!: User;
+  user: User;
 }

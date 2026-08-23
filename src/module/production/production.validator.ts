@@ -9,7 +9,7 @@ import * as z from "zod";
 import {
   ProductionTypeEnum,
   ProductionStatusEnum,
-} from "@/database/models/company/Production";
+} from "@/database/models/Production";
 
 export const CreateProductionSchema = BaseCreateSchema.extend({
   type: z

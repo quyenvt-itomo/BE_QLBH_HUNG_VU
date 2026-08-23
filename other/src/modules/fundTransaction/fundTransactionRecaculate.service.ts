@@ -6,7 +6,7 @@ import { IncomeExpense } from "@/database/models/store/IncomeExpense";
 import { TransactionService } from "@/shared/base/TransactionService";
 import {
   FundTransactionRefTypeEnum,
-  FundTransactionTypeEnum,
+  FundTransactionType,
   IncomeExpenseTypeEnum,
 } from "@/shared/constants/enum";
 import logger from "@/shared/utils/logger";
@@ -28,8 +28,8 @@ export class FundTransactionRecalculate extends TransactionService {
   ): Partial<FundTransaction> {
     const type =
       data.type === IncomeExpenseTypeEnum.EXPENSE
-        ? FundTransactionTypeEnum.DECREASE
-        : FundTransactionTypeEnum.INCREASE;
+        ? FundTransactionType.DECREASE
+        : FundTransactionType.INCREASE;
     return {
       fundId: data.fundId,
       amount: data.amount,
@@ -51,7 +51,7 @@ export class FundTransactionRecalculate extends TransactionService {
       {
         fundId: data.fromFundId,
         refId: data.id,
-        type: FundTransactionTypeEnum.DECREASE,
+        type: FundTransactionType.DECREASE,
         amount: data.amount,
         occurredAt: data.occurredAt,
         refType: FundTransactionRefTypeEnum.TRANSFER,
@@ -60,7 +60,7 @@ export class FundTransactionRecalculate extends TransactionService {
       {
         fundId: data.toFundId,
         refId: data.id,
-        type: FundTransactionTypeEnum.INCREASE,
+        type: FundTransactionType.INCREASE,
         amount: data.amount,
         occurredAt: data.occurredAt,
         refType: FundTransactionRefTypeEnum.TRANSFER,
@@ -231,8 +231,8 @@ export class FundTransactionRecalculate extends TransactionService {
     const deltaAmount = Math.abs(data.expectedAmount - countedAmount);
     const direction =
       data.expectedAmount >= countedAmount
-        ? FundTransactionTypeEnum.INCREASE
-        : FundTransactionTypeEnum.DECREASE;
+        ? FundTransactionType.INCREASE
+        : FundTransactionType.DECREASE;
 
     const newAdjustment = {
       ...data,
@@ -285,7 +285,7 @@ export class FundTransactionRecalculate extends TransactionService {
 
     const fundBalances: Record<string, number> = {};
     for (const trans of transactions) {
-      const sign = trans.type === FundTransactionTypeEnum.INCREASE ? 1 : -1;
+      const sign = trans.type === FundTransactionType.INCREASE ? 1 : -1;
       if (!fundBalances[trans.fundId]) {
         fundBalances[trans.fundId] = 0;
       }
@@ -330,7 +330,7 @@ export class FundTransactionRecalculate extends TransactionService {
       .andWhere("ft.occurredAt <= :date", { date });
     const transactions = await transQb.getMany();
     for (const trans of transactions) {
-      const sign = trans.type === FundTransactionTypeEnum.INCREASE ? 1 : -1;
+      const sign = trans.type === FundTransactionType.INCREASE ? 1 : -1;
       balance += sign * trans.amount;
     }
 

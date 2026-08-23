@@ -13,7 +13,7 @@ export enum PartnerDebtOffsetSideEnum {
  * Một phiếu đối trừ có 2 danh sách: hóa đơn đầu vào (payable) và hóa đơn đầu ra (receivable).
  * Tổng giá trị giảm trừ 2 bên phải bằng nhau (= offsetAmount của phiếu).
  */
-@Entity("partner_debt_offset_lines")
+@Entity("debt_offset_lines")
 export class PartnerDebtOffsetLine extends BaseEntity {
   @Column({ type: "uuid" })
   offsetId: string;

@@ -9,7 +9,7 @@ import { Warehouse } from "@/database/models/company/Warehouse";
 import { Product } from "@/database/models/company/Product";
 import { EntityManager, Brackets, IsNull } from "typeorm";
 import { ApiResponse } from "@/shared/types/interfaces";
-import { TransactionTypeEnum } from "@/shared/constants/enum";
+import { TransactionType } from "@/shared/constants/enum";
 import {
   GetStockReportQueryDto,
   GetTransactionDetailsQueryDto,
@@ -286,8 +286,8 @@ export class InventoryService extends TransactionService {
           startAt,
           endAt,
           companyId,
-          typeIn: TransactionTypeEnum.IN,
-          typeOut: TransactionTypeEnum.OUT,
+          typeIn: TransactionType.IN,
+          typeOut: TransactionType.OUT,
           refTypeTransfer: InventoryTransactionRefType.TRANSFER,
         });
 
@@ -696,7 +696,7 @@ export class InventoryService extends TransactionService {
     let runningAmount = openingAmountTotal;
 
     allTransactions.forEach((tx) => {
-      const isIn = tx.type === TransactionTypeEnum.IN;
+      const isIn = tx.type === TransactionType.IN;
       runningQuantity += isIn ? tx.quantity : -tx.quantity;
       runningAmount += isIn ? tx.amount : -tx.amount;
 
@@ -1016,8 +1016,8 @@ export class InventoryService extends TransactionService {
         startAt,
         endAt,
         companyId,
-        typeIn: TransactionTypeEnum.IN,
-        typeOut: TransactionTypeEnum.OUT,
+        typeIn: TransactionType.IN,
+        typeOut: TransactionType.OUT,
         refTypeTransfer: InventoryTransactionRefType.TRANSFER,
       });
 

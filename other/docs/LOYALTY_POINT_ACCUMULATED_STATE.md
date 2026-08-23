@@ -16,16 +16,16 @@ Lưu trạng thái tích lũy vào **mỗi transaction** (giống FIFO của inv
 
 ```typescript
 @Column(BaseNumericColumnOptions)
-revenueChange!: number; // Biến động doanh thu trong giao dịch này
+revenueChange: number; // Biến động doanh thu trong giao dịch này
 
 @Column(BaseNumericColumnOptions)
-accumulatedRevenue!: number; // Tổng doanh thu tích lũy SAU transaction này
+accumulatedRevenue: number; // Tổng doanh thu tích lũy SAU transaction này
 
 @Column(BaseNumericColumnOptions)
-revenueForPointsMilestone!: number; // Mốc doanh thu đã tính điểm
+revenueForPointsMilestone: number; // Mốc doanh thu đã tính điểm
 
 @Column(BaseNumericColumnOptions)
-pointEarnRate!: number; // Tỷ lệ tích điểm (lưu lại để audit)
+pointEarnRate: number; // Tỷ lệ tích điểm (lưu lại để audit)
 ```
 
 ## Ví dụ thực tế (theo yêu cầu của bạn)

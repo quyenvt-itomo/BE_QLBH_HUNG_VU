@@ -1,4 +1,4 @@
-﻿import type {
+import type {
   RequestContext,
   ActionMap,
   ActionValue,
@@ -13,7 +13,7 @@ import { DeepPartial, EntityManager } from "typeorm";
 import { withTransaction } from "@/shared/base/TransactionManager";
 import { ApproveStatus } from "@/shared/constants/enum";
 import { BadRequestError, NotFoundError } from "@/shared/types/errors";
-import { PartnerType } from "@/database/models/company/Partner";
+import { PartnerType } from "@/database/models/Partner";
 import { NotificationService } from "@/module/notification/notification.service";
 import { NOTIFICATION_TYPES } from "@/module/notification/notification.types";
 import { ActionType, NotificationType } from "@/database/models/Notification";

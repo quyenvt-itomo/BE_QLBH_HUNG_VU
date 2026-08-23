@@ -1,4 +1,4 @@
-import { FundTransfer } from "@/database/models/company/FundTransfer";
+import { FundTransfer } from "@/database/models/FundTransfer";
 import { BaseSelect } from "@/shared/base/BaseSelect";
 import { FindOptionsRelations, FindOptionsSelect } from "typeorm";
 

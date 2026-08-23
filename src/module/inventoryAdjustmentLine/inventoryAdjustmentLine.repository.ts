@@ -2,7 +2,7 @@ import {
   BaseRepository,
   IFindPaginationOptions,
 } from "@/shared/base/BaseRepository";
-import { InventoryAdjustmentLine } from "@/database/models/company/InventoryAdjustmentLine";
+import { InventoryAdjustmentLine } from "@/database/models/store/InventoryAdjustmentLine";
 import {
   InventoryAdjustmentLineSelectFull,
   InventoryAdjustmentLineRelations,

@@ -2,7 +2,7 @@ import { injectable, inject } from "inversify";
 import { VatDebtAdjustmentService } from "./vatDebtAdjustment.service";
 import { VAT_DEBT_ADJUSTMENT_TYPES } from "./vatDebtAdjustment.types";
 import { BaseController } from "@/shared/base/BaseController";
-import { VatDebtAdjustment } from "@/database/models/company/VatDebtAdjustment";
+import { VatDebtAdjustment } from "@/database/models/VatDebtAdjustment";
 
 @injectable()
 export class VatDebtAdjustmentController extends BaseController<VatDebtAdjustment> {

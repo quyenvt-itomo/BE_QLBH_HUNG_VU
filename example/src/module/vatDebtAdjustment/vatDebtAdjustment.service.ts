@@ -7,8 +7,8 @@ import { VatDebtAdjustment } from "@/database/models/company/VatDebtAdjustment";
 import { DeepPartial, EntityManager } from "typeorm";
 import { EMPLOYEE_TYPES, EmployeeRepository } from "@/module/employee";
 import { VAT_DEBT_SYNC_TYPES, VatDebtSyncService } from "@/module/vatDebtSync";
-import { VatTransactionTypeEnum } from "@/database/models/company/VatDebtTransaction";
-import { TransactionTypeEnum } from "@/shared/constants/enum";
+import { VatTransactionType } from "@/database/models/company/VatDebtTransaction";
+import { TransactionType } from "@/shared/constants/enum";
 
 @injectable()
 export class VatDebtAdjustmentService extends BaseService<VatDebtAdjustment> {
@@ -82,7 +82,7 @@ export class VatDebtAdjustmentService extends BaseService<VatDebtAdjustment> {
   ): Promise<void> {
     await this.vatDebtSync.removeByRef(
       manager,
-      VatTransactionTypeEnum.ADJUSTMENT,
+      VatTransactionType.ADJUSTMENT,
       data.id,
     );
   }
@@ -101,7 +101,6 @@ export class VatDebtAdjustmentService extends BaseService<VatDebtAdjustment> {
     const expected = Number(data.expectedAmount || 0);
     data.countedAmount = counted;
     data.deltaAmount = Math.abs(expected - counted);
-    data.type =
-      expected >= counted ? TransactionTypeEnum.IN : TransactionTypeEnum.OUT;
+    data.type = expected >= counted ? TransactionType.IN : TransactionType.OUT;
   }
 }

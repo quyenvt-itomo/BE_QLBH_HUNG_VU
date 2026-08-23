@@ -471,13 +471,13 @@ export class SaleOrderExcelProcessor {
     }
 
     // Lookup shipping provider (optional)
-    let shippingProvider: Partner | null = null;
+    let shipper: Partner | null = null;
     if (orderData[OrderKey.SHIPPING_PROVIDER_CODE]) {
-      shippingProvider = await this.partnerRepo.findOne({
+      shipper = await this.partnerRepo.findOne({
         where: { code: orderData[OrderKey.SHIPPING_PROVIDER_CODE] as string },
       });
 
-      if (!shippingProvider) {
+      if (!shipper) {
         logger.warn(
           `[Excel Import - SaleOrder] Shipping provider not found: ${orderData[OrderKey.SHIPPING_PROVIDER_CODE]}`,
         );
@@ -602,7 +602,7 @@ export class SaleOrderExcelProcessor {
       discountType:
         orderData[OrderKey.DISCOUNT_TYPE] || DiscountTypeEnum.AMOUNT,
       discountValue: orderData[OrderKey.DISCOUNT_VALUE] || null,
-      shippingProviderId: shippingProvider?.id || null,
+      shipperId: shipper?.id || null,
       shippingFee: orderData[OrderKey.SHIPPING_FEE] || null,
       isFreeShipping: orderData[OrderKey.IS_FREE_SHIPPING] || false,
       loyaltyPointsUsed: orderData[OrderKey.LOYALTY_POINTS_USED] || 0,

@@ -19,21 +19,21 @@ import { IncomeExpense } from "./IncomeExpense";
 @Entity("orders")
 export class Order extends BaseEntityWithStore {
   @Column({ type: "enum", enum: OrderTypeEnum })
-  type!: OrderTypeEnum;
+  type: OrderTypeEnum;
   @Column({ type: "varchar", length: 50 })
-  code!: string;
+  code: string;
   @Column({ type: "uuid", nullable: true, default: null })
-  partnerId!: string | null;
+  partnerId: string | null;
   @Column({ type: "jsonb", nullable: true, default: null })
-  partnerSnapshot!: PartnerSnapshot | null;
+  partnerSnapshot: PartnerSnapshot | null;
 
   @Column({ type: "timestamptz" })
-  orderAt!: Date; // ngày thực hiện đơn hàng - nhập kho, xuất kho
+  orderAt: Date; // ngày thực hiện đơn hàng - nhập kho, xuất kho
 
   @Column({ type: "uuid", nullable: true, default: null })
   employeeId: string | null;
   @Column({ type: "jsonb", nullable: true, default: null })
-  employeeSnapshot!: EmployeeSnapshot | null;
+  employeeSnapshot: EmployeeSnapshot | null;
 
   // TODO ===== Discount (order-level) =====
   @Column({
@@ -48,9 +48,9 @@ export class Order extends BaseEntityWithStore {
 
   // TODO ===== Shipping Info =====
   @Column({ type: "uuid", nullable: true, default: null })
-  shippingProviderId: string | null;
+  shipperId: string | null;
   @Column({ type: "jsonb", nullable: true, default: null })
-  shippingProviderSnapshot: PartnerSnapshot | null;
+  shipperSnapshot: PartnerSnapshot | null;
   @Column(BaseNullableNumericColumnOptions)
   shippingFee: number | null; // phí vận chuyển
   @Column({ type: "boolean", default: true })
@@ -73,19 +73,19 @@ export class Order extends BaseEntityWithStore {
   // TODO ===== Loyalty Points =====
   // Snapshot hệ số tích điểm tại thời điểm tạo đơn
   @Column({ ...BaseNumericColumnOptions, default: 100000 })
-  pointEarnRate!: number; // VNĐ cần để tích 1 điểm (ví dụ: 100000)
+  pointEarnRate: number; // VNĐ cần để tích 1 điểm (ví dụ: 100000)
   @Column({ ...BaseNumericColumnOptions, default: 1000 })
-  pointRedeemRate!: number; // 1 điểm = bao nhiêu VNĐ (ví dụ: 1000)
+  pointRedeemRate: number; // 1 điểm = bao nhiêu VNĐ (ví dụ: 1000)
 
   // Điểm sử dụng trong đơn này
   @Column(BaseNumericColumnOptions)
-  loyaltyPointsUsed!: number; // Điểm khách dùng
+  loyaltyPointsUsed: number; // Điểm khách dùng
   @Column(BaseNumericColumnOptions)
-  loyaltyPointsDiscountAmount!: number; // Giá trị giảm từ điểm
+  loyaltyPointsDiscountAmount: number; // Giá trị giảm từ điểm
 
   // Điểm tích được từ đơn này (calculated after order)
   @Column(BaseNumericColumnOptions)
-  loyaltyPointsEarned!: number; // Điểm tích được
+  loyaltyPointsEarned: number; // Điểm tích được
 
   @Column({
     type: "enum",
@@ -96,7 +96,7 @@ export class Order extends BaseEntityWithStore {
 
   // For returns, reference to original order
   @Column({ type: "uuid", nullable: true, default: null })
-  refOrderId!: string | null; // đơn gốc bị hoàn
+  refOrderId: string | null; // đơn gốc bị hoàn
 
   // * ========================= RELATIONS ========================= * //
   @ManyToOne(() => Partner, { onDelete: "SET NULL" })
@@ -108,8 +108,8 @@ export class Order extends BaseEntityWithStore {
   employee: Employee | null;
 
   @ManyToOne(() => Partner, { onDelete: "SET NULL" })
-  @JoinColumn({ name: "shippingProviderId" })
-  shippingProvider: Partner | null;
+  @JoinColumn({ name: "shipperId" })
+  shipper: Partner | null;
 
   @ManyToOne(() => Order, {
     nullable: true,

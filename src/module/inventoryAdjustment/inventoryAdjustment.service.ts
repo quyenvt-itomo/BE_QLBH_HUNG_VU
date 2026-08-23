@@ -1,10 +1,10 @@
-﻿import type { RequestContext } from "@/shared/types/interfaces";
+import type { RequestContext } from "@/shared/types/interfaces";
 import { injectable, inject } from "inversify";
 import { BaseService } from "@/shared/base/BaseService";
 import { InventoryAdjustmentRepository } from "./inventoryAdjustment.repository";
 import { INVENTORY_ADJUSTMENT_TYPES } from "./inventoryAdjustment.types";
-import { InventoryAdjustment } from "@/database/models/company/InventoryAdjustment";
-import { InventoryAdjustmentLine } from "@/database/models/company/InventoryAdjustmentLine";
+import { InventoryAdjustment } from "@/database/models/store/InventoryAdjustment";
+import { InventoryAdjustmentLine } from "@/database/models/store/InventoryAdjustmentLine";
 import { DeepPartial, EntityManager } from "typeorm";
 import { Request } from "express";
 import { withTransaction } from "@/shared/base/TransactionManager";

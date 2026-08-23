@@ -13,7 +13,7 @@ import { Request } from "express";
 import { DeepPartial, EntityManager } from "typeorm";
 import { generateCode } from "@/shared/utils/code.utils";
 import { FundAdjustment } from "@/database/models/FundAdjustment";
-import { FundTransactionTypeEnum } from "@/shared/constants/enum";
+import { FundTransactionType } from "@/shared/constants/enum";
 import dayjs from "dayjs";
 import { BadRequestError } from "@/shared/types/errors";
 import { ErrorsMessages } from "@/shared/constants/errors";
@@ -82,8 +82,8 @@ export class FundService extends BaseService<Fund> {
           code,
           countedAmount: 0,
           deltaAmount: initialBalance,
-          direction: FundTransactionTypeEnum.INCREASE,
-          isInitialAdjustment: true,
+          direction: FundTransactionType.INCREASE,
+          isInitial: true,
         },
       ];
     }

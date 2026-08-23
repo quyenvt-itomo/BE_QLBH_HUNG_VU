@@ -1,9 +1,9 @@
-﻿import type { RequestContext } from "@/shared/types/interfaces";
+import type { RequestContext } from "@/shared/types/interfaces";
 import { injectable, inject } from "inversify";
 import { BaseService } from "@/shared/base/BaseService";
 import { IncomeExpenseRepository } from "./incomeExpense.repository";
 import { INCOME_EXPENSE_TYPES } from "./incomeExpense.types";
-import { IncomeExpense } from "@/database/models/company/IncomeExpense";
+import { IncomeExpense } from "@/database/models/store/IncomeExpense";
 import { DeepPartial, EntityManager } from "typeorm";
 import {
   PARTNER_DEBT_SYNC_TYPES,
@@ -16,8 +16,8 @@ import {
   InvoiceRepository,
   InvoiceService,
 } from "@/module/invoice";
-import { PartnerDebtRefTypeEnum } from "@/database/models/company/PartnerDebtTransaction";
-import { VatTransactionTypeEnum } from "@/database/models/company/VatDebtTransaction";
+import { PartnerDebtRefTypeEnum } from "@/database/models/PartnerDebtTransaction";
+import { VatTransactionType } from "@/database/models/VatTransaction";
 
 @injectable()
 export class IncomeExpenseService extends BaseService<IncomeExpense> {
@@ -138,7 +138,7 @@ export class IncomeExpenseService extends BaseService<IncomeExpense> {
     );
     await this.vatDebtSync.removeByRef(
       manager,
-      VatTransactionTypeEnum.EXPENSE,
+      VatTransactionType.EXPENSE,
       data.id,
     );
     await this.recalculateAllocatedInvoices(allocations, manager);

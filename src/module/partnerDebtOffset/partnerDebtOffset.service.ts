@@ -1,13 +1,13 @@
-﻿import type { RequestContext } from "@/shared/types/interfaces";
+import type { RequestContext } from "@/shared/types/interfaces";
 import { injectable, inject } from "inversify";
 import { BaseService } from "@/shared/base/BaseService";
 import { PartnerDebtOffsetRepository } from "./partnerDebtOffset.repository";
 import { PARTNER_DEBT_OFFSET_TYPES } from "./partnerDebtOffset.types";
-import { PartnerDebtOffset } from "@/database/models/company/PartnerDebtOffset";
+import { PartnerDebtOffset } from "@/database/models/PartnerDebtOffset";
 import {
   PartnerDebtOffsetLine,
   PartnerDebtOffsetSideEnum,
-} from "@/database/models/company/PartnerDebtOffsetLine";
+} from "@/database/models/PartnerDebtOffsetLine";
 import { Invoice, InvoiceType } from "@/database/models/company/Invoice";
 import { DeepPartial, EntityManager, In } from "typeorm";
 import { PARTNER_TYPES, PartnerRepository } from "@/module/partner";

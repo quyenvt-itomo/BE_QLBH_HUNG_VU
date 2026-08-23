@@ -1,7 +1,7 @@
 import { BaseNumericColumnOptions } from "@/shared/base/BaseEntity";
 import { Column, Entity, JoinColumn, ManyToOne } from "typeorm";
 import { PartnerContact, PartnerContactSnapshot } from "./PartnerContact";
-import { TransactionTypeEnum } from "@/shared/constants/enum";
+import { TransactionType } from "@/shared/constants/enum";
 import { BaseEntityWithCompany } from "./BaseEntityWithCompany";
 
 /**
@@ -32,16 +32,16 @@ export class CommissionDebtAdjustment extends BaseEntityWithCompany {
 
   @Column({
     type: "enum",
-    enum: TransactionTypeEnum,
-    default: TransactionTypeEnum.IN,
+    enum: TransactionType,
+    default: TransactionType.IN,
   })
-  type: TransactionTypeEnum;
+  type: TransactionType;
 
   @Column({ type: "text", nullable: true })
   reason: string | null;
 
   @Column({ type: "boolean", default: false })
-  isInitialAdjustment: boolean;
+  isInitial: boolean;
 
   // * ======================== RELATIONS ========================= //
   @ManyToOne(() => PartnerContact, { onDelete: "CASCADE" })

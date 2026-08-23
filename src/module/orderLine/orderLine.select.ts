@@ -1,4 +1,4 @@
-import { OrderLine } from "@/database/models/company/OrderLine";
+import { OrderLine } from "@/database/models/store/OrderLine";
 import { BaseSelect } from "@/shared/base/BaseSelect";
 import { FindOptionsRelations, FindOptionsSelect } from "typeorm";
 

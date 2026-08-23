@@ -2,7 +2,7 @@ import { injectable, inject } from "inversify";
 import { OrderService } from "./order.service";
 import { ORDER_TYPES } from "./order.types";
 import { BaseController } from "@/shared/base/BaseController";
-import { Order } from "@/database/models/company/Order";
+import { Order } from "@/database/models/store/Order";
 import { asyncHandler } from "@/shared/utils/controller.utils";
 
 @injectable()

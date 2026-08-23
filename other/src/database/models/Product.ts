@@ -10,15 +10,15 @@ import { Attribute } from "./Attribute";
 @Entity("products")
 export class Product extends BaseEntity {
   @Column({ type: "varchar" })
-  name!: string;
+  name: string;
   @Column({ type: "varchar" })
-  code!: string;
+  code: string;
 
   @Column({ type: "uuid", nullable: true, default: null })
-  categoryId!: string | null;
+  categoryId: string | null;
 
   @Column({ type: "uuid", nullable: true, default: null })
-  unitId!: string | null;
+  unitId: string | null;
 
   @Column({ type: "boolean", default: true })
   hasVariant: boolean;

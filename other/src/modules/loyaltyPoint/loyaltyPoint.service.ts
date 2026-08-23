@@ -4,7 +4,7 @@ import { Partner } from "@/database/models/Partner";
 import { LoyaltyPointTransaction } from "@/database/models/LoyaltyPointTransaction";
 import { Order } from "@/database/models/store/Order";
 import {
-  LoyaltyPointTransactionTypeEnum,
+  LoyaltyPointTransactionType,
   LoyaltyPointRefTypeEnum,
   OrderTypeEnum,
   OrderStatusEnum,
@@ -302,20 +302,20 @@ export class LoyaltyPointService extends TransactionService {
 
       partnerTxInPeriod.forEach((tx: LoyaltyPointTransaction) => {
         if (
-          tx.type === LoyaltyPointTransactionTypeEnum.INCREASE &&
+          tx.type === LoyaltyPointTransactionType.INCREASE &&
           tx.refType === LoyaltyPointRefTypeEnum.ORDER
         ) {
           // Tích điểm từ đơn hàng
           pointsEarned += tx.points;
         } else if (
-          tx.type === LoyaltyPointTransactionTypeEnum.DECREASE &&
+          tx.type === LoyaltyPointTransactionType.DECREASE &&
           tx.refType === LoyaltyPointRefTypeEnum.ORDER
         ) {
           // Dùng điểm trong đơn hàng
           pointsRedeemed += tx.points;
         } else if (tx.refType === LoyaltyPointRefTypeEnum.ADJUSTMENT) {
           // Điều chỉnh
-          if (tx.type === LoyaltyPointTransactionTypeEnum.INCREASE) {
+          if (tx.type === LoyaltyPointTransactionType.INCREASE) {
             pointsAdjusted += tx.points;
           } else {
             pointsAdjusted -= tx.points;
@@ -414,19 +414,19 @@ export class LoyaltyPointService extends TransactionService {
 
     allTxInPeriod.forEach((tx: LoyaltyPointTransaction) => {
       if (
-        tx.type === LoyaltyPointTransactionTypeEnum.INCREASE &&
+        tx.type === LoyaltyPointTransactionType.INCREASE &&
         tx.refType === LoyaltyPointRefTypeEnum.ORDER
       ) {
         pointsEarned += tx.points;
         increasePoints += tx.points;
       } else if (
-        tx.type === LoyaltyPointTransactionTypeEnum.DECREASE &&
+        tx.type === LoyaltyPointTransactionType.DECREASE &&
         tx.refType === LoyaltyPointRefTypeEnum.ORDER
       ) {
         pointsRedeemed += tx.points;
         decreasePoints += tx.points;
       } else if (tx.refType === LoyaltyPointRefTypeEnum.ADJUSTMENT) {
-        if (tx.type === LoyaltyPointTransactionTypeEnum.INCREASE) {
+        if (tx.type === LoyaltyPointTransactionType.INCREASE) {
           pointsAdjusted += tx.points;
           increasePoints += tx.points;
         } else {

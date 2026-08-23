@@ -1,22 +1,18 @@
 import { BaseEntity } from "@/shared/base/BaseEntity";
-import { Column, Entity, Index, ManyToOne, JoinColumn } from "typeorm";
-import { Organization } from "./Organization";
+import { Column, Entity, Index } from "typeorm";
 
 export enum AttributeType {
-  OPERATION = "operation", // công đoạn sản xuất
   UNIT = "unit", // đơn vị tính
-  JOB_TITLE = "job_title", // chuc vu
 
   INCOME_CATEGORY = "income_category", // loại thu
   EXPENSE_CATEGORY = "expense_category", // loại chi
 
   // Nhóm hàng hóa
-  FINISHED_GROUP = "finished_group", // nhóm thành phẩm
-  MAIN_MATERIAL_GROUP = "main_material_group", // nhóm nguyên vật liệu
-  SUB_MATERIAL_GROUP = "sub_material_group", // nhóm nguyên vật liệu phụ
-  TOOLS_GROUP = "tools_group", // nhóm công cụ dụng cụ
+  PRODUCT_GROUP = "product_group", // nhóm hàng hóa
 
-  PARTNER_GROUP = "partner_group",
+  CUSTOMER_GROUP = "customer_group", // nhóm khách hàng
+  SUPPLIER_GROUP = "supplier_group", // nhóm nhà cung cấp
+  SHIPPER_GROUP = "shipper_group", // nhóm đơn vị vận chuyển
 }
 
 export const DEFAULT_WEIGHT_UNIT = "Kg";
@@ -48,12 +44,4 @@ export class Attribute extends BaseEntity {
   @Index()
   @Column({ type: "varchar", length: 20 })
   type: AttributeType;
-
-  @Index()
-  @Column({ type: "uuid", nullable: true })
-  companyId: string | null;
-
-  @ManyToOne(() => Organization, { onDelete: "SET NULL" })
-  @JoinColumn({ name: "companyId" })
-  company: Organization | null;
 }

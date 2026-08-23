@@ -2,7 +2,7 @@ import { injectable, inject } from "inversify";
 import { OrderLineService } from "./orderLine.service";
 import { ORDER_LINE_TYPES } from "./orderLine.types";
 import { BaseController } from "@/shared/base/BaseController";
-import { OrderLine } from "@/database/models/company/OrderLine";
+import { OrderLine } from "@/database/models/store/OrderLine";
 
 @injectable()
 export class OrderLineController extends BaseController<OrderLine> {

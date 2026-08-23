@@ -1,4 +1,4 @@
-import { IncomeExpense } from "@/database/models/company/IncomeExpense";
+import { IncomeExpense } from "@/database/models/store/IncomeExpense";
 import { BaseSelect } from "@/shared/base/BaseSelect";
 import { FindOptionsRelations, FindOptionsSelect } from "typeorm";
 

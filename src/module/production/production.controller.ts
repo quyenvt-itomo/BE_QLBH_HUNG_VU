@@ -1,8 +1,8 @@
-﻿import { injectable, inject } from "inversify";
+import { injectable, inject } from "inversify";
 import { ProductionService } from "./production.service";
 import { PRODUCTION_TYPES } from "./production.types";
 import { BaseController } from "@/shared/base/BaseController";
-import { Production } from "@/database/models/company/Production";
+import { Production } from "@/database/models/Production";
 import { asyncHandler } from "@/shared/utils/controller.utils";
 import { OperationLogUtils } from "@/shared/utils/operationLog.utils";
 

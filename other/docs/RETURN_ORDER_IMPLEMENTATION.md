@@ -264,8 +264,8 @@ private async processReturnOrderLine(
 
   // Tạo inventory transaction với metadata của return
   const txType = order.type === OrderTypeEnum.SALE_RETURN
-    ? InventoryTransactionTypeEnum.INCREASE // Khách trả → tăng tồn
-    : InventoryTransactionTypeEnum.DECREASE; // Trả NCC → giảm tồn
+    ? InventoryTransactionType.INCREASE // Khách trả → tăng tồn
+    : InventoryTransactionType.DECREASE; // Trả NCC → giảm tồn
 
   const refType = order.type === OrderTypeEnum.SALE_RETURN
     ? InventoryRefTypeEnum.SALE_RETURN

@@ -25,7 +25,7 @@ export class InventoryAdjustment extends BaseEntityWithCompany {
   totalAdjustmentValue: number; // tổng giá trị điều chỉnh (có dấu: +tăng, -giảm)
 
   @Column({ type: "boolean", default: false })
-  isInitialAdjustment: boolean; // là phiếu điều chỉnh tồn kho đầu kỳ
+  isInitial: boolean; // là phiếu điều chỉnh tồn kho đầu kỳ
 
   // * ======================== RELATIONS ========================= //
   @ManyToOne(() => Warehouse, (warehouse) => warehouse.inventoryAdjustments, {

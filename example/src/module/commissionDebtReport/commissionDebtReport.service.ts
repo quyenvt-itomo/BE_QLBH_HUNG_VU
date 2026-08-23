@@ -3,7 +3,7 @@ import { TransactionService } from "@/shared/base/TransactionService";
 import { CommissionDebtTransaction } from "@/database/models/company/CommissionDebtTransaction";
 import { PartnerContact } from "@/database/models/company/PartnerContact";
 import { Partner } from "@/database/models/company/Partner";
-import { TransactionTypeEnum } from "@/shared/constants/enum";
+import { TransactionType } from "@/shared/constants/enum";
 import { ApiResponse } from "@/shared/types/interfaces";
 import {
   CommissionDebtReportQueryDto,
@@ -87,8 +87,8 @@ export class CommissionDebtReportService extends TransactionService {
       .andWhere("tx.deletedAt IS NULL")
       .groupBy("tx.partnerContactId")
       .setParameters({
-        inType: TransactionTypeEnum.IN,
-        outType: TransactionTypeEnum.OUT,
+        inType: TransactionType.IN,
+        outType: TransactionType.OUT,
         startAt,
         endAt,
       });

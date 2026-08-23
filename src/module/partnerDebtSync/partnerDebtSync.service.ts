@@ -4,18 +4,18 @@ import {
   PartnerDebtRefTypeEnum,
   PartnerDebtSideEnum,
   PartnerDebtTransaction,
-} from "@/database/models/company/PartnerDebtTransaction";
+} from "@/database/models/PartnerDebtTransaction";
 import {
   Invoice,
   InvoiceStatus,
   InvoiceType,
 } from "@/database/models/company/Invoice";
-import { IncomeExpense } from "@/database/models/company/IncomeExpense";
+import { IncomeExpense } from "@/database/models/store/IncomeExpense";
 import { InvoiceAllocation } from "@/database/models/company/InvoiceAllocation";
-import { PartnerDebtOffset } from "@/database/models/company/PartnerDebtOffset";
-import { PartnerDebtOffsetLine } from "@/database/models/company/PartnerDebtOffsetLine";
-import { PartnerDebtAdjustment } from "@/database/models/company/PartnerDebtAdjustment";
-import { TransactionTypeEnum } from "@/shared/constants/enum";
+import { PartnerDebtOffset } from "@/database/models/PartnerDebtOffset";
+import { PartnerDebtOffsetLine } from "@/database/models/PartnerDebtOffsetLine";
+import { PartnerDebtAdjustment } from "@/database/models/PartnerDebtAdjustment";
+import { TransactionType } from "@/shared/constants/enum";
 import DatabaseConfig from "@/config/database";
 
 /**
@@ -78,7 +78,7 @@ export class PartnerDebtSyncService {
       .where("tx.partnerId = :partnerId", { partnerId })
       .andWhere("tx.occurredAt <= :atDate", { atDate })
       .andWhere("tx.deletedAt IS NULL")
-      .setParameters({ inType: TransactionTypeEnum.IN })
+      .setParameters({ inType: TransactionType.IN })
       .groupBy("tx.side")
       .getRawMany<{ side: PartnerDebtSideEnum; balance: string }>();
 
@@ -122,7 +122,7 @@ export class PartnerDebtSyncService {
         partnerId: data.partnerId,
         invoiceId: data.id,
         side,
-        type: TransactionTypeEnum.IN,
+        type: TransactionType.IN,
         amount: Number(data.totalAmount),
         refType,
         refId: data.id,
@@ -159,7 +159,7 @@ export class PartnerDebtSyncService {
         partnerId: data.partnerId!,
         invoiceId: al.invoiceId,
         side,
-        type: TransactionTypeEnum.OUT,
+        type: TransactionType.OUT,
         amount: Number(al.amount),
         refType,
         refId: data.id,
@@ -190,7 +190,7 @@ export class PartnerDebtSyncService {
         partnerId: data.partnerId,
         invoiceId: line.invoiceId,
         side: line.side as unknown as PartnerDebtSideEnum,
-        type: TransactionTypeEnum.OUT,
+        type: TransactionType.OUT,
         amount: Number(line.amount),
         refType,
         refId: data.id,

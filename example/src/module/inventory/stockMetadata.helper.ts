@@ -1,7 +1,7 @@
 import { inject, injectable } from "inversify";
 import { EntityManager } from "typeorm";
 import logger from "@/shared/utils/logger";
-import { TransactionTypeEnum } from "@/shared/constants/enum";
+import { TransactionType } from "@/shared/constants/enum";
 
 /**
  * StockMetadata Helper
@@ -23,11 +23,11 @@ export class StockMetadataHelper {
         .createQueryBuilder()
         .select('it."warehouseId"', "warehouseId")
         .addSelect(
-          `SUM(CASE WHEN it.type = ${TransactionTypeEnum.IN} THEN it.quantity ELSE -it.quantity END)`,
+          `SUM(CASE WHEN it.type = ${TransactionType.IN} THEN it.quantity ELSE -it.quantity END)`,
           "qty",
         )
         .addSelect(
-          `SUM(CASE WHEN it.type = ${TransactionTypeEnum.IN} THEN it.amount ELSE -it.amount END)`,
+          `SUM(CASE WHEN it.type = ${TransactionType.IN} THEN it.amount ELSE -it.amount END)`,
           "value",
         )
         .from("inventory_transactions", "it")
@@ -107,7 +107,7 @@ export class StockMetadataHelper {
         .andWhere('it."warehouseId" = :warehouseId')
         .andWhere('it."deletedAt" IS NULL')
         .setParameters({
-          inTransactionType: TransactionTypeEnum.IN,
+          inTransactionType: TransactionType.IN,
           productId,
           warehouseId,
         })

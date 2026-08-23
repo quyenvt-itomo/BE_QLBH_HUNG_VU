@@ -2,7 +2,7 @@ import {
   BaseRepository,
   IFindPaginationOptions,
 } from "@/shared/base/BaseRepository";
-import { Role } from "@/database/models/company/Role";
+import { Role } from "@/database/models/Role";
 import { RoleRelations, RoleSelectFull } from "./role.select";
 import { SelectQueryBuilder } from "typeorm";
 

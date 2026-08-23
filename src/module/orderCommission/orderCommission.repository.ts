@@ -2,7 +2,7 @@ import {
   BaseRepository,
   IFindPaginationOptions,
 } from "@/shared/base/BaseRepository";
-import { OrderCommission } from "@/database/models/company/OrderCommission";
+import { OrderCommission } from "@/database/models/store/OrderCommission";
 import {
   OrderCommissionSelectFull,
   OrderCommissionRelations,

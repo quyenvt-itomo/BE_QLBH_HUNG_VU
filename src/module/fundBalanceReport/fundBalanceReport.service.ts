@@ -1,8 +1,8 @@
 import { injectable } from "inversify";
 import { TransactionService } from "@/shared/base/TransactionService";
-import { FundTransaction } from "@/database/models/company/FundTransaction";
-import { Fund } from "@/database/models/company/Fund";
-import { TransactionTypeEnum } from "@/shared/constants/enum";
+import { FundTransaction } from "@/database/models/FundTransaction";
+import { Fund } from "@/database/models/Fund";
+import { TransactionType } from "@/shared/constants/enum";
 import { ApiResponse } from "@/shared/types/interfaces";
 import {
   FundBalanceReportQueryDto,
@@ -80,8 +80,8 @@ export class FundBalanceReportService extends TransactionService {
       .where("tx.fundId IN (:...allowedFundIds)", { allowedFundIds })
       .groupBy("tx.fundId")
       .setParameters({
-        inType: TransactionTypeEnum.IN,
-        outType: TransactionTypeEnum.OUT,
+        inType: TransactionType.IN,
+        outType: TransactionType.OUT,
         startAt,
         endAt,
       });

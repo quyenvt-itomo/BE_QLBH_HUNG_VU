@@ -1,7 +1,7 @@
 import { injectable } from "inversify";
 import { TransactionService } from "@/shared/base/TransactionService";
 import { VatDebtTransaction } from "@/database/models/company/VatDebtTransaction";
-import { TransactionTypeEnum } from "@/shared/constants/enum";
+import { TransactionType } from "@/shared/constants/enum";
 import { ApiResponse } from "@/shared/types/interfaces";
 import {
   VatDebtReportQueryDto,
@@ -43,8 +43,8 @@ export class VatDebtReportService extends TransactionService {
       .where("tx.companyId = :companyId", { companyId })
       .andWhere("tx.deletedAt IS NULL")
       .setParameters({
-        inType: TransactionTypeEnum.IN,
-        outType: TransactionTypeEnum.OUT,
+        inType: TransactionType.IN,
+        outType: TransactionType.OUT,
         startAt,
         endAt,
       });

@@ -53,10 +53,10 @@ export class Partner extends BaseEntity {
 
   // TODO ===== Loyalty Points =====
   @Column(BaseNumericColumnOptions)
-  loyaltyPoints!: number; // Số điểm tích lũy hiện có
+  loyaltyPoints: number; // Số điểm tích lũy hiện có
 
   @Column(BaseNumericColumnOptions)
-  totalRevenue!: number; // Tổng doanh số tích lũy (dùng để tính điểm)
+  totalRevenue: number; // Tổng doanh số tích lũy (dùng để tính điểm)
 
   // * ========================= RELATIONS ========================= * //
   @ManyToOne(() => Attribute, {
@@ -77,10 +77,10 @@ export class Partner extends BaseEntity {
   @OneToMany(() => LoyaltyPointAdjustment, (adjustment) => adjustment.partner, {
     cascade: true,
   })
-  loyaltyPointAdjustments!: LoyaltyPointAdjustment[];
+  loyaltyPointAdjustments: LoyaltyPointAdjustment[];
 
   @OneToMany(() => PartnerDebtAdjustment, (debt) => debt.partner, {
     cascade: true,
   })
-  partnerDebtAdjustments!: PartnerDebtAdjustment[];
+  partnerDebtAdjustments: PartnerDebtAdjustment[];
 }

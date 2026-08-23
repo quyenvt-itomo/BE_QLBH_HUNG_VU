@@ -13,43 +13,43 @@ import { Order } from "./Order";
 @Entity("income_expenses")
 export class IncomeExpense extends BaseEntityWithStore {
   @Column({ type: "timestamptz" })
-  occurredAt!: Date;
+  occurredAt: Date;
 
   //? số phiếu
   @Column({ type: "varchar", length: 20 })
-  code!: string;
+  code: string;
 
   @Column({ type: "enum", enum: IncomeExpenseTypeEnum })
-  type!: IncomeExpenseTypeEnum;
+  type: IncomeExpenseTypeEnum;
 
   //? người lập phiếu
   @Column({ type: "uuid", nullable: true })
-  creatorId!: string | null;
+  creatorId: string | null;
   @Column({ type: "jsonb", nullable: true, default: null })
-  creatorSnapshot!: EmployeeSnapshot | null;
+  creatorSnapshot: EmployeeSnapshot | null;
 
   //? quỹ
   @Column({ type: "uuid" })
   fundId: string;
 
   @Column({ type: "uuid", nullable: true })
-  orderId!: string | null;
+  orderId: string | null;
 
   //? số tiền thu/chi
   @Column(BaseNumericColumnOptions)
-  amount!: number;
+  amount: number;
 
   @Column({ type: "uuid", nullable: true, default: null })
-  categoryId!: string;
+  categoryId: string;
 
   @Column({ type: "uuid", nullable: true, default: null })
-  partnerId!: string | null;
+  partnerId: string | null;
   @Column({ type: "jsonb", nullable: true, default: null })
-  partnerSnapshot!: PartnerSnapshot | null;
+  partnerSnapshot: PartnerSnapshot | null;
 
   //? nội dung thu/chi
   @Column({ type: "text", nullable: true })
-  description!: string | null;
+  description: string | null;
 
   /* ================= relations ================= */
   @ManyToOne(() => Employee, {

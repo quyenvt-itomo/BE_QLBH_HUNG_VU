@@ -1,5 +1,5 @@
 // shared/middleware/partner-context.middleware.ts
-import { PartnerType } from "@/database/models/company/Partner";
+import { PartnerType } from "@/database/models/Partner";
 import { PartnerModule } from "@/shared/types/sub-context";
 import { Request, Response, NextFunction } from "express";
 

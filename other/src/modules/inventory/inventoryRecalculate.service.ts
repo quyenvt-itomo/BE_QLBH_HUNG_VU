@@ -10,7 +10,7 @@ import logger from "@/shared/utils/logger";
 import { InventoryAdjustmentLine } from "@/database/models/store/InventoryAdjustmentLine";
 import {
   InventoryRefTypeEnum,
-  InventoryTransactionTypeEnum,
+  InventoryTransactionType,
   OrderLineTypeEnum,
   OrderStatusEnum,
   OrderTypeEnum,
@@ -861,7 +861,7 @@ export class InventoryRecalculateService extends TransactionService {
         stateMap.set(key, state);
       }
 
-      const sign = tx.type === InventoryTransactionTypeEnum.IN ? 1 : -1;
+      const sign = tx.type === InventoryTransactionType.IN ? 1 : -1;
       state.quantity += sign * tx.quantity;
       state.value += sign * tx.amount;
 
@@ -933,7 +933,7 @@ export class InventoryRecalculateService extends TransactionService {
       productVariantId: string;
       storeId: string;
       quantity: number;
-      type: InventoryTransactionTypeEnum;
+      type: InventoryTransactionType;
       refType: InventoryRefTypeEnum;
       refId: string;
       refCode?: string | null;
@@ -956,11 +956,11 @@ export class InventoryRecalculateService extends TransactionService {
     const amount =
       params.amount !== undefined
         ? Math.abs(params.amount)
-        : params.type === InventoryTransactionTypeEnum.IN
+        : params.type === InventoryTransactionType.IN
           ? qty * Math.abs(params.unitCost ?? averageBefore)
           : qty * Math.abs(averageBefore);
 
-    const sign = params.type === InventoryTransactionTypeEnum.IN ? 1 : -1;
+    const sign = params.type === InventoryTransactionType.IN ? 1 : -1;
 
     let quantityAfter = current.quantity + sign * qty;
     let inventoryValueAfter = current.value + sign * amount;
@@ -1010,7 +1010,7 @@ export class InventoryRecalculateService extends TransactionService {
       .createQueryBuilder(InventoryTransaction, "it")
       .where("it.productVariantId = :productVariantId", { productVariantId })
       .andWhere("it.storeId = :storeId", { storeId })
-      .andWhere("it.type = :type", { type: InventoryTransactionTypeEnum.IN })
+      .andWhere("it.type = :type", { type: InventoryTransactionType.IN })
       .andWhere("it.deletedAt IS NULL")
       .andWhere("it.occurredAt <= :occurredAt", { occurredAt })
       .orderBy("it.occurredAt", "DESC")
@@ -1112,7 +1112,7 @@ export class InventoryRecalculateService extends TransactionService {
             storeId,
             quantity: absQty,
             amount: Math.abs(line.netAmount || 0),
-            type: InventoryTransactionTypeEnum.IN,
+            type: InventoryTransactionType.IN,
             refType: InventoryRefTypeEnum.PURCHASE,
             refId: orderId,
             refCode: orderCode,
@@ -1126,7 +1126,7 @@ export class InventoryRecalculateService extends TransactionService {
             productVariantId,
             storeId,
             quantity: absQty,
-            type: InventoryTransactionTypeEnum.OUT,
+            type: InventoryTransactionType.OUT,
             refType: InventoryRefTypeEnum.SALE,
             refId: orderId,
             refCode: orderCode,
@@ -1140,7 +1140,7 @@ export class InventoryRecalculateService extends TransactionService {
             productVariantId,
             storeId,
             quantity: absQty,
-            type: InventoryTransactionTypeEnum.OUT,
+            type: InventoryTransactionType.OUT,
             refType: InventoryRefTypeEnum.PURCHASE_RETURN,
             refId: orderId,
             refCode: orderCode,
@@ -1160,8 +1160,8 @@ export class InventoryRecalculateService extends TransactionService {
             storeId,
             quantity: absQty,
             type: isReturnLine
-              ? InventoryTransactionTypeEnum.IN
-              : InventoryTransactionTypeEnum.OUT,
+              ? InventoryTransactionType.IN
+              : InventoryTransactionType.OUT,
             refType: InventoryRefTypeEnum.SALE_RETURN,
             refId: orderId,
             refCode: orderCode,
@@ -1199,7 +1199,7 @@ export class InventoryRecalculateService extends TransactionService {
           storeId,
           quantity: absQty,
           amount: Math.abs(netAmount || 0),
-          type: InventoryTransactionTypeEnum.IN,
+          type: InventoryTransactionType.IN,
           refType: InventoryRefTypeEnum.PURCHASE,
           refId: orderId,
           refCode: orderCode,
@@ -1213,7 +1213,7 @@ export class InventoryRecalculateService extends TransactionService {
           productVariantId,
           storeId,
           quantity: absQty,
-          type: InventoryTransactionTypeEnum.OUT,
+          type: InventoryTransactionType.OUT,
           refType: InventoryRefTypeEnum.SALE,
           refId: orderId,
           refCode: orderCode,
@@ -1227,7 +1227,7 @@ export class InventoryRecalculateService extends TransactionService {
           productVariantId,
           storeId,
           quantity: absQty,
-          type: InventoryTransactionTypeEnum.OUT,
+          type: InventoryTransactionType.OUT,
           refType: InventoryRefTypeEnum.PURCHASE_RETURN,
           refId: orderId,
           refCode: orderCode,
@@ -1244,8 +1244,8 @@ export class InventoryRecalculateService extends TransactionService {
           storeId,
           quantity: absQty,
           type: isReturnLine
-            ? InventoryTransactionTypeEnum.IN
-            : InventoryTransactionTypeEnum.OUT,
+            ? InventoryTransactionType.IN
+            : InventoryTransactionType.OUT,
           refType: InventoryRefTypeEnum.SALE_RETURN,
           refId: orderId,
           refCode: orderCode,
@@ -1289,7 +1289,7 @@ export class InventoryRecalculateService extends TransactionService {
           productVariantId,
           storeId: transfer.fromStoreId,
           quantity,
-          type: InventoryTransactionTypeEnum.OUT,
+          type: InventoryTransactionType.OUT,
           refType: InventoryRefTypeEnum.TRANSFER,
           refId: transfer.id,
           refCode: transfer.code,
@@ -1304,7 +1304,7 @@ export class InventoryRecalculateService extends TransactionService {
           storeId: transfer.toStoreId,
           quantity,
           amount: outTx.amount,
-          type: InventoryTransactionTypeEnum.IN,
+          type: InventoryTransactionType.IN,
           refType: InventoryRefTypeEnum.TRANSFER,
           refId: transfer.id,
           refCode: transfer.code,
@@ -1342,7 +1342,7 @@ export class InventoryRecalculateService extends TransactionService {
           productVariantId,
           storeId: fromStoreId,
           quantity,
-          type: InventoryTransactionTypeEnum.OUT,
+          type: InventoryTransactionType.OUT,
           refType: InventoryRefTypeEnum.TRANSFER,
           refId: transferId,
           refCode: transferCode,
@@ -1360,7 +1360,7 @@ export class InventoryRecalculateService extends TransactionService {
           refId: transferId,
           productVariantId,
           storeId: fromStoreId,
-          type: InventoryTransactionTypeEnum.OUT,
+          type: InventoryTransactionType.OUT,
           deletedAt: null as any,
         },
       });
@@ -1381,7 +1381,7 @@ export class InventoryRecalculateService extends TransactionService {
           storeId: toStoreId,
           quantity,
           amount: totalAmount,
-          type: InventoryTransactionTypeEnum.IN,
+          type: InventoryTransactionType.IN,
           refType: InventoryRefTypeEnum.TRANSFER,
           refId: transferId,
           refCode: transferCode,
@@ -1432,8 +1432,8 @@ export class InventoryRecalculateService extends TransactionService {
       const deltaQty = Math.abs(line.expectedQty - countedQty);
       const direction =
         line.expectedQty > countedQty
-          ? InventoryTransactionTypeEnum.IN
-          : InventoryTransactionTypeEnum.OUT;
+          ? InventoryTransactionType.IN
+          : InventoryTransactionType.OUT;
 
       // logger.info(
       //   `  Variant ${line.productVariantId.substring(0, 8)}... ` +
@@ -1452,7 +1452,7 @@ export class InventoryRecalculateService extends TransactionService {
         continue;
       }
 
-      if (direction === InventoryTransactionTypeEnum.IN) {
+      if (direction === InventoryTransactionType.IN) {
         const tx = await this.createWeightedTransaction(
           {
             occurredAt: adjustment.occurredAt,
@@ -1460,7 +1460,7 @@ export class InventoryRecalculateService extends TransactionService {
             storeId: adjustment.storeId,
             quantity: deltaQty,
             amount: deltaQty * txUnitCost,
-            type: InventoryTransactionTypeEnum.IN,
+            type: InventoryTransactionType.IN,
             refType: InventoryRefTypeEnum.ADJUST,
             refId: adjustment.id,
             refCode: adjustment.code,
@@ -1484,7 +1484,7 @@ export class InventoryRecalculateService extends TransactionService {
             storeId: adjustment.storeId,
             quantity: deltaQty,
             amount: deltaQty * txUnitCost,
-            type: InventoryTransactionTypeEnum.OUT,
+            type: InventoryTransactionType.OUT,
             refType: InventoryRefTypeEnum.ADJUST,
             refId: adjustment.id,
             refCode: adjustment.code,
@@ -1514,7 +1514,7 @@ export class InventoryRecalculateService extends TransactionService {
       if (line.deltaQty === 0) continue;
 
       const multiplier =
-        line.direction === InventoryTransactionTypeEnum.IN ? 1 : -1;
+        line.direction === InventoryTransactionType.IN ? 1 : -1;
       totalAdjustmentQty += line.deltaQty! * multiplier;
       totalAdjustmentValue +=
         // line.deltaQty! * (line.costPriceAtTime || 0) * multiplier;
@@ -1577,8 +1577,8 @@ export class InventoryRecalculateService extends TransactionService {
     const deltaQty = Math.abs(expectedQty - countedQty);
     const direction =
       expectedQty > countedQty
-        ? InventoryTransactionTypeEnum.IN
-        : InventoryTransactionTypeEnum.OUT;
+        ? InventoryTransactionType.IN
+        : InventoryTransactionType.OUT;
 
     if (deltaQty === 0) {
       await manager.save(InventoryAdjustmentLine, {
@@ -1592,7 +1592,7 @@ export class InventoryRecalculateService extends TransactionService {
       return;
     }
 
-    if (direction === InventoryTransactionTypeEnum.IN) {
+    if (direction === InventoryTransactionType.IN) {
       const tx = await this.createWeightedTransaction(
         {
           occurredAt,
@@ -1600,7 +1600,7 @@ export class InventoryRecalculateService extends TransactionService {
           storeId,
           quantity: deltaQty,
           amount: deltaQty * txUnitCost,
-          type: InventoryTransactionTypeEnum.IN,
+          type: InventoryTransactionType.IN,
           refType: InventoryRefTypeEnum.ADJUST,
           refId: adjustmentId,
           refCode: adjustmentCode,
@@ -1623,7 +1623,7 @@ export class InventoryRecalculateService extends TransactionService {
           storeId,
           quantity: deltaQty,
           amount: deltaQty * txUnitCost,
-          type: InventoryTransactionTypeEnum.OUT,
+          type: InventoryTransactionType.OUT,
           refType: InventoryRefTypeEnum.ADJUST,
           refId: adjustmentId,
           refCode: adjustmentCode,
@@ -1648,8 +1648,7 @@ export class InventoryRecalculateService extends TransactionService {
     let totalAdjustmentValue = 0;
     for (const l of lines) {
       if (l.deltaQty === 0) continue;
-      const multiplier =
-        l.direction === InventoryTransactionTypeEnum.IN ? 1 : -1;
+      const multiplier = l.direction === InventoryTransactionType.IN ? 1 : -1;
       totalAdjustmentQty += l.deltaQty! * multiplier;
       totalAdjustmentValue += (l.adjustmentValue || 0) * multiplier;
     }

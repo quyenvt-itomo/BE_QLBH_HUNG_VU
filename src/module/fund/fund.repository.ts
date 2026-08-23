@@ -2,7 +2,7 @@ import {
   BaseRepository,
   IFindPaginationOptions,
 } from "@/shared/base/BaseRepository";
-import { Fund, FundSnapshot } from "@/database/models/company/Fund";
+import { Fund, FundSnapshot } from "@/database/models/Fund";
 import { FundSelectFull, FundRelations } from "./fund.select";
 import { injectable } from "inversify";
 import { EntityManager, SelectQueryBuilder } from "typeorm";

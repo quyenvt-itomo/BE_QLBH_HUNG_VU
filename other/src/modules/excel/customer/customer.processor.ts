@@ -22,7 +22,7 @@ import { ATTRIBUTE_TYPES, AttributeRepository } from "@/modules/attribute";
 import {
   AttributeTypeEnum,
   PartnerTypeEnum,
-  LoyaltyPointTransactionTypeEnum,
+  LoyaltyPointTransactionType,
   DebtDirectionEnum,
   PartnerDebtSideEnum,
 } from "@/shared/constants/enum";
@@ -552,7 +552,7 @@ export class CustomerExcelProcessor {
           code,
           occurredAt,
           partnerId: customer.id,
-          direction: LoyaltyPointTransactionTypeEnum.INCREASE,
+          direction: LoyaltyPointTransactionType.INCREASE,
           expectedRevenue: row.currentRevenue || 0,
           countedRevenue: 0,
           expectedPoints: row.currentLoyaltyPoints || 0,
@@ -581,7 +581,7 @@ export class CustomerExcelProcessor {
           reason: "Điều chỉnh công nợ từ import Excel khách hàng",
           adjustedById: null,
           adjustedBySnapshot: null,
-          isInitialAdjustment: true,
+          isInitial: true,
         });
 
         await manager.save(PartnerDebtAdjustment, partnerDebtAdjustment);

@@ -8,42 +8,42 @@ import { Employee } from "./Employee";
 @Entity("vat_debt_adjustments")
 export class VatDebtAdjustment extends BaseEntityWithStore {
   @Column({ type: "varchar", length: 25 })
-  code!: string; // mã phiếu
+  code: string; // mã phiếu
 
   @Column({ type: "timestamptz" })
-  occurredAt!: Date; // ngày ghi nhận điều chỉnh
+  occurredAt: Date; // ngày ghi nhận điều chỉnh
 
   @Column({ type: "uuid", nullable: true })
-  adjustedById!: string | null; // người điều chỉnh
+  adjustedById: string | null; // người điều chỉnh
   @Column({ type: "jsonb", nullable: true, default: null })
-  adjustedBySnapshot!: EmployeeSnapshot | null;
+  adjustedBySnapshot: EmployeeSnapshot | null;
 
   @Column(BaseNumericColumnOptions)
-  expectedAmount!: number;
+  expectedAmount: number;
 
   @Column(BaseNumericColumnOptions)
-  countedAmount!: number;
+  countedAmount: number;
 
   @Column(BaseNumericColumnOptions)
-  deltaAmount!: number;
+  deltaAmount: number;
 
   @Column({
     type: "enum",
     enum: DebtDirectionEnum,
     default: DebtDirectionEnum.INCREASE,
   })
-  direction!: DebtDirectionEnum;
+  direction: DebtDirectionEnum;
 
   @Column({ type: "text", nullable: true })
-  reason!: string | null; // lý do điều chỉnh
+  reason: string | null; // lý do điều chỉnh
 
   @Column({ type: "boolean", default: false })
-  isInitialAdjustment!: boolean; // là phiếu điều chỉnh VAT đầu kỳ
+  isInitial: boolean; // là phiếu điều chỉnh VAT đầu kỳ
 
   // * ======================== RELATIONS ========================= //
   @ManyToOne(() => Employee, {
     onDelete: "SET NULL",
   })
   @JoinColumn({ name: "adjustedById" })
-  adjustedBy!: Employee | null;
+  adjustedBy: Employee | null;
 }

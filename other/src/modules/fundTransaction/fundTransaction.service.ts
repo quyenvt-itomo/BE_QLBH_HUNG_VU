@@ -9,7 +9,7 @@ import {
 import { In } from "typeorm";
 import { FundSnapshot } from "@/database/models/FundSnapshot";
 import { FundTransaction } from "@/database/models/FundTransaction";
-import { FundTransactionTypeEnum } from "@/shared/constants/enum";
+import { FundTransactionType } from "@/shared/constants/enum";
 import { Fund } from "@/database/models/Fund";
 import logger from "@/shared/utils/logger";
 import { ApiResponse } from "@/shared/types/interfaces";
@@ -275,9 +275,7 @@ export class FundTransactionService extends TransactionService {
           tx.occurredAt < startAt
         ) {
           openingAmount +=
-            tx.type === FundTransactionTypeEnum.INCREASE
-              ? tx.amount
-              : -tx.amount;
+            tx.type === FundTransactionType.INCREASE ? tx.amount : -tx.amount;
         }
       }
 
@@ -290,7 +288,7 @@ export class FundTransactionService extends TransactionService {
           tx.occurredAt >= startAt &&
           tx.occurredAt <= endAt
         ) {
-          if (tx.type === FundTransactionTypeEnum.INCREASE) {
+          if (tx.type === FundTransactionType.INCREASE) {
             increaseAmount += tx.amount;
           } else {
             decreaseAmount += tx.amount;
@@ -377,11 +375,11 @@ export class FundTransactionService extends TransactionService {
       if (tx.occurredAt < startAt) {
         // Hiệu chỉnh tồn đầu kỳ
         openingAmount +=
-          tx.type === FundTransactionTypeEnum.INCREASE ? tx.amount : -tx.amount;
+          tx.type === FundTransactionType.INCREASE ? tx.amount : -tx.amount;
       } else {
         // Transaction trong kỳ
         dataRes.push(tx);
-        if (tx.type === FundTransactionTypeEnum.INCREASE) {
+        if (tx.type === FundTransactionType.INCREASE) {
           totalIncreaseAmount += tx.amount;
         } else {
           totalDecreaseAmount += tx.amount;
@@ -466,7 +464,7 @@ export class FundTransactionService extends TransactionService {
         const snapshotAt = snapshot?.snapshotAt ?? new Date(0);
         for (const tx of transactions) {
           if (tx.fundId === fund.id && tx.occurredAt > snapshotAt) {
-            const sign = tx.type === FundTransactionTypeEnum.INCREASE ? 1 : -1;
+            const sign = tx.type === FundTransactionType.INCREASE ? 1 : -1;
             balance += sign * tx.amount;
           }
         }

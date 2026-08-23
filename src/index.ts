@@ -14,16 +14,12 @@ import corsMiddleware from "./shared/middleware/cors.middleware";
 // import { entities } from "./database/models";
 import { configViewEngine } from "./config/viewEngine";
 import path from "path";
-import { AutoClearTempJob } from "./job/autoClearTemp.job";
-import { OrphanTransactionCleanupJob } from "./job/orphanTransactionCleanup.job";
-import inventoryRecalculateQueue from "./job/inventoryRecalculate.queue";
 import { createServer } from "http";
 import Socket from "./config/socket";
 import passport from "passport";
 import session from "express-session";
 import { initializePassport } from "./config/passport";
 import { asyncHandler } from "./shared/utils/controller.utils";
-import { TestFunctionJob } from "./job/testFunc.job";
 import { Request, Response, NextFunction } from "express";
 
 class App {
@@ -121,8 +117,7 @@ class App {
       "/test",
       asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
         try {
-          await TestFunctionJob.start();
-          res.status(200).json({ message: "Test function executed" });
+          res.status(200).json({ message: "OK" });
         } catch (error) {
           logger.error("/test endpoint failed:", error);
           next(error);
@@ -165,17 +160,7 @@ class App {
   }
 
   private initializeJobs(): void {
-    AutoClearTempJob.start();
-    OrphanTransactionCleanupJob.start();
-
-    // Queue worker tính lại tồn kho (job-based).
-    inventoryRecalculateQueue.start().catch((error) => {
-      logger.error(
-        `[InventoryRecalculateQueue] Không khởi động được worker: ${
-          (error as Error)?.message || error
-        }`,
-      );
-    });
+    // Store ledger replay is invoked by store transaction services.
   }
 
   private initializeErrorHandling(): void {

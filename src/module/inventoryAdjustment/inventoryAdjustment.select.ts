@@ -1,4 +1,4 @@
-import { InventoryAdjustment } from "@/database/models/company/InventoryAdjustment";
+import { InventoryAdjustment } from "@/database/models/store/InventoryAdjustment";
 import { BaseSelect } from "@/shared/base/BaseSelect";
 import { FindOptionsRelations, FindOptionsSelect } from "typeorm";
 
@@ -12,7 +12,7 @@ export const InventoryAdjustmentSelectFull: FindOptionsSelect<InventoryAdjustmen
     reason: true,
     totalAdjustmentQuantity: true,
     totalAdjustmentValue: true,
-    isInitialAdjustment: true,
+    isInitial: true,
     lines: {
       id: true,
       adjustmentId: true,

@@ -5,7 +5,7 @@ import {
   BaseQuerySchema,
   BaseParamsSchema,
 } from "@/shared/base/BaseValidator";
-import { FundTypeEnum } from "@/database/models/company/Fund";
+import { FundTypeEnum } from "@/database/models/Fund";
 
 export const CreateFundSchema = BaseCreateSchema.extend({
   code: z.string().min(1).max(25),

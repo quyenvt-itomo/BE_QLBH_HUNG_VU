@@ -1,39 +1,15 @@
-import { CompanyType, Organization } from "@/database/models/Organization";
 import { Request, Response, NextFunction } from "express";
-import { BadRequestError } from "../types/errors";
 import DatabaseConfig from "@/config/database";
-import { In } from "typeorm";
+import { Store } from "@/database/models/Store";
 
-export const companyResolver = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-): Promise<void> => {
+/** Resolves the active store; companyId remains only as a request-context alias. */
+export const companyResolver = async (req: Request, _res: Response, next: NextFunction): Promise<void> => {
   try {
-    const companyId = req.headers["x-company-id"];
-
-    if (!companyId || typeof companyId !== "string") {
-      return next();
-    }
-
-    const companyRepo = DatabaseConfig.getRepository(Organization);
-    const company = await companyRepo.findOne({
-      where: { id: companyId, type: In(CompanyType) },
-    });
-
-    if (!company) {
-      throw new BadRequestError("Không tìm thấy thông tin công ty");
-    }
-
-    req.companyContext = {
-      companyId: company.id,
-      companyName: company.name,
-      companyCode: company.code,
-      companyType: company.type,
-    };
-
+    const storeId = (req.headers["x-store-id"] || req.headers["x-company-id"]) as string | undefined;
+    if (!storeId) return next();
+    const store = await DatabaseConfig.getRepository(Store).findOne({ where: { id: storeId } });
+    if (!store) return next(new Error("Store not found"));
+    req.companyContext = { companyId: store.id, storeId: store.id, companyName: store.name, companyCode: store.code };
     next();
-  } catch (error) {
-    next(error);
-  }
+  } catch (error) { next(error); }
 };

@@ -1,6 +1,6 @@
 import { BaseEntity, BaseNumericColumnOptions } from "@/shared/base/BaseEntity";
 import { Column, Entity, JoinColumn, ManyToOne } from "typeorm";
-import { LoyaltyPointTransactionTypeEnum } from "@/shared/constants/enum";
+import { LoyaltyPointTransactionType } from "@/shared/constants/enum";
 import { Partner } from "./Partner";
 
 /**
@@ -10,45 +10,45 @@ import { Partner } from "./Partner";
 @Entity("loyalty_point_adjustments")
 export class LoyaltyPointAdjustment extends BaseEntity {
   @Column({ type: "varchar" })
-  code!: string;
+  code: string;
 
   @Column({ type: "timestamptz" })
-  occurredAt!: Date;
+  occurredAt: Date;
 
   @Column({ type: "uuid" })
-  partnerId!: string;
+  partnerId: string;
 
   @Column({
     type: "enum",
-    enum: LoyaltyPointTransactionTypeEnum,
+    enum: LoyaltyPointTransactionType,
   })
-  direction!: LoyaltyPointTransactionTypeEnum; // INCREASE | DECREASE
+  direction: LoyaltyPointTransactionType; // INCREASE | DECREASE
 
   @Column(BaseNumericColumnOptions)
-  expectedRevenue!: number; // Doanh số hệ thống ghi nhận
+  expectedRevenue: number; // Doanh số hệ thống ghi nhận
 
   @Column(BaseNumericColumnOptions)
-  countedRevenue!: number; // Doanh số thực tế kiểm kê
+  countedRevenue: number; // Doanh số thực tế kiểm kê
 
   @Column(BaseNumericColumnOptions)
-  expectedPoints!: number; // số tiền hệ thống ghi nhận
+  expectedPoints: number; // số tiền hệ thống ghi nhận
 
   @Column(BaseNumericColumnOptions)
-  countedPoints!: number; // số tiền thực tế kiểm kê
+  countedPoints: number; // số tiền thực tế kiểm kê
 
   @Column(BaseNumericColumnOptions)
-  deltaPoints!: number;
+  deltaPoints: number;
 
   @Column({ type: "text" })
-  reason!: string;
+  reason: string;
 
   @Column({ type: "boolean", default: false })
-  isInitialAdjustment!: boolean; // là phiếu điều chỉnh điểm đầu kỳ
+  isInitial: boolean; // là phiếu điều chỉnh điểm đầu kỳ
 
   // * ======================== RELATIONS ========================= //
   @ManyToOne(() => Partner, (partner) => partner.id, {
     onDelete: "CASCADE",
   })
   @JoinColumn({ name: "partnerId" })
-  partner!: Partner;
+  partner: Partner;
 }

@@ -2,7 +2,7 @@ import { injectable, inject } from "inversify";
 import { FundTransferService } from "./fundTransfer.service";
 import { FUND_TRANSFER_TYPES } from "./fundTransfer.types";
 import { BaseController } from "@/shared/base/BaseController";
-import { FundTransfer } from "@/database/models/company/FundTransfer";
+import { FundTransfer } from "@/database/models/FundTransfer";
 
 @injectable()
 export class FundTransferController extends BaseController<FundTransfer> {

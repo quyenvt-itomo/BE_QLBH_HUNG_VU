@@ -6,7 +6,7 @@ import {
   BaseParamsSchema,
   DateTransform,
 } from "@/shared/base/BaseValidator";
-import { TransactionTypeEnum } from "@/shared/constants/enum";
+import { TransactionType } from "@/shared/constants/enum";
 
 export const CreateCommissionDebtAdjustmentSchema = BaseCreateSchema.extend({
   code: z.string().min(1).max(25),
@@ -15,9 +15,9 @@ export const CreateCommissionDebtAdjustmentSchema = BaseCreateSchema.extend({
   expectedAmount: z.number().min(0),
   countedAmount: z.number().min(0),
   deltaAmount: z.number(),
-  type: z.enum(TransactionTypeEnum),
+  type: z.enum(TransactionType),
   reason: z.string().nullish(),
-  isInitialAdjustment: z.boolean().optional().default(false),
+  isInitial: z.boolean().optional().default(false),
 });
 
 export const UpdateCommissionDebtAdjustmentSchema = BaseUpdateSchema.extend({
@@ -27,15 +27,15 @@ export const UpdateCommissionDebtAdjustmentSchema = BaseUpdateSchema.extend({
   expectedAmount: z.number().min(0).optional(),
   countedAmount: z.number().min(0).optional(),
   deltaAmount: z.number().optional(),
-  type: z.enum(TransactionTypeEnum).optional(),
+  type: z.enum(TransactionType).optional(),
   reason: z.string().nullish(),
-  isInitialAdjustment: z.boolean().optional(),
+  isInitial: z.boolean().optional(),
 });
 
 export const CommissionDebtAdjustmentQuerySchema = BaseQuerySchema.extend({
   partnerContactId: z.uuid().optional(),
-  type: z.enum(TransactionTypeEnum).optional(),
-  isInitialAdjustment: z
+  type: z.enum(TransactionType).optional(),
+  isInitial: z
     .string()
     .optional()
     .transform((val) => (val === undefined ? undefined : val === "true")),

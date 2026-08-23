@@ -2,7 +2,7 @@ import { injectable, inject } from "inversify";
 import { PartnerService } from "./partner.service";
 import { PARTNER_TYPES } from "./partner.types";
 import { BaseController } from "@/shared/base/BaseController";
-import { Partner } from "@/database/models/company/Partner";
+import { Partner } from "@/database/models/Partner";
 import { asyncHandler } from "@/shared/utils/controller.utils";
 import { BaseParamsSchema } from "@/shared/base/BaseValidator";
 import { zodValidate } from "@/shared/middleware/validation.middleware";

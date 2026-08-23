@@ -1,15 +1,15 @@
 import { injectable } from "inversify";
 import { Brackets, EntityManager, In, MoreThan } from "typeorm";
 import { TransactionService } from "@/shared/base/TransactionService";
-import { PartnerDebtTransaction } from "@/database/models/company/PartnerDebtTransaction";
-import { Partner } from "@/database/models/company/Partner";
+import { PartnerDebtTransaction } from "@/database/models/PartnerDebtTransaction";
+import { Partner } from "@/database/models/Partner";
 import {
   Invoice,
   InvoiceStatus,
   InvoiceType,
 } from "@/database/models/company/Invoice";
 import { PaymentTerm } from "@/database/models/company/PaymentTerm";
-import { TransactionTypeEnum } from "@/shared/constants/enum";
+import { TransactionType } from "@/shared/constants/enum";
 import { ApiResponse } from "@/shared/types/interfaces";
 import {
   PartnerDebtReportQueryDto,
@@ -105,8 +105,8 @@ export class PartnerDebtReportService extends TransactionService {
       .andWhere("tx.deletedAt IS NULL")
       .groupBy("tx.partnerId")
       .setParameters({
-        inType: TransactionTypeEnum.IN,
-        outType: TransactionTypeEnum.OUT,
+        inType: TransactionType.IN,
+        outType: TransactionType.OUT,
         startAt,
         endAt,
       });
@@ -205,7 +205,7 @@ export class PartnerDebtReportService extends TransactionService {
       .where("partner.companyId = :companyId", { companyId })
       .andWhere("tx.deletedAt IS NULL")
       .andWhere("tx.occurredAt < :startAt", { startAt: effectiveStartAt })
-      .setParameters({ inType: TransactionTypeEnum.IN })
+      .setParameters({ inType: TransactionType.IN })
       .groupBy("tx.partnerId")
       .addGroupBy("tx.side");
     if (partnerId)
@@ -252,7 +252,7 @@ export class PartnerDebtReportService extends TransactionService {
     for (const tx of allTransactions) {
       const key = `${tx.partnerId}|${tx.side}`;
       if (!running.has(key)) running.set(key, openingByKey.get(key) || 0);
-      const sign = tx.type === TransactionTypeEnum.IN ? 1 : -1;
+      const sign = tx.type === TransactionType.IN ? 1 : -1;
       running.set(key, running.get(key)! + sign * Number(tx.amount));
       (tx as any).closingAmount = running.get(key)!;
     }
@@ -295,8 +295,8 @@ export class PartnerDebtReportService extends TransactionService {
       .andWhere("tx.deletedAt IS NULL")
       .andWhere("tx.occurredAt <= :endAt", { endAt: effectiveEndAt })
       .setParameters({
-        inType: TransactionTypeEnum.IN,
-        outType: TransactionTypeEnum.OUT,
+        inType: TransactionType.IN,
+        outType: TransactionType.OUT,
         startAt: effectiveStartAt,
         endAt: effectiveEndAt,
       });

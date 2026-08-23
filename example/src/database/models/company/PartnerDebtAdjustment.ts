@@ -1,7 +1,7 @@
 import { BaseNumericColumnOptions } from "@/shared/base/BaseEntity";
 import { Column, Entity, JoinColumn, ManyToOne } from "typeorm";
 import { Partner, PartnerSnapshot } from "./Partner";
-import { TransactionTypeEnum } from "@/shared/constants/enum";
+import { TransactionType } from "@/shared/constants/enum";
 import { BaseEntityWithCompany } from "./BaseEntityWithCompany";
 import { PartnerDebtSideEnum } from "./PartnerDebtTransaction";
 import { InvoiceSnapshot } from "./Invoice";
@@ -11,7 +11,7 @@ import { InvoiceSnapshot } from "./Invoice";
  * deltaAmount = |expected - counted|, type được suy ra ở service.
  * Có thể điều chỉnh cho riêng 1 hóa đơn (invoiceId) hoặc điều chỉnh tổng (invoiceId = null).
  */
-@Entity("partner_debt_adjustments")
+@Entity("debt_adjustments")
 export class PartnerDebtAdjustment extends BaseEntityWithCompany {
   @Column({ type: "varchar", length: 25 })
   code: string;
@@ -43,16 +43,16 @@ export class PartnerDebtAdjustment extends BaseEntityWithCompany {
 
   @Column({
     type: "enum",
-    enum: TransactionTypeEnum,
-    default: TransactionTypeEnum.IN,
+    enum: TransactionType,
+    default: TransactionType.IN,
   })
-  type: TransactionTypeEnum;
+  type: TransactionType;
 
   @Column({ type: "text", nullable: true })
   reason: string | null;
 
   @Column({ type: "boolean", default: false })
-  isInitialAdjustment: boolean;
+  isInitial: boolean;
 
   // * ======================== RELATIONS ========================= //
   @ManyToOne(() => Partner, { onDelete: "CASCADE" })

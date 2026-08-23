@@ -1,4 +1,4 @@
-﻿import type {
+import type {
   RequestContext,
   ActionMap,
   ActionValue,
@@ -7,8 +7,8 @@ import { injectable, inject } from "inversify";
 import { BaseService } from "@/shared/base/BaseService";
 import { OrderRepository } from "./order.repository";
 import { ORDER_TYPES } from "./order.types";
-import { Order } from "@/database/models/company/Order";
-import { OrderLine } from "@/database/models/company/OrderLine";
+import { Order } from "@/database/models/store/Order";
+import { OrderLine } from "@/database/models/store/OrderLine";
 import {
   StockDocument,
   StockDocumentStatus,

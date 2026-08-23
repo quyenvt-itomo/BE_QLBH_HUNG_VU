@@ -1,4 +1,4 @@
-import { VatDebtAdjustment } from "@/database/models/company/VatDebtAdjustment";
+import { VatDebtAdjustment } from "@/database/models/VatDebtAdjustment";
 import { BaseSelect } from "@/shared/base/BaseSelect";
 import { FindOptionsRelations, FindOptionsSelect } from "typeorm";
 
@@ -14,7 +14,7 @@ export const VatDebtAdjustmentSelectFull: FindOptionsSelect<VatDebtAdjustment> =
     deltaAmount: true,
     type: true,
     reason: true,
-    isInitialAdjustment: true,
+    isInitial: true,
     adjustedBy: {
       id: true,
       name: true,

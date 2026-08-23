@@ -24,15 +24,15 @@ export class InventoryAdjustmentRepository extends BaseRepository<InventoryAdjus
     options: IFindPaginationOptions<InventoryAdjustment>,
   ): Promise<void> {
     const alias = qb.alias;
-    const { warehouseId, isInitialAdjustment } =
+    const { warehouseId, isInitial } =
       (options?.moreQuery as InventoryAdjustmentQueryDto) || {};
 
     if (warehouseId) {
       qb.andWhere(`${alias}.warehouseId = :warehouseId`, { warehouseId });
     }
-    if (typeof isInitialAdjustment === "boolean") {
-      qb.andWhere(`${alias}.isInitialAdjustment = :isInitialAdjustment`, {
-        isInitialAdjustment,
+    if (typeof isInitial === "boolean") {
+      qb.andWhere(`${alias}.isInitial = :isInitial`, {
+        isInitial,
       });
     }
   }

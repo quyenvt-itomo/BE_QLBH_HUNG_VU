@@ -1,9 +1,9 @@
-﻿import type { RequestContext } from "@/shared/types/interfaces";
+import type { RequestContext } from "@/shared/types/interfaces";
 import { injectable, inject } from "inversify";
 import { BaseService } from "@/shared/base/BaseService";
 import { OrderCommissionRepository } from "./orderCommission.repository";
 import { ORDER_COMMISSION_TYPES } from "./orderCommission.types";
-import { OrderCommission } from "@/database/models/company/OrderCommission";
+import { OrderCommission } from "@/database/models/store/OrderCommission";
 import { DeepPartial, EntityManager } from "typeorm";
 import { Request } from "express";
 import {

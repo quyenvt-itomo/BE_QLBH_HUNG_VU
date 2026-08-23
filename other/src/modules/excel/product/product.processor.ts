@@ -20,7 +20,7 @@ import { ATTRIBUTE_TYPES, AttributeRepository } from "@/modules/attribute";
 import {
   AttributeTypeEnum,
   InventoryRefTypeEnum,
-  InventoryTransactionTypeEnum,
+  InventoryTransactionType,
 } from "@/shared/constants/enum";
 import { PRODUCT_COLUMNS, ProductKey, RawProductRow } from "./product.types";
 import {
@@ -646,7 +646,7 @@ export class ProductExcelProcessor {
         expectedQty: data.expectedQty,
         countedQty: 0, // Mới nhập hàng nên countedQty = 0
         deltaQty: data.expectedQty, // deltaQty = expectedQty - countedQty
-        direction: InventoryTransactionTypeEnum.IN,
+        direction: InventoryTransactionType.IN,
         sortOrder: index + 1,
       }));
 
@@ -665,7 +665,7 @@ export class ProductExcelProcessor {
       adjustedBySnapshot: employeeSnapshot,
       reason: `Nhập tồn kho ban đầu từ Excel`,
       lines,
-      isInitialAdjustment: true,
+      isInitial: true,
     });
 
     await manager.save(InventoryAdjustment, adjustment);

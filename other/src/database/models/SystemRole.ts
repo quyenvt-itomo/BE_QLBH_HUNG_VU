@@ -8,5 +8,5 @@ export class SystemRole extends BaseEntity {
   name: string;
 
   @Column({ type: "jsonb", default: {} })
-  permissions!: PermissionStructure;
+  permissions: PermissionStructure;
 }

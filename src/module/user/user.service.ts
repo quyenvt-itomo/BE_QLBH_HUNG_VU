@@ -1,4 +1,4 @@
-﻿import type {
+import type {
   RequestContext,
   ActionMap,
   ActionValue,
@@ -20,7 +20,7 @@ import { CreateUserDto } from "./user.validator";
 import { ROLE_TYPES } from "../role/role.types";
 import { RoleRepository } from "../role/role.repository";
 import { CompanyUser } from "@/database/models/CompanyUser";
-import { Role } from "@/database/models/company/Role";
+import { Role } from "@/database/models/Role";
 import { Employee } from "@/database/models/company/Employee";
 import { EMPLOYEE_TYPES } from "../employee/employee.types";
 import { EmployeeRepository } from "../employee/employee.repository";

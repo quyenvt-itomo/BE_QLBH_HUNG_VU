@@ -13,10 +13,10 @@ import { ATTRIBUTE_TYPES } from "../../attribute/attribute.types";
 import { AttributeService } from "../../attribute/attribute.service";
 import { BadRequestError } from "@/shared/types/errors";
 import { RequestContext } from "@/shared/types/interfaces";
-import { Product, ProductType } from "@/database/models/company/Product";
+import { Product, ProductType } from "@/database/models/Product";
 import { AttributeType } from "@/database/models/Attribute";
 import { DeepPartial } from "typeorm";
-import { ProductExtraUnit } from "@/database/models/company/ProductExtraUnit";
+import { ProductExtraUnit } from "@/database/models/ProductExtraUnit";
 import logger from "@/shared/utils/logger";
 import { withTransaction } from "@/shared/base/TransactionManager";
 

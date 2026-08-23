@@ -1,4 +1,4 @@
-import { OrderCommission } from "@/database/models/company/OrderCommission";
+import { OrderCommission } from "@/database/models/store/OrderCommission";
 import { BaseSelect } from "@/shared/base/BaseSelect";
 import { FindOptionsRelations, FindOptionsSelect } from "typeorm";
 

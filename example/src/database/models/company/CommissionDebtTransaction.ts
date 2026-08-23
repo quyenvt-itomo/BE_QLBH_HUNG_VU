@@ -1,6 +1,6 @@
 import { Entity, Column, Index } from "typeorm";
 import { BaseEntity, BaseNumericColumnOptions } from "@/shared/base/BaseEntity";
-import { TransactionTypeEnum } from "@/shared/constants/enum";
+import { TransactionType } from "@/shared/constants/enum";
 
 export enum CommissionDebtRefTypeEnum {
   ORDER = "order", // SALE -> phát sinh công nợ hoa hồng
@@ -29,8 +29,8 @@ export class CommissionDebtTransaction extends BaseEntity {
   @Column({ type: "uuid" })
   partnerContactId: string;
 
-  @Column({ type: "enum", enum: TransactionTypeEnum })
-  type: TransactionTypeEnum;
+  @Column({ type: "enum", enum: TransactionType })
+  type: TransactionType;
 
   @Column(BaseNumericColumnOptions)
   amount: number;

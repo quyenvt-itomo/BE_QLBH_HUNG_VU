@@ -1,5 +1,5 @@
 import { Entity, Column, ManyToOne, JoinColumn } from "typeorm";
-import { EmployeeStatusEnum, GenderEnum } from "@/shared/constants/enum";
+import { EmployeeStatusEnum, Gender } from "@/shared/constants/enum";
 import { Attribute } from "../Attribute";
 import { BaseEntityWithStore } from "./BaseEntityWithStore";
 import { IAddress } from "@/shared/base/BaseValidator";
@@ -20,8 +20,8 @@ export class Employee extends BaseEntityWithStore {
 
   @Column({ type: "timestamptz", nullable: true, default: null })
   dob: Date | null;
-  @Column({ type: "enum", enum: GenderEnum, nullable: true, default: null })
-  gender: GenderEnum | null;
+  @Column({ type: "enum", enum: Gender, nullable: true, default: null })
+  gender: Gender | null;
   @Column({ type: "jsonb", default: {} })
   address: IAddress | null;
 

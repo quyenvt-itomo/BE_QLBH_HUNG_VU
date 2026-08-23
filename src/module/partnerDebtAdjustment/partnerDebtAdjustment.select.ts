@@ -1,4 +1,4 @@
-import { PartnerDebtAdjustment } from "@/database/models/company/PartnerDebtAdjustment";
+import { PartnerDebtAdjustment } from "@/database/models/PartnerDebtAdjustment";
 import { BaseSelect } from "@/shared/base/BaseSelect";
 import { FindOptionsRelations, FindOptionsSelect } from "typeorm";
 
@@ -18,7 +18,7 @@ export const PartnerDebtAdjustmentSelectFull: FindOptionsSelect<PartnerDebtAdjus
     deltaAmount: true,
     type: true,
     reason: true,
-    isInitialAdjustment: true,
+    isInitial: true,
     partner: {
       id: true,
       code: true,

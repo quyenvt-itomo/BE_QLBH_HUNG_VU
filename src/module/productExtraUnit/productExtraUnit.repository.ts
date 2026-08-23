@@ -2,7 +2,7 @@ import {
   BaseRepository,
   IFindPaginationOptions,
 } from "@/shared/base/BaseRepository";
-import { ProductExtraUnit } from "@/database/models/company/ProductExtraUnit";
+import { ProductExtraUnit } from "@/database/models/ProductExtraUnit";
 import {
   ProductExtraUnitSelectFull,
   ProductExtraUnitRelations,

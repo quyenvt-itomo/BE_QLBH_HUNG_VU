@@ -1,8 +1,8 @@
 import { Entity, Column } from "typeorm";
 import { BaseEntity, BaseNumericColumnOptions } from "@/shared/base/BaseEntity";
-import { TransactionTypeEnum } from "@/shared/constants/enum";
+import { TransactionType } from "@/shared/constants/enum";
 
-export enum VatTransactionTypeEnum {
+export enum VatTransactionType {
   PURCHASE_INVOICE = "purchase_invoice", // Phát sinh từ hóa đơn mua hàng
   SALES_INVOICE = "sales_invoice", // Phát sinh từ hóa đơn bán hàng
   ADJUSTMENT = "adjustment", // điều chỉnh đầu/cuối kỳ
@@ -17,14 +17,14 @@ export class VatDebtTransaction extends BaseEntity {
   @Column({ type: "uuid" })
   companyId: string;
 
-  @Column({ type: "enum", enum: TransactionTypeEnum })
-  type: TransactionTypeEnum;
+  @Column({ type: "enum", enum: TransactionType })
+  type: TransactionType;
 
   @Column(BaseNumericColumnOptions)
   amount: number;
 
-  @Column({ type: "enum", enum: VatTransactionTypeEnum })
-  refType: VatTransactionTypeEnum;
+  @Column({ type: "enum", enum: VatTransactionType })
+  refType: VatTransactionType;
   @Column({ type: "uuid" })
   refId: string;
   @Column({ type: "varchar", length: 50, nullable: true, default: null })

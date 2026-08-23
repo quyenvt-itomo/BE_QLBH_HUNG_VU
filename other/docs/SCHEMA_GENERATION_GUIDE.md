@@ -69,20 +69,20 @@ npm run db:schema:generate
 @Entity("check_ins")
 export class CheckIn extends BaseEntity {
   @Column({ type: "int" })
-  userId!: number;
+  userId: number;
 
   @Column({ type: "int" })
-  courtId!: number;
+  courtId: number;
 
   @Column({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" })
-  checkInTime!: Date;
+  checkInTime: Date;
 
   @Column({ type: "int" })
-  creditsUsed!: number;
+  creditsUsed: number;
 
   @ManyToOne(() => User, (user) => user.checkIns)
   @JoinColumn({ name: "user_id" })
-  user!: User;
+  user: User;
 }
 ```
 

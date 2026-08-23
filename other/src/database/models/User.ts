@@ -1,7 +1,7 @@
 import { Entity, Column, OneToMany, ManyToOne } from "typeorm";
 import { BaseEntity } from "@/shared/base/BaseEntity";
 import { UserNotification } from "./UserNotification";
-import { GenderEnum } from "@/shared/constants/enum";
+import { Gender } from "@/shared/constants/enum";
 import { StoreUser } from "./store/StoreUser";
 import { IAddress } from "@/shared/base/BaseValidator";
 import { SystemRole } from "./SystemRole";
@@ -29,8 +29,8 @@ export class User extends BaseEntity {
     default: null,
   })
   phone: string | null;
-  @Column({ type: "enum", enum: GenderEnum, nullable: true, default: null })
-  gender: GenderEnum | null;
+  @Column({ type: "enum", enum: Gender, nullable: true, default: null })
+  gender: Gender | null;
   @Column({ type: "timestamptz", nullable: true, default: null })
   dob: Date | null;
   @Column({ type: "jsonb", default: {} })

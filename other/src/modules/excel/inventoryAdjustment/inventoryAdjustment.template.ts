@@ -205,7 +205,7 @@ export class InventoryAdjustmentExcelTemplate {
             adjustment.totalAdjustmentQty || 0,
           [InventoryAdjustmentKey.TOTAL_ADJUSTMENT_VALUE]:
             adjustment.totalAdjustmentValue || 0,
-          [InventoryAdjustmentKey.IS_INITIAL]: adjustment.isInitialAdjustment
+          [InventoryAdjustmentKey.IS_INITIAL]: adjustment.isInitial
             ? "Có"
             : "Không",
           [InventoryAdjustmentKey.STAFF_NAME]:

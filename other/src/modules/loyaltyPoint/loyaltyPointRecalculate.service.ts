@@ -7,7 +7,7 @@ import { Order } from "@/database/models/store/Order";
 import { Partner } from "@/database/models/Partner";
 import logger from "@/shared/utils/logger";
 import {
-  LoyaltyPointTransactionTypeEnum,
+  LoyaltyPointTransactionType,
   LoyaltyPointRefTypeEnum,
   OrderTypeEnum,
   OrderStatusEnum,
@@ -86,7 +86,7 @@ export class LoyaltyPointRecalculateService extends TransactionService {
       transactions.push({
         partnerId,
         occurredAt: orderAt,
-        type: LoyaltyPointTransactionTypeEnum.DECREASE,
+        type: LoyaltyPointTransactionType.DECREASE,
         points: loyaltyPointsUsed,
         refType: LoyaltyPointRefTypeEnum.ORDER,
         refId: id,
@@ -121,7 +121,7 @@ export class LoyaltyPointRecalculateService extends TransactionService {
       transactions.push({
         partnerId,
         occurredAt: orderAt,
-        type: LoyaltyPointTransactionTypeEnum.INCREASE,
+        type: LoyaltyPointTransactionType.INCREASE,
         points: pointsDelta,
         refType: LoyaltyPointRefTypeEnum.ORDER,
         refId: id,
@@ -410,8 +410,8 @@ export class LoyaltyPointRecalculateService extends TransactionService {
     const deltaPoints = Math.abs(data.expectedPoints - countedPoints);
     const direction =
       data.expectedPoints >= countedPoints
-        ? LoyaltyPointTransactionTypeEnum.INCREASE
-        : LoyaltyPointTransactionTypeEnum.DECREASE;
+        ? LoyaltyPointTransactionType.INCREASE
+        : LoyaltyPointTransactionType.DECREASE;
 
     const newAdjustment = {
       ...data,
@@ -500,7 +500,7 @@ export class LoyaltyPointRecalculateService extends TransactionService {
         totalRevenue: 0,
       };
 
-      if (tx.type === LoyaltyPointTransactionTypeEnum.INCREASE) {
+      if (tx.type === LoyaltyPointTransactionType.INCREASE) {
         current.points += tx.points;
       } else {
         current.points -= tx.points;
@@ -675,7 +675,7 @@ export class LoyaltyPointRecalculateService extends TransactionService {
         const current = currentState.get(tx.partnerId);
         if (!current) continue;
 
-        if (tx.type === LoyaltyPointTransactionTypeEnum.INCREASE) {
+        if (tx.type === LoyaltyPointTransactionType.INCREASE) {
           current.points += tx.points;
         } else {
           current.points -= tx.points;
@@ -754,7 +754,7 @@ export class LoyaltyPointRecalculateService extends TransactionService {
       .getMany();
 
     for (const tx of txs) {
-      if (tx.type === LoyaltyPointTransactionTypeEnum.INCREASE) {
+      if (tx.type === LoyaltyPointTransactionType.INCREASE) {
         points += tx.points;
       } else {
         points -= tx.points;

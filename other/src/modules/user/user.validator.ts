@@ -7,7 +7,7 @@ import {
   BaseCreateSchema,
   BaseUpdateSchema,
 } from "@/shared/base/BaseValidator";
-import { GenderEnum } from "@/shared/constants/enum";
+import { Gender } from "@/shared/constants/enum";
 
 export const CreateUserSchema = BaseCreateSchema.extend({
   code: z.string().optional(),
@@ -16,7 +16,7 @@ export const CreateUserSchema = BaseCreateSchema.extend({
   password: z.string().max(255),
   email: z.email().max(255).optional(),
   phone: z.string().max(255).optional(),
-  gender: z.enum(GenderEnum).optional(),
+  gender: z.enum(Gender).optional(),
   dob: DateTransform.optional(),
   address: AddressSchema.optional(),
   systemRoleId: z.uuid().optional(),
@@ -48,7 +48,7 @@ export const UpdateUserSchema = BaseUpdateSchema.extend({
   name: z.string().max(255).optional(),
   email: z.email().max(255).nullish(),
   phone: z.string().max(255).nullish(),
-  gender: z.enum(GenderEnum).nullish(),
+  gender: z.enum(Gender).nullish(),
   dob: DateTransform.nullish(),
   address: AddressSchema.nullish(),
   systemRoleId: z.uuid().nullish(),

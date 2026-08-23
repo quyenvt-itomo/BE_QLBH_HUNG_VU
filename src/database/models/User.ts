@@ -1,40 +1,46 @@
 import { BaseEntity } from "@/shared/base/BaseEntity";
-import { Column, Entity, ManyToOne, OneToMany } from "typeorm";
-import { CompanyUser } from "./CompanyUser";
-import { Organization } from "./Organization";
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from "typeorm";
+import { Role } from "./Role";
+import { Address } from "@/shared/base/BaseValidator";
+import { Gender } from "@/shared/constants/enum";
+import { Notification } from "./Notification";
+import { StoreUser } from "./store/StoreUser";
 
 @Entity("users")
 export class User extends BaseEntity {
   @Column({ type: "varchar", length: 50 })
   code: string;
-
   @Column({ type: "varchar", length: 255 })
   name: string;
 
   @Column({ type: "varchar", length: 100 })
   username: string;
-
-  @Column({ type: "varchar", length: 255, nullable: true })
-  email: string | null;
-
-  @Column({ type: "varchar", length: 20, nullable: true })
-  phone: string | null;
-
   @Column({ type: "varchar", length: 255 })
   password: string;
+
+  @Column({ type: "varchar", length: 255, nullable: true, default: null })
+  email: string | null;
+  @Column({ type: "varchar", length: 255, nullable: true, default: null })
+  phone: string | null;
+  @Column({ type: "enum", enum: Gender, nullable: true, default: null })
+  gender: Gender | null;
+  @Column({ type: "timestamptz", nullable: true, default: null })
+  dob: Date | null;
+  @Column({ type: "jsonb", default: {} })
+  address: Address | null;
+
+  @Column({ type: "uuid", nullable: true, default: null })
+  roleId: string | null;
+  @ManyToOne(() => Role, { onDelete: "SET NULL" })
+  @JoinColumn({ name: "roleId" })
+  role: Role | null;
 
   @Column({ type: "boolean", default: true })
   isActive: boolean;
 
-  @Column({ type: "uuid", nullable: true, default: null })
-  sourceCompanyId: string | null;
+  @OneToMany(() => Notification, (notification) => notification.user)
+  notifications?: Notification[];
 
-  // ============================== RELATIONSHIPS ==============================
-  @OneToMany(() => CompanyUser, (companyUser) => companyUser.user, {
-    cascade: true,
-  })
-  companyUsers?: CompanyUser[];
-
-  @ManyToOne(() => Organization, { onDelete: "SET NULL" })
-  sourceCompany?: Organization;
+  @OneToMany(() => StoreUser, (storeUser) => storeUser.user, { cascade: true })
+  storeUsers?: StoreUser[];
 }

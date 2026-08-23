@@ -153,9 +153,9 @@ export class StockDocumentService extends BaseService<StockDocument> {
     await this.warehouseRepository.attachInfo(data, manager);
 
     await this.shippingPlanRepository.attachInfo(data, manager);
-    // Ghi đè shippingProvider từ shippingPlan
-    data.shippingProviderId =
-      data.shippingPlanSnapshot?.partnerId || data.shippingProviderId || null;
+    // Ghi đè shipper từ shippingPlan
+    data.shipperId =
+      data.shippingPlanSnapshot?.partnerId || data.shipperId || null;
 
     await this.partnerRepository.attachInfo(data, manager);
 

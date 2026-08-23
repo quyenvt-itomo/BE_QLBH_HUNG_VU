@@ -7,16 +7,16 @@ import { ProductVariant } from "./ProductVariant";
 @Entity("product_options")
 export class ProductOption extends BaseEntity {
   @Column({ type: "uuid" })
-  productId!: string;
+  productId: string;
 
   @Column({ type: "uuid" })
-  typeId!: string;
+  typeId: string;
 
   @Column({ type: "varchar", length: 255 })
-  value!: string;
+  value: string;
 
   @Column({ type: "int", default: 0 })
-  typeIndex!: number;
+  typeIndex: number;
 
   // * ======================== RELATIONS ========================= * //
   @ManyToOne(() => Product, (product) => product.options, {

@@ -20,7 +20,7 @@ import {
   WorkingStatusEnum,
 } from "@/database/models/company/Employee";
 import { EmployeeContractTypeEnum } from "@/database/models/company/EmployeeContract";
-import { GenderEnum } from "@/shared/constants/enum";
+import { Gender } from "@/shared/constants/enum";
 
 export const CreateEmployeeContractSchema = BaseCreateSchema.extend({
   contractNumber: z.string("Số hợp đồng không hợp lệ").trim().max(255),
@@ -43,7 +43,7 @@ export const CreateEmployeeSchema = BaseCreateSchema.extend({
   companyId: z.uuid(),
   code: BaseCodeSchema.optional(),
   name: z.string().trim().max(255),
-  gender: z.enum(GenderEnum).nullish(),
+  gender: z.enum(Gender).nullish(),
   dob: DateTransform.nullish(),
   maritalStatus: z.enum(MaritalStatusEnum).nullish(),
   ethnicity: z.string().trim().max(255).nullish(),
@@ -73,7 +73,7 @@ export const CreateEmployeeSchema = BaseCreateSchema.extend({
 export const UpdateEmployeeSchema = BaseUpdateSchema.extend({
   code: BaseCodeSchema.optional(),
   name: z.string().trim().max(255).optional(),
-  gender: z.enum(GenderEnum).nullish(),
+  gender: z.enum(Gender).nullish(),
   dob: DateTransform.nullish(),
   maritalStatus: z.enum(MaritalStatusEnum).nullish(),
   ethnicity: z.string().trim().max(255).nullish(),

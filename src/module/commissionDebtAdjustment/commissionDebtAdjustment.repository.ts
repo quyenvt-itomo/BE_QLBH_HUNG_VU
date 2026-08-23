@@ -22,7 +22,7 @@ export class CommissionDebtAdjustmentRepository extends BaseRepository<Commissio
     options: IFindPaginationOptions<CommissionDebtAdjustment>,
   ): Promise<void> {
     const alias = qb.alias;
-    const { partnerContactId, type, isInitialAdjustment } =
+    const { partnerContactId, type, isInitial } =
       (options?.moreQuery as CommissionDebtAdjustmentQueryDto) || {};
 
     if (partnerContactId) {
@@ -33,9 +33,9 @@ export class CommissionDebtAdjustmentRepository extends BaseRepository<Commissio
     if (type) {
       qb.andWhere(`${alias}.type = :type`, { type });
     }
-    if (isInitialAdjustment !== undefined) {
-      qb.andWhere(`${alias}.isInitialAdjustment = :isInitialAdjustment`, {
-        isInitialAdjustment,
+    if (isInitial !== undefined) {
+      qb.andWhere(`${alias}.isInitial = :isInitial`, {
+        isInitial,
       });
     }
   }

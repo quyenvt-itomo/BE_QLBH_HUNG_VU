@@ -10,7 +10,7 @@ import {
   zBooleanLike,
 } from "@/shared/base/BaseValidator";
 import * as z from "zod";
-import { PartnerType } from "@/database/models/company/Partner";
+import { PartnerType } from "@/database/models/Partner";
 
 export const PartnerContactSchema = z.object({
   id: z.uuid().optional(),

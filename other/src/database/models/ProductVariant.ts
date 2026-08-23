@@ -27,22 +27,22 @@ export interface StockMetadata {
 @Entity("product_variants")
 export class ProductVariant extends BaseEntity {
   @Column({ type: "uuid" })
-  productId!: string;
+  productId: string;
 
   @Column({ type: "varchar", length: 255, nullable: true })
-  sku!: string | null;
+  sku: string | null;
 
   @Column({ type: "varchar", length: 255, nullable: true })
-  barcode!: string | null;
+  barcode: string | null;
 
   @Column(BaseNumericColumnOptions)
-  costPrice!: number;
+  costPrice: number;
 
   @Column(BaseNumericColumnOptions)
-  price!: number;
+  price: number;
 
   @Column({ type: "boolean", default: true })
-  isActive!: boolean;
+  isActive: boolean;
 
   /**
    * 🚀 Denormalized stock data for high-performance queries

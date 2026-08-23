@@ -1,5 +1,5 @@
-import { Partner } from "@/database/models/company/Partner";
-import { PartnerContact } from "@/database/models/company/PartnerContact";
+import { Partner } from "@/database/models/Partner";
+import { PartnerContact } from "@/database/models/PartnerContact";
 import { BaseSelect } from "@/shared/base/BaseSelect";
 import { FindOptionsRelations, FindOptionsSelect } from "typeorm";
 

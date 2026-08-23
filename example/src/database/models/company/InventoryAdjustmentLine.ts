@@ -6,7 +6,7 @@ import {
 import { Column, Entity, JoinColumn, ManyToOne } from "typeorm";
 import { InventoryAdjustment } from "./InventoryAdjustment";
 import { Product } from "./Product";
-import { TransactionTypeEnum } from "@/shared/constants/enum";
+import { TransactionType } from "@/shared/constants/enum";
 
 @Entity("inventory_adjustment_lines")
 export class InventoryAdjustmentLine extends BaseEntity {
@@ -27,10 +27,10 @@ export class InventoryAdjustmentLine extends BaseEntity {
 
   @Column({
     type: "enum",
-    enum: TransactionTypeEnum,
-    default: TransactionTypeEnum.IN,
+    enum: TransactionType,
+    default: TransactionType.IN,
   })
-  type: TransactionTypeEnum;
+  type: TransactionType;
 
   @Column(BaseNumericColumnOptions)
   costPriceAtTime: number;

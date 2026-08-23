@@ -2,7 +2,7 @@ import {
   BaseRepository,
   IFindPaginationOptions,
 } from "@/shared/base/BaseRepository";
-import { OrderLine } from "@/database/models/company/OrderLine";
+import { OrderLine } from "@/database/models/store/OrderLine";
 import { OrderLineSelectFull, OrderLineRelations } from "./orderLine.select";
 import { injectable } from "inversify";
 import { SelectQueryBuilder } from "typeorm";

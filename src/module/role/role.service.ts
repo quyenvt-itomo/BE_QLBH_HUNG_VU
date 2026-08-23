@@ -1,6 +1,6 @@
-﻿import { injectable, inject } from "inversify";
+import { injectable, inject } from "inversify";
 import { BaseService, IFindOptions } from "@/shared/base/BaseService";
-import { Role } from "@/database/models/company/Role";
+import { Role } from "@/database/models/Role";
 import { RoleRepository } from "./role.repository";
 import { ROLE_TYPES } from "./role.types";
 import { RequestContext } from "@/shared/types/interfaces";

@@ -9,7 +9,7 @@ import {
 import * as z from "zod";
 import { PaymentRequestTypeEnum } from "@/database/models/company/PaymentRequest";
 import { ApproveStatus } from "@/shared/constants/enum";
-import { FundTypeEnum } from "@/database/models/company/Fund";
+import { FundTypeEnum } from "@/database/models/Fund";
 
 export const PaymentRequestLineSchema = BaseLineSchema.extend({
   invoiceId: z.uuid().nullish(),

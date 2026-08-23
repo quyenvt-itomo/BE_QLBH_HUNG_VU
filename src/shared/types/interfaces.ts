@@ -7,7 +7,6 @@ import {
 } from "typeorm";
 import { IError } from "./errors";
 import { UserSnapshot } from "../base/BaseEntity";
-import { OrganizationTypeEnum } from "@/database/models/Organization";
 import { AttributeType } from "@/database/models/Attribute";
 import { PermissionStructure } from "../middleware/permission.middleware";
 
@@ -113,7 +112,9 @@ export interface CompanyContext {
   companyId: string;
   companyName: string;
   companyCode: string;
-  companyType: OrganizationTypeEnum;
+  /** Store context is the canonical scope; companyId is a compatibility alias. */
+  storeId?: string;
+  companyType?: string;
 }
 
 export type ActionKey =

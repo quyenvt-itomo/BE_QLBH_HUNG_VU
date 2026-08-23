@@ -1,4 +1,4 @@
-import { ProductExtraUnit } from "@/database/models/company/ProductExtraUnit";
+import { ProductExtraUnit } from "@/database/models/ProductExtraUnit";
 import { BaseSelect } from "@/shared/base/BaseSelect";
 import { FindOptionsRelations, FindOptionsSelect } from "typeorm";
 

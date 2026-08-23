@@ -1,9 +1,9 @@
-﻿import type { RequestContext } from "@/shared/types/interfaces";
+import type { RequestContext } from "@/shared/types/interfaces";
 import { injectable, inject } from "inversify";
 import { BaseService } from "@/shared/base/BaseService";
 import { OrderLineRepository } from "./orderLine.repository";
 import { ORDER_LINE_TYPES } from "./orderLine.types";
-import { OrderLine } from "@/database/models/company/OrderLine";
+import { OrderLine } from "@/database/models/store/OrderLine";
 import { DeepPartial, EntityManager } from "typeorm";
 import { Request } from "express";
 import { PRODUCT_TYPES, ProductRepository } from "@/module/product";

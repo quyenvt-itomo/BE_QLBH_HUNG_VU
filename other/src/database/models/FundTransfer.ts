@@ -5,10 +5,10 @@ import { Fund } from "./Fund";
 @Entity("fund_transfers")
 export class FundTransfer extends BaseEntity {
   @Column({ type: "varchar", length: 20 })
-  code!: string;
+  code: string;
 
   @Column({ type: "timestamptz" })
-  occurredAt!: Date;
+  occurredAt: Date;
 
   @Column({ type: "uuid" })
   fromFundId: string;
@@ -17,18 +17,18 @@ export class FundTransfer extends BaseEntity {
   toFundId: string;
 
   @Column(BaseNumericColumnOptions)
-  amount!: number;
+  amount: number;
 
   // * ======================== RELATIONS ========================= //
   @ManyToOne(() => Fund, {
     onDelete: "CASCADE",
   })
   @JoinColumn({ name: "fromFundId" })
-  fromFund!: Fund;
+  fromFund: Fund;
 
   @ManyToOne(() => Fund, {
     onDelete: "CASCADE",
   })
   @JoinColumn({ name: "toFundId" })
-  toFund!: Fund;
+  toFund: Fund;
 }

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { BaseQuerySchema, DateTransform } from "@/shared/base/BaseValidator";
-import { LoyaltyPointTransactionTypeEnum } from "@/shared/constants/enum";
+import { LoyaltyPointTransactionType } from "@/shared/constants/enum";
 
 /**
  * Query schema cho getPartnerPointsReport
@@ -26,7 +26,7 @@ export const GetTransactionDetailsQuerySchema = BaseQuerySchema.extend({
   startAt: DateTransform,
   endAt: DateTransform,
   partnerId: z.uuid(),
-  type: z.enum(LoyaltyPointTransactionTypeEnum).optional(),
+  type: z.enum(LoyaltyPointTransactionType).optional(),
 });
 
 export type GetPartnerPointsReportQueryDto = z.infer<

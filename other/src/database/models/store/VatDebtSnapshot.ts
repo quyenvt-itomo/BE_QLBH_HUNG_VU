@@ -4,11 +4,11 @@ import { BaseEntity, BaseNumericColumnOptions } from "@/shared/base/BaseEntity";
 @Entity("vat_debt_snapshots")
 export class VatDebtSnapshot extends BaseEntity {
   @Column({ type: "timestamptz" })
-  snapshotAt!: Date;
+  snapshotAt: Date;
 
   @Column({ type: "uuid" })
-  storeId!: string;
+  storeId: string;
 
   @Column(BaseNumericColumnOptions)
-  amount!: number;
+  amount: number;
 }

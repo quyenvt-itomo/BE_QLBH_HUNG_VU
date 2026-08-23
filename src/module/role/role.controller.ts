@@ -1,6 +1,6 @@
 import { injectable, inject } from "inversify";
 import { BaseController } from "@/shared/base/BaseController";
-import { Role } from "@/database/models/company/Role";
+import { Role } from "@/database/models/Role";
 import { RoleService } from "./role.service";
 import { ROLE_TYPES } from "./role.types";
 

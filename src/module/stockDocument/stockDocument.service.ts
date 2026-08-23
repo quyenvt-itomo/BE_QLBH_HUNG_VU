@@ -1,4 +1,4 @@
-﻿import { injectable, inject } from "inversify";
+import { injectable, inject } from "inversify";
 import { BaseService } from "@/shared/base/BaseService";
 import { StockDocumentRepository } from "./stockDocument.repository";
 import { STOCK_DOCUMENT_TYPES } from "./stockDocument.types";
@@ -9,7 +9,7 @@ import {
 } from "@/database/models/company/StockDocument";
 import { StockDocumentLine } from "@/database/models/company/StockDocumentLine";
 import { PurchaseLine } from "@/database/models/company/PurchaseLine";
-import { OrderLine } from "@/database/models/company/OrderLine";
+import { OrderLine } from "@/database/models/store/OrderLine";
 import { DeepPartial, EntityManager, In } from "typeorm";
 import { withTransaction } from "@/shared/base/TransactionManager";
 import {
@@ -154,9 +154,9 @@ export class StockDocumentService extends BaseService<StockDocument> {
     await this.warehouseRepository.attachInfo(data, manager);
 
     await this.shippingPlanRepository.attachInfo(data, manager);
-    // Ghi đè shippingProvider từ shippingPlan
-    data.shippingProviderId =
-      data.shippingPlanSnapshot?.partnerId || data.shippingProviderId || null;
+    // Ghi đè shipper từ shippingPlan
+    data.shipperId =
+      data.shippingPlanSnapshot?.partnerId || data.shipperId || null;
 
     await this.partnerRepository.attachInfo(data, manager);
 
@@ -765,7 +765,9 @@ export class StockDocumentService extends BaseService<StockDocument> {
     });
     if (!orderLine) return;
     const quantity =
-      Number(line.stockQuantity ?? line.requestQuantity ?? line.billingQuantity) || 0;
+      Number(
+        line.stockQuantity ?? line.requestQuantity ?? line.billingQuantity,
+      ) || 0;
     line.costPriceAtTime = Number(orderLine.costPriceAtTime) || 0;
     line.costAmount = quantity * line.costPriceAtTime;
   }

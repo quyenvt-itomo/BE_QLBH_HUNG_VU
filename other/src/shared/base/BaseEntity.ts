@@ -39,16 +39,16 @@ export abstract class BaseEntity {
   updatedBySnapshot?: UserSnapshot | null;
 
   @CreateDateColumn({ name: "createdAt" })
-  createdAt!: Date;
+  createdAt: Date;
 
   @UpdateDateColumn({ name: "updatedAt", nullable: true, default: null })
-  updatedAt!: Date | null;
+  updatedAt: Date | null;
 
   @DeleteDateColumn({ name: "deletedAt", nullable: true })
   deletedAt?: Date | null;
 
   @Column({ name: "isDefault", type: "boolean", default: false })
-  isDefault!: boolean;
+  isDefault: boolean;
 
   // Helper methods
   get isDeleted(): boolean {

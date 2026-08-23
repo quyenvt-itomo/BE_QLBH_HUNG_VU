@@ -5,7 +5,7 @@ import {
 import {
   PartnerContact,
   PartnerContactSnapshot,
-} from "@/database/models/company/PartnerContact";
+} from "@/database/models/PartnerContact";
 import {
   PartnerContactSelectFull,
   PartnerContactRelations,

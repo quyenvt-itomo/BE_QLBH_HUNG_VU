@@ -7,16 +7,16 @@ import { UserNotification } from "./UserNotification";
 @Entity("notifications")
 export class Notification extends BaseEntity {
   @Column({ type: "varchar", length: 255 })
-  title!: string;
+  title: string;
 
   @Column({ type: "text" })
-  content!: string;
+  content: string;
 
   @Column({ type: "int", nullable: true, default: null })
   oId: number | null;
 
   @Column({ type: "varchar", enum: NotificationTypeEnum })
-  type!: NotificationTypeEnum;
+  type: NotificationTypeEnum;
 
   @Column({
     type: "varchar",
@@ -24,7 +24,7 @@ export class Notification extends BaseEntity {
     nullable: true,
     default: null,
   })
-  action!: ActionTypeEnum | null;
+  action: ActionTypeEnum | null;
 
   @Column({ type: "jsonb", nullable: true })
   metadata?: any;

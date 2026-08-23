@@ -1,5 +1,5 @@
 import { BaseEntity, BaseNumericColumnOptions } from "@/shared/base/BaseEntity";
-import { TransactionTypeEnum } from "@/shared/constants/enum";
+import { TransactionType } from "@/shared/constants/enum";
 import { Column, Entity, Index } from "typeorm";
 
 export enum InventoryTransactionRefType {
@@ -45,8 +45,8 @@ export class InventoryTransaction extends BaseEntity {
   @Column(BaseNumericColumnOptions)
   amount: number;
 
-  @Column({ type: "enum", enum: TransactionTypeEnum })
-  type: TransactionTypeEnum;
+  @Column({ type: "enum", enum: TransactionType })
+  type: TransactionType;
 
   @Column({ type: "varchar", length: 20 })
   refType: InventoryTransactionRefType;

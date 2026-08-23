@@ -6,7 +6,7 @@ import {
   DateTransform,
 } from "@/shared/base/BaseValidator";
 import * as z from "zod";
-import { IncomeExpenseTypeEnum } from "@/database/models/company/IncomeExpense";
+import { IncomeExpenseTypeEnum } from "@/database/models/store/IncomeExpense";
 
 // Phân bổ thanh toán theo hóa đơn (giảm công nợ theo từng hóa đơn)
 const InvoiceAllocationSchema = z.object({

@@ -17,7 +17,7 @@ export enum OrderKey {
   DISCOUNT_VALUE = "discountValue", // % hoặc số tiền
 
   // Shipping
-  SHIPPING_PROVIDER_CODE = "shippingProviderCode", // Mã nhà vận chuyển
+  SHIPPING_PROVIDER_CODE = "shipperCode", // Mã nhà vận chuyển
   SHIPPING_FEE = "shippingFee", // Phí vận chuyển
   IS_FREE_SHIPPING = "isFreeShipping", // Miễn phí vận chuyển
 

@@ -6,37 +6,37 @@ import {
 import { Column, Entity, JoinColumn, ManyToOne } from "typeorm";
 import { InventoryAdjustment } from "./InventoryAdjustment";
 import { ProductVariant } from "../ProductVariant";
-import { InventoryTransactionTypeEnum } from "@/shared/constants/enum";
+import { InventoryTransactionType } from "@/shared/constants/enum";
 
 @Entity("inventory_adjustment_lines")
 export class InventoryAdjustmentLine extends BaseEntity {
   @Column({ type: "uuid" })
-  adjustmentId!: string;
+  adjustmentId: string;
 
   @Column({ type: "uuid" })
-  productVariantId!: string;
+  productVariantId: string;
 
   @Column(BaseNumericColumnOptions)
-  expectedQty!: number; // số lượng tồn kho điều chỉnh
+  expectedQty: number; // số lượng tồn kho điều chỉnh
 
   @Column(BaseNumericColumnOptions)
-  countedQty!: number; // số lượng hệ thống đếm được
+  countedQty: number; // số lượng hệ thống đếm được
 
   @Column(BaseNumericColumnOptions)
-  deltaQty!: number;
+  deltaQty: number;
 
   @Column({
     type: "enum",
-    enum: InventoryTransactionTypeEnum,
-    default: InventoryTransactionTypeEnum.IN,
+    enum: InventoryTransactionType,
+    default: InventoryTransactionType.IN,
   })
-  direction!: InventoryTransactionTypeEnum;
+  direction: InventoryTransactionType;
 
   @Column(BaseNumericColumnOptions)
-  costPriceAtTime!: number;
+  costPriceAtTime: number;
 
   @Column(BaseNumericColumnOptions)
-  adjustmentValue!: number; // nếu là tăng: = deltaQty * costPriceAtTime, nếu là giảm: tính theo giá bình quân tại thời điểm phát sinh
+  adjustmentValue: number; // nếu là tăng: = deltaQty * costPriceAtTime, nếu là giảm: tính theo giá bình quân tại thời điểm phát sinh
 
   @Column(BaseSortOrderColumnOptions)
   sortOrder: number;

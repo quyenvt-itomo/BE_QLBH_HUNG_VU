@@ -5,14 +5,14 @@ import {
   BaseUpdateSchema,
   DateTransform,
 } from "@/shared/base/BaseValidator";
-import { FundTransactionTypeEnum } from "@/shared/constants/enum";
+import { FundTransactionType } from "@/shared/constants/enum";
 import * as z from "zod";
 
 export const CreateLoyaltyPointAdjustmentSchema = BaseCreateSchema.extend({
   code: z.string().optional(),
   occurredAt: DateTransform,
   partnerId: z.uuid(),
-  direction: z.enum(FundTransactionTypeEnum),
+  direction: z.enum(FundTransactionType),
   expectedRevenue: z.number().min(0),
   expectedPoints: z.number().min(0),
   reason: z.string(),
@@ -22,7 +22,7 @@ export const UpdateLoyaltyPointAdjustmentSchema = BaseUpdateSchema.extend({
   code: z.string().optional(),
   occurredAt: DateTransform.optional(),
   partnerId: z.uuid().optional(),
-  direction: z.enum(FundTransactionTypeEnum).optional(),
+  direction: z.enum(FundTransactionType).optional(),
   expectedRevenue: z.number().min(0).optional(),
   expectedPoints: z.number().min(0).optional(),
   reason: z.string().optional(),

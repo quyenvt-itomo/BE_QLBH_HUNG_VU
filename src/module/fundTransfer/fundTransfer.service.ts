@@ -1,9 +1,9 @@
-﻿import type { RequestContext } from "@/shared/types/interfaces";
+import type { RequestContext } from "@/shared/types/interfaces";
 import { injectable, inject } from "inversify";
 import { BaseService } from "@/shared/base/BaseService";
 import { FundTransferRepository } from "./fundTransfer.repository";
 import { FUND_TRANSFER_TYPES } from "./fundTransfer.types";
-import { FundTransfer } from "@/database/models/company/FundTransfer";
+import { FundTransfer } from "@/database/models/FundTransfer";
 import { DeepPartial, EntityManager } from "typeorm";
 import { Request } from "express";
 import { FUND_TYPES, FundRepository } from "@/module/fund";

@@ -5,21 +5,21 @@ import { DebtDirectionEnum, DebtRefTypeEnum } from "@/shared/constants/enum";
 @Entity("vat_debt_transactions")
 export class VatDebtTransaction extends BaseEntity {
   @Column({ type: "timestamptz" })
-  occurredAt!: Date;
+  occurredAt: Date;
 
   @Column({ type: "uuid" })
-  storeId!: string;
+  storeId: string;
 
   @Column({ type: "enum", enum: DebtDirectionEnum })
-  direction!: DebtDirectionEnum;
+  direction: DebtDirectionEnum;
 
   @Column(BaseNumericColumnOptions)
-  amount!: number;
+  amount: number;
 
   @Column({ type: "enum", enum: DebtRefTypeEnum })
-  refType!: DebtRefTypeEnum;
+  refType: DebtRefTypeEnum;
   @Column({ type: "uuid" })
-  refId!: string;
+  refId: string;
   @Column({ type: "varchar", length: 50, nullable: true, default: null })
   refCode?: string | null;
 }

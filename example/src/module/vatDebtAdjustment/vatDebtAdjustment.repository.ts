@@ -22,7 +22,7 @@ export class VatDebtAdjustmentRepository extends BaseRepository<VatDebtAdjustmen
     options: IFindPaginationOptions<VatDebtAdjustment>,
   ): Promise<void> {
     const alias = qb.alias;
-    const { adjustedById, type, isInitialAdjustment } =
+    const { adjustedById, type, isInitial } =
       (options?.moreQuery as VatDebtAdjustmentQueryDto) || {};
 
     if (adjustedById) {
@@ -31,9 +31,9 @@ export class VatDebtAdjustmentRepository extends BaseRepository<VatDebtAdjustmen
     if (type) {
       qb.andWhere(`${alias}.type = :type`, { type });
     }
-    if (isInitialAdjustment !== undefined) {
-      qb.andWhere(`${alias}.isInitialAdjustment = :isInitialAdjustment`, {
-        isInitialAdjustment,
+    if (isInitial !== undefined) {
+      qb.andWhere(`${alias}.isInitial = :isInitial`, {
+        isInitial,
       });
     }
   }

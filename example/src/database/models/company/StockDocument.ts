@@ -50,8 +50,8 @@ export interface StockDocumentSnapshot {
   shippingPlanId: string | null;
   shippingPlanSnapshot: ShippingPlanSnapshot | null;
 
-  shippingProviderId: string | null;
-  shippingProviderSnapshot: PartnerSnapshot | null;
+  shipperId: string | null;
+  shipperSnapshot: PartnerSnapshot | null;
 
   representative: Representative | null;
   vehicleType: string | null;
@@ -95,9 +95,9 @@ export class StockDocument extends BaseEntityWithCompany {
   partnerSnapshot: PartnerSnapshot | null;
 
   @Column({ type: "uuid", nullable: true, default: null })
-  shippingProviderId: string | null;
+  shipperId: string | null;
   @Column({ type: "jsonb", nullable: true, default: null })
-  shippingProviderSnapshot: PartnerSnapshot | null;
+  shipperSnapshot: PartnerSnapshot | null;
 
   // Người đại diện giao dịch (nếu là purchase_receipt, hoặc order_issue)
   @Column({ type: "jsonb", nullable: true, default: null })
@@ -153,8 +153,8 @@ export class StockDocument extends BaseEntityWithCompany {
   partner: Partner | null;
 
   @ManyToOne(() => Partner, { onDelete: "SET NULL" })
-  @JoinColumn({ name: "shippingProviderId" })
-  shippingProvider: Partner | null;
+  @JoinColumn({ name: "shipperId" })
+  shipper: Partner | null;
 
   @ManyToOne(() => Warehouse, { onDelete: "SET NULL" })
   @JoinColumn({ name: "warehouseId" })

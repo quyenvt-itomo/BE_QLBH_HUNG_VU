@@ -1,6 +1,6 @@
 import { Entity, Column, Index } from "typeorm";
 import { BaseEntity, BaseNumericColumnOptions } from "@/shared/base/BaseEntity";
-import { TransactionTypeEnum } from "@/shared/constants/enum";
+import { TransactionType } from "@/shared/constants/enum";
 
 export enum PartnerDebtSideEnum {
   PAYABLE = "payable",
@@ -19,7 +19,7 @@ export enum PartnerDebtRefTypeEnum {
  * 1 phiếu nguồn (Order/Purchase/IE/Adjustment/Offset) → tạo 1‑N transaction.
  * Idempotent qua (refType, refId).
  */
-@Entity("partner_debt_transactions")
+@Entity("debt_transactions")
 @Index(["companyId", "occurredAt"])
 @Index(["partnerId", "side", "occurredAt"])
 @Index(["refType", "refId"])
@@ -38,8 +38,8 @@ export class PartnerDebtTransaction extends BaseEntity {
   @Column({ type: "uuid" })
   partnerId: string;
 
-  @Column({ type: "enum", enum: TransactionTypeEnum })
-  type: TransactionTypeEnum;
+  @Column({ type: "enum", enum: TransactionType })
+  type: TransactionType;
 
   @Column(BaseNumericColumnOptions)
   amount: number;

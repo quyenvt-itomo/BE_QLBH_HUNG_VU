@@ -3,19 +3,19 @@ export const nullUuidMap = {
   expenseCategory: "00000000-0000-4000-8000-000000000002",
 };
 
-export enum GenderEnum {
+export enum Gender {
   MALE = "MALE",
   FEMALE = "FEMALE",
   OTHER = "OTHER",
 }
 
-export enum IdentificationTypeEnum {
+export enum IdentificationType {
   CCCD = "CCCD", // Căn cước công dân
   CMND = "CMND", // Chứng minh nhân dân
   HC = "HC", // Hộ chiếu
 }
 
-export enum TransactionTypeEnum {
+export enum TransactionType {
   IN = "in",
   OUT = "out",
 }

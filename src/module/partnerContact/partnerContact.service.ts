@@ -2,7 +2,7 @@ import { injectable, inject } from "inversify";
 import { BaseService } from "@/shared/base/BaseService";
 import { PartnerContactRepository } from "./partnerContact.repository";
 import { PARTNER_CONTACT_TYPES } from "./partnerContact.types";
-import { PartnerContact } from "@/database/models/company/PartnerContact";
+import { PartnerContact } from "@/database/models/PartnerContact";
 
 @injectable()
 export class PartnerContactService extends BaseService<PartnerContact> {

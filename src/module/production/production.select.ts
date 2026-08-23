@@ -1,4 +1,4 @@
-import { Production } from "@/database/models/company/Production";
+import { Production } from "@/database/models/Production";
 import { BaseSelect } from "@/shared/base/BaseSelect";
 import { FindOptionsRelations, FindOptionsSelect } from "typeorm";
 

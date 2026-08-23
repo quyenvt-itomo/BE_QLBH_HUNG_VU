@@ -17,7 +17,7 @@ import {
   InvoiceService,
 } from "@/module/invoice";
 import { PartnerDebtRefTypeEnum } from "@/database/models/company/PartnerDebtTransaction";
-import { VatTransactionTypeEnum } from "@/database/models/company/VatDebtTransaction";
+import { VatTransactionType } from "@/database/models/company/VatDebtTransaction";
 
 @injectable()
 export class IncomeExpenseService extends BaseService<IncomeExpense> {
@@ -138,7 +138,7 @@ export class IncomeExpenseService extends BaseService<IncomeExpense> {
     );
     await this.vatDebtSync.removeByRef(
       manager,
-      VatTransactionTypeEnum.EXPENSE,
+      VatTransactionType.EXPENSE,
       data.id,
     );
     await this.recalculateAllocatedInvoices(allocations, manager);

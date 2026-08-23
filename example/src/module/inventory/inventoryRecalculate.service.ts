@@ -9,7 +9,7 @@ import {
   InventoryTransactionRefType,
   FifoData,
 } from "@/database/models/company/InventoryTransaction";
-import { TransactionTypeEnum } from "@/shared/constants/enum";
+import { TransactionType } from "@/shared/constants/enum";
 import { StockDocumentStatus } from "@/database/models/company/StockDocument";
 import { WarehouseTransfer } from "@/database/models/company/WarehouseTransfer";
 import { WarehouseTransferLine } from "@/database/models/company/WarehouseTransferLine";
@@ -21,7 +21,7 @@ export interface InventoryTransactionParams {
   productId: string;
   warehouseId: string;
   quantity: number;
-  type: TransactionTypeEnum;
+  type: TransactionType;
   refType: InventoryTransactionRefType;
   refId: string;
   refCode: string;
@@ -117,7 +117,7 @@ export class InventoryRecalculateService extends TransactionService {
     let amount: number;
     let newFifo: FifoData[];
 
-    if (type === TransactionTypeEnum.IN) {
+    if (type === TransactionType.IN) {
       // Nhập kho: thêm vào cuối FIFO queue
       const unitPrice =
         unitCost ??
@@ -155,7 +155,7 @@ export class InventoryRecalculateService extends TransactionService {
       newFifo = consumed;
     }
 
-    const sign = type === TransactionTypeEnum.IN ? 1 : -1;
+    const sign = type === TransactionType.IN ? 1 : -1;
     const quantityAfter = prevQty + sign * qty;
     const inventoryValueAfter = prevValue + sign * amount;
 
@@ -287,7 +287,7 @@ export class InventoryRecalculateService extends TransactionService {
       quantity: number;
       amount: number;
       unitCost: number;
-      txType: TransactionTypeEnum;
+      txType: TransactionType;
       companyId: string;
     }>
   > {
@@ -302,7 +302,7 @@ export class InventoryRecalculateService extends TransactionService {
       quantity: number;
       amount: number;
       unitCost: number;
-      txType: TransactionTypeEnum;
+      txType: TransactionType;
       companyId: string;
     }> = [];
 
@@ -366,7 +366,7 @@ export class InventoryRecalculateService extends TransactionService {
           quantity: qty,
           amount,
           unitCost,
-          txType: TransactionTypeEnum.IN,
+          txType: TransactionType.IN,
           companyId: doc.companyId,
         });
       }
@@ -416,7 +416,7 @@ export class InventoryRecalculateService extends TransactionService {
           quantity: qty,
           amount: 0, // Will be calculated by FIFO
           unitCost: 0,
-          txType: TransactionTypeEnum.OUT,
+          txType: TransactionType.OUT,
           companyId: doc.companyId,
         });
       }
@@ -460,7 +460,7 @@ export class InventoryRecalculateService extends TransactionService {
           quantity: qty,
           amount: 0, // Will be calculated by FIFO
           unitCost: 0,
-          txType: TransactionTypeEnum.IN,
+          txType: TransactionType.IN,
           companyId: doc.companyId,
         });
       }
@@ -504,7 +504,7 @@ export class InventoryRecalculateService extends TransactionService {
           quantity: qty,
           amount: 0,
           unitCost: 0,
-          txType: TransactionTypeEnum.OUT,
+          txType: TransactionType.OUT,
           companyId: doc.companyId,
         });
       }
@@ -559,7 +559,7 @@ export class InventoryRecalculateService extends TransactionService {
             quantity: Math.abs(deltaQty),
             amount: Math.abs(adjustmentAmount),
             unitCost,
-            txType: isIn ? TransactionTypeEnum.IN : TransactionTypeEnum.OUT,
+            txType: isIn ? TransactionType.IN : TransactionType.OUT,
             companyId: doc.companyId,
           });
         }
@@ -587,7 +587,7 @@ export class InventoryRecalculateService extends TransactionService {
       quantity: number;
       amount: number;
       unitCost: number;
-      txType: TransactionTypeEnum;
+      txType: TransactionType;
       companyId: string;
     },
     manager: EntityManager,

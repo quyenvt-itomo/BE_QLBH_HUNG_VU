@@ -95,15 +95,11 @@ export class PartnerDebtRecalculateService extends TransactionService {
             refId: id,
             refCode: code,
           });
-          if (
-            order.shippingProviderId &&
-            order.shippingFee &&
-            order.shippingFee > 0
-          ) {
+          if (order.shipperId && order.shippingFee && order.shippingFee > 0) {
             transactions.push({
               amount: order.shippingFee,
               occurredAt: orderAt,
-              partnerId: order.shippingProviderId,
+              partnerId: order.shipperId,
               storeId,
               direction: DebtDirectionEnum.INCREASE,
               side: PartnerDebtSideEnum.PAYABLE,
@@ -165,14 +161,14 @@ export class PartnerDebtRecalculateService extends TransactionService {
 
     if (
       (type === OrderTypeEnum.SALE || type === OrderTypeEnum.SALE_RETURN) &&
-      order.shippingProviderId &&
+      order.shipperId &&
       order.shippingFee &&
       order.shippingFee > 0
     ) {
       transactions.push({
         amount: order.shippingFee,
         occurredAt: orderAt,
-        partnerId: order.shippingProviderId,
+        partnerId: order.shipperId,
         storeId,
         direction: DebtDirectionEnum.INCREASE,
         side: PartnerDebtSideEnum.PAYABLE,

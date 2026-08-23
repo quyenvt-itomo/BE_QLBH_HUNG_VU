@@ -1,10 +1,10 @@
-﻿import type { RequestContext } from "@/shared/types/interfaces";
+import type { RequestContext } from "@/shared/types/interfaces";
 import { injectable, inject } from "inversify";
 import { BaseService } from "@/shared/base/BaseService";
 import { FundRepository } from "./fund.repository";
 import { FUND_TYPES } from "./fund.types";
-import { Fund } from "@/database/models/company/Fund";
-import { FundTypeEnum } from "@/database/models/company/Fund";
+import { Fund } from "@/database/models/Fund";
+import { FundTypeEnum } from "@/database/models/Fund";
 import { DeepPartial, EntityManager } from "typeorm";
 import { Request } from "express";
 import { BadRequestError } from "@/shared/types/errors";

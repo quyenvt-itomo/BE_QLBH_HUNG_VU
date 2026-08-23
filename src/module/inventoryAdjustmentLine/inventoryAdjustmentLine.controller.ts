@@ -2,7 +2,7 @@ import { injectable, inject } from "inversify";
 import { InventoryAdjustmentLineService } from "./inventoryAdjustmentLine.service";
 import { INVENTORY_ADJUSTMENT_LINE_TYPES } from "./inventoryAdjustmentLine.types";
 import { BaseController } from "@/shared/base/BaseController";
-import { InventoryAdjustmentLine } from "@/database/models/company/InventoryAdjustmentLine";
+import { InventoryAdjustmentLine } from "@/database/models/store/InventoryAdjustmentLine";
 
 @injectable()
 export class InventoryAdjustmentLineController extends BaseController<InventoryAdjustmentLine> {

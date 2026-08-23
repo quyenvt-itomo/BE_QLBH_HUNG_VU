@@ -11,7 +11,7 @@ import { PartnerDebtOffsetLine } from "./PartnerDebtOffsetLine";
  * tổng giá trị giảm trừ của 2 bên phải bằng nhau (= offsetAmount).
  * Mỗi dòng sinh 1 transaction DECREASE (OUT) cho chính hóa đơn đó.
  */
-@Entity("partner_debt_offsets")
+@Entity("debt_offsets")
 export class PartnerDebtOffset extends BaseEntityWithCompany {
   @Column({ type: "varchar", length: 25 })
   code: string;

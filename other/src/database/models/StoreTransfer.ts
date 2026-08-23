@@ -6,19 +6,19 @@ import { Store } from "./Store";
 @Entity("store_transfers")
 export class StoreTransfer extends BaseEntity {
   @Column({ type: "timestamptz" })
-  occurredAt!: Date;
+  occurredAt: Date;
 
   @Column({ type: "varchar", length: 50 })
-  code!: string;
+  code: string;
 
   @Column({ type: "uuid" })
-  fromStoreId!: string;
+  fromStoreId: string;
 
   @Column({ type: "uuid" })
-  toStoreId!: string;
+  toStoreId: string;
 
   @Column({ type: "text", nullable: true })
-  reason!: string | null;
+  reason: string | null;
 
   // * ========================= RELATIONS ========================= * //
   @OneToMany(() => StoreTransferLine, (line) => line.transfer, {

@@ -14,7 +14,7 @@ export const VatDebtAdjustmentSelectFull: FindOptionsSelect<VatDebtAdjustment> =
     deltaAmount: true,
     type: true,
     reason: true,
-    isInitialAdjustment: true,
+    isInitial: true,
     adjustedBy: {
       id: true,
       name: true,

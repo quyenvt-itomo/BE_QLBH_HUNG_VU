@@ -2,7 +2,7 @@ import {
   BaseRepository,
   IFindPaginationOptions,
 } from "@/shared/base/BaseRepository";
-import { PartnerDebtAdjustment } from "@/database/models/company/PartnerDebtAdjustment";
+import { PartnerDebtAdjustment } from "@/database/models/PartnerDebtAdjustment";
 import {
   PartnerDebtAdjustmentSelectFull,
   PartnerDebtAdjustmentRelations,
@@ -22,7 +22,7 @@ export class PartnerDebtAdjustmentRepository extends BaseRepository<PartnerDebtA
     options: IFindPaginationOptions<PartnerDebtAdjustment>,
   ): Promise<void> {
     const alias = qb.alias;
-    const { partnerId, side, type, isInitialAdjustment } =
+    const { partnerId, side, type, isInitial } =
       (options?.moreQuery as PartnerDebtAdjustmentQueryDto) || {};
 
     if (partnerId) {
@@ -34,9 +34,9 @@ export class PartnerDebtAdjustmentRepository extends BaseRepository<PartnerDebtA
     if (type) {
       qb.andWhere(`${alias}.type = :type`, { type });
     }
-    if (isInitialAdjustment !== undefined) {
-      qb.andWhere(`${alias}.isInitialAdjustment = :isInitialAdjustment`, {
-        isInitialAdjustment,
+    if (isInitial !== undefined) {
+      qb.andWhere(`${alias}.isInitial = :isInitial`, {
+        isInitial,
       });
     }
   }

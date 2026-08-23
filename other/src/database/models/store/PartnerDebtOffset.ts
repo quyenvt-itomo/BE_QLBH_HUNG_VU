@@ -5,33 +5,33 @@ import { EmployeeSnapshot } from "@/modules/employee/employee.types";
 import { Employee } from "./Employee";
 import { BaseEntityWithStore } from "./BaseEntityWithStore";
 
-@Entity("partner_debt_offsets")
+@Entity("debt_offsets")
 export class PartnerDebtOffset extends BaseEntityWithStore {
   @Column({ type: "varchar", length: 25 })
-  code!: string; // mã phiếu
+  code: string; // mã phiếu
 
   @Column({ type: "timestamptz" })
-  occurredAt!: Date; // ngày ghi nhận đối soát
+  occurredAt: Date; // ngày ghi nhận đối soát
 
   @Column({ type: "uuid", nullable: true })
-  offsetById!: string | null; // người điều chỉnh
+  offsetById: string | null; // người điều chỉnh
   @Column({ type: "jsonb", nullable: true, default: null })
-  offsetBySnapshot!: EmployeeSnapshot | null;
+  offsetBySnapshot: EmployeeSnapshot | null;
 
   @Column({ type: "uuid" })
-  partnerId!: string;
+  partnerId: string;
 
   @Column(BaseNumericColumnOptions)
-  payableDebtAmount!: number;
+  payableDebtAmount: number;
 
   @Column(BaseNumericColumnOptions)
-  receivableDebtAmount!: number;
+  receivableDebtAmount: number;
 
   @Column(BaseNumericColumnOptions)
-  offsetAmount!: number;
+  offsetAmount: number;
 
   @Column({ type: "text", nullable: true })
-  reason!: string | null; // lý do đối soát
+  reason: string | null; // lý do đối soát
 
   // * ======================== RELATIONS ========================= //
   @ManyToOne(() => Partner, { onDelete: "CASCADE" })
@@ -42,5 +42,5 @@ export class PartnerDebtOffset extends BaseEntityWithStore {
     onDelete: "SET NULL",
   })
   @JoinColumn({ name: "offsetById" })
-  offsetBy!: Employee | null;
+  offsetBy: Employee | null;
 }

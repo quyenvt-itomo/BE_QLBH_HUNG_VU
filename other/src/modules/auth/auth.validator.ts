@@ -1,5 +1,5 @@
 import { AddressSchema, DateTransform } from "@/shared/base/BaseValidator";
-import { GenderEnum } from "@/shared/constants/enum";
+import { Gender } from "@/shared/constants/enum";
 import { email, z } from "zod";
 
 export const LoginSchema = z.object({
@@ -18,7 +18,7 @@ export const UpdateInfoSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   email: z.email().nullish(),
   phone: z.string().min(10).max(15).nullish(),
-  gender: z.enum(GenderEnum).nullish(),
+  gender: z.enum(Gender).nullish(),
   dob: DateTransform.nullish(),
   address: AddressSchema.nullish(),
 });

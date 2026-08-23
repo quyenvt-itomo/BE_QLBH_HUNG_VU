@@ -174,13 +174,12 @@ export class OrderService extends BaseService<Order> {
       data.employeeSnapshot = employeeSnapshot;
     }
 
-    if (data.shippingProviderId) {
-      const shippingProviderSnapshot =
-        await this.partnerRepository.getPartnerSnapshot(
-          data.shippingProviderId,
-        );
-      if (shippingProviderSnapshot) {
-        data.shippingProviderSnapshot = shippingProviderSnapshot;
+    if (data.shipperId) {
+      const shipperSnapshot = await this.partnerRepository.getPartnerSnapshot(
+        data.shipperId,
+      );
+      if (shipperSnapshot) {
+        data.shipperSnapshot = shipperSnapshot;
       }
     }
 
@@ -476,13 +475,12 @@ export class OrderService extends BaseService<Order> {
       data.employeeSnapshot = null;
     }
 
-    if (data.shippingProviderId) {
-      const shippingProviderSnapshot =
-        await this.partnerRepository.getPartnerSnapshot(
-          data.shippingProviderId,
-        );
-      if (shippingProviderSnapshot) {
-        data.shippingProviderSnapshot = shippingProviderSnapshot;
+    if (data.shipperId) {
+      const shipperSnapshot = await this.partnerRepository.getPartnerSnapshot(
+        data.shipperId,
+      );
+      if (shipperSnapshot) {
+        data.shipperSnapshot = shipperSnapshot;
       }
     }
     if (errors.length > 0) {
@@ -762,8 +760,8 @@ export class OrderService extends BaseService<Order> {
     const partnerIds = this.collectUniqueIds([
       data.partnerId,
       oldData?.partnerId,
-      data.shippingProviderId,
-      oldData?.shippingProviderId,
+      data.shipperId,
+      oldData?.shipperId,
     ]);
 
     const fundIds = this.collectUniqueIds([

@@ -1,5 +1,5 @@
 import { Entity, Column, ManyToOne, JoinColumn, OneToMany } from "typeorm";
-import { GenderEnum } from "@/shared/constants/enum";
+import { Gender } from "@/shared/constants/enum";
 import {
   Address,
   BankAccount,
@@ -40,7 +40,7 @@ export interface EmployeeSnapshot {
   id: string;
   code: string;
   name: string;
-  gender: GenderEnum | null;
+  gender: Gender | null;
   dob: Date | null;
   companyId: string;
 }
@@ -54,11 +54,11 @@ export class Employee extends BaseEntityWithCompany {
   name: string;
   @Column({
     type: "enum",
-    enum: GenderEnum,
+    enum: Gender,
     nullable: true,
     default: null,
   })
-  gender: GenderEnum | null;
+  gender: Gender | null;
   @Column({ type: "timestamptz", nullable: true, default: null })
   dob: Date | null;
   @Column({ type: "varchar", length: 50, nullable: true, default: null })

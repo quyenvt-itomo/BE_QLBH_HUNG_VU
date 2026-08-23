@@ -13,27 +13,27 @@ import { ProductVariant } from "../ProductVariant";
 @Entity("order_lines")
 export class OrderLine extends BaseEntity {
   @Column({ type: "uuid" })
-  orderId!: string;
+  orderId: string;
 
   @Column({
     type: "enum",
     enum: OrderLineTypeEnum,
     default: OrderLineTypeEnum.NORMAL,
   })
-  lineType!: OrderLineTypeEnum; // NORMAL | RETURN
+  lineType: OrderLineTypeEnum; // NORMAL | RETURN
 
   @Column({ type: "uuid", nullable: true, default: null })
-  productVariantId!: string | null;
+  productVariantId: string | null;
   @Column({ type: "jsonb" })
-  productVariantSnapshot!: ProductVariantSnapshot;
+  productVariantSnapshot: ProductVariantSnapshot;
 
   // TODO: Trước giảm giá
   @Column(BaseNumericColumnOptions)
-  unitPrice!: number;
+  unitPrice: number;
   @Column(BaseNumericColumnOptions)
-  quantity!: number;
+  quantity: number;
   @Column(BaseNumericColumnOptions)
-  subTotal!: number;
+  subTotal: number;
 
   // TODO: Giảm giá trên dòng
   @Column(BaseNullableNumericColumnOptions)
@@ -66,7 +66,7 @@ export class OrderLine extends BaseEntity {
 
   // For returns, reference to original line
   @Column({ type: "uuid", nullable: true, default: null })
-  refOrderLineId!: string | null; // dòng gốc bị hoàn
+  refOrderLineId: string | null; // dòng gốc bị hoàn
 
   // * ========================= RELATIONS ========================= * //
   @ManyToOne(() => Order, { onDelete: "CASCADE" })

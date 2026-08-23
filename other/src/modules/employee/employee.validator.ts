@@ -7,7 +7,7 @@ import {
   BaseQuerySchema,
   DateTransform,
 } from "@/shared/base/BaseValidator";
-import { GenderEnum } from "@/shared/constants/enum";
+import { Gender } from "@/shared/constants/enum";
 
 export const CreateEmployeeSchema = BaseCreateSchema.extend({
   name: z.string().max(255),
@@ -17,7 +17,7 @@ export const CreateEmployeeSchema = BaseCreateSchema.extend({
   phone: z.string().optional(),
   email: z.email().optional(),
   dob: DateTransform.optional(),
-  gender: z.enum(GenderEnum).optional(),
+  gender: z.enum(Gender).optional(),
   address: AddressSchema.nullish(),
 });
 
@@ -28,7 +28,7 @@ export const UpdateEmployeeSchema = BaseUpdateSchema.extend({
   phone: z.string().nullish(),
   email: z.email().nullish(),
   dob: DateTransform.nullish(),
-  gender: z.enum(GenderEnum).nullish(),
+  gender: z.enum(Gender).nullish(),
   address: AddressSchema.nullish(),
 });
 

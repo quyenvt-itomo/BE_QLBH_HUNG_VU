@@ -3,23 +3,22 @@ import { BaseEntity } from "@/shared/base/BaseEntity";
 import { User } from "./User";
 
 export enum ActionType {
-  CREATE = "CREATE",
-  UPDATE = "UPDATE",
-  DELETE = "DELETE",
-  PENDING = "PENDING",
-  APPROVE = "APPROVE",
-  REJECT = "REJECT",
-  FAILED = "FAILED",
-  UNFIXED = "UNFIXED",
-  DAILY_WARNING = "DAILY_WARNING",
-  REPLY = "REPLY",
-  NOTIFICATION = "NOTIFICATION",
-  REMINDER = "REMINDER",
-  ASSIGN = "ASSIGN",
-  COMPLETE = "COMPLETE",
-  CANCEL = "CANCEL",
+  CREATE = "create",
+  UPDATE = "update",
+  DELETE = "delete",
+  PENDING = "pending",
+  APPROVE = "approve",
+  REJECT = "reject",
+  FAILED = "failed",
+  UNFIXED = "unfixed",
+  DAILY_WARNING = "daily_warning",
+  REPLY = "reply",
+  NOTIFICATION = "notification",
+  REMINDER = "reminder",
+  ASSIGN = "assign",
+  COMPLETE = "complete",
+  CANCEL = "cancel",
 }
-
 export enum NotificationType {
   SYSTEM = "system",
   USER = "user",

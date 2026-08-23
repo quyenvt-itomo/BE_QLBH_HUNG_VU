@@ -1,11 +1,11 @@
-﻿import { injectable, inject } from "inversify";
+import { injectable, inject } from "inversify";
 import { BaseService } from "@/shared/base/BaseService";
 import { ProductionRepository } from "./production.repository";
 import { PRODUCTION_TYPES } from "./production.types";
 import {
   Production,
   ProductionStatusEnum,
-} from "@/database/models/company/Production";
+} from "@/database/models/Production";
 import { DeepPartial, EntityManager } from "typeorm";
 import { withTransaction } from "@/shared/base/TransactionManager";
 import { BadRequestError, NotFoundError } from "@/shared/types/errors";

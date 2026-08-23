@@ -2,7 +2,7 @@ import {
   BaseRepository,
   IFindPaginationOptions,
 } from "@/shared/base/BaseRepository";
-import { FundTransfer } from "@/database/models/company/FundTransfer";
+import { FundTransfer } from "@/database/models/FundTransfer";
 import {
   FundTransferSelectFull,
   FundTransferRelations,

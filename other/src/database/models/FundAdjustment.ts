@@ -1,40 +1,40 @@
 import { BaseEntity, BaseNumericColumnOptions } from "@/shared/base/BaseEntity";
 import { Column, Entity, JoinColumn, ManyToOne } from "typeorm";
 import { Fund } from "./Fund";
-import { FundTransactionTypeEnum } from "@/shared/constants/enum";
+import { FundTransactionType } from "@/shared/constants/enum";
 
 @Entity("fund_adjustments")
 export class FundAdjustment extends BaseEntity {
   @Column({ type: "varchar" })
-  code!: string;
+  code: string;
 
   @Column({ type: "timestamptz" })
-  occurredAt!: Date; // ngày ghi nhận điều chỉnh
+  occurredAt: Date; // ngày ghi nhận điều chỉnh
 
   @Column({ type: "uuid" })
-  fundId!: string;
+  fundId: string;
 
   @Column(BaseNumericColumnOptions)
-  expectedAmount!: number; // số tiền hệ thống ghi nhận
+  expectedAmount: number; // số tiền hệ thống ghi nhận
 
   @Column(BaseNumericColumnOptions)
-  countedAmount!: number; // số tiền thực tế kiểm kê
+  countedAmount: number; // số tiền thực tế kiểm kê
 
   @Column(BaseNumericColumnOptions)
-  deltaAmount!: number;
+  deltaAmount: number;
 
   @Column({
     type: "enum",
-    enum: FundTransactionTypeEnum,
-    default: FundTransactionTypeEnum.INCREASE,
+    enum: FundTransactionType,
+    default: FundTransactionType.INCREASE,
   })
-  direction!: FundTransactionTypeEnum;
+  direction: FundTransactionType;
 
   @Column({ type: "text" })
-  reason!: string;
+  reason: string;
 
   @Column({ type: "boolean", default: false })
-  isInitialAdjustment!: boolean; // là phiếu điều chỉnh quỹ đầu kỳ
+  isInitial: boolean; // là phiếu điều chỉnh quỹ đầu kỳ
 
   // * ======================== RELATIONS ========================= //
   @ManyToOne(() => Fund, (fund) => fund.fundAdjustments, {

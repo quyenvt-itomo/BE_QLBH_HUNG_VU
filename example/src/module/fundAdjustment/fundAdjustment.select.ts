@@ -14,7 +14,7 @@ export const FundAdjustmentSelectFull: FindOptionsSelect<FundAdjustment> = {
   deltaAmount: true,
   type: true,
   reason: true,
-  isInitialAdjustment: true,
+  isInitial: true,
   fund: {
     id: true,
     code: true,

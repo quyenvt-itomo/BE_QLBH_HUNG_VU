@@ -1,4 +1,4 @@
-import { InventoryAdjustmentLine } from "@/database/models/company/InventoryAdjustmentLine";
+import { InventoryAdjustmentLine } from "@/database/models/store/InventoryAdjustmentLine";
 import { BaseSelect } from "@/shared/base/BaseSelect";
 import { FindOptionsRelations, FindOptionsSelect } from "typeorm";
 

@@ -48,7 +48,7 @@ const clearOrphanTransactions = async (): Promise<void> => {
 
   const partnerDebtDeleted = await countDeleted(`
     WITH deleted AS (
-      DELETE FROM partner_debt_transactions pdt
+      DELETE FROM debt_transactions pdt
       WHERE
         NOT EXISTS (
           SELECT 1

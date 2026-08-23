@@ -23,7 +23,7 @@ import { CompanyType, Organization } from "@/database/models/Organization";
 import { ORGANIZATION_TYPES } from "../organization/organization.types";
 import { OrganizationRepository } from "../organization/organization.repository";
 import { In } from "typeorm";
-import { Role } from "@/database/models/company/Role";
+import { Role } from "@/database/models/Role";
 import { Employee } from "@/database/models/company/Employee";
 import { ATTRIBUTE_TYPES } from "../attribute/attribute.types";
 import { AttributeRepository } from "../attribute/attribute.repository";

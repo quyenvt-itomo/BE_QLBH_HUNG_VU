@@ -1,4 +1,4 @@
-﻿import type { RequestContext } from "@/shared/types/interfaces";
+import type { RequestContext } from "@/shared/types/interfaces";
 import { injectable, inject } from "inversify";
 import { BaseService } from "@/shared/base/BaseService";
 import { InvoiceRepository } from "./invoice.repository";
@@ -25,9 +25,9 @@ import { VAT_DEBT_SYNC_TYPES, VatDebtSyncService } from "@/module/vatDebtSync";
 import {
   PartnerDebtRefTypeEnum,
   PartnerDebtTransaction,
-} from "@/database/models/company/PartnerDebtTransaction";
-import { VatTransactionTypeEnum } from "@/database/models/company/VatDebtTransaction";
-import { TransactionTypeEnum } from "@/shared/constants/enum";
+} from "@/database/models/PartnerDebtTransaction";
+import { VatTransactionType } from "@/database/models/VatTransaction";
+import { TransactionType } from "@/shared/constants/enum";
 
 @injectable()
 export class InvoiceService extends BaseService<Invoice> {
@@ -131,12 +131,12 @@ export class InvoiceService extends BaseService<Invoice> {
     // VAT: xóa cả 2 loại (purchase/sales) theo invoiceId
     await this.vatDebtSync.removeByRef(
       manager,
-      VatTransactionTypeEnum.PURCHASE_INVOICE,
+      VatTransactionType.PURCHASE_INVOICE,
       data.id,
     );
     await this.vatDebtSync.removeByRef(
       manager,
-      VatTransactionTypeEnum.SALES_INVOICE,
+      VatTransactionType.SALES_INVOICE,
       data.id,
     );
   }
@@ -164,7 +164,7 @@ export class InvoiceService extends BaseService<Invoice> {
     let adjustmentNet = 0;
     for (const r of rows) {
       const amt = Number(r.amount || 0);
-      if (r.type === TransactionTypeEnum.IN) {
+      if (r.type === TransactionType.IN) {
         if (r.refType === PartnerDebtRefTypeEnum.ADJUSTMENT) {
           adjustmentNet += amt;
         }

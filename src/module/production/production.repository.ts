@@ -5,7 +5,7 @@ import {
 import {
   Production,
   ProductionSnapshot,
-} from "@/database/models/company/Production";
+} from "@/database/models/Production";
 import { ProductionSelectFull, ProductionRelations } from "./production.select";
 import { injectable } from "inversify";
 import { DeepPartial, EntityManager, SelectQueryBuilder } from "typeorm";

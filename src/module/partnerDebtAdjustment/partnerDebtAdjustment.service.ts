@@ -1,9 +1,9 @@
-﻿import type { RequestContext } from "@/shared/types/interfaces";
+import type { RequestContext } from "@/shared/types/interfaces";
 import { injectable, inject } from "inversify";
 import { BaseService } from "@/shared/base/BaseService";
 import { PartnerDebtAdjustmentRepository } from "./partnerDebtAdjustment.repository";
 import { PARTNER_DEBT_ADJUSTMENT_TYPES } from "./partnerDebtAdjustment.types";
-import { PartnerDebtAdjustment } from "@/database/models/company/PartnerDebtAdjustment";
+import { PartnerDebtAdjustment } from "@/database/models/PartnerDebtAdjustment";
 import { DeepPartial, EntityManager } from "typeorm";
 import { PARTNER_TYPES, PartnerRepository } from "@/module/partner";
 import {
@@ -15,7 +15,7 @@ import {
   PARTNER_DEBT_SYNC_TYPES,
   PartnerDebtSyncService,
 } from "@/module/partnerDebtSync";
-import { PartnerDebtRefTypeEnum } from "@/database/models/company/PartnerDebtTransaction";
+import { PartnerDebtRefTypeEnum } from "@/database/models/PartnerDebtTransaction";
 
 @injectable()
 export class PartnerDebtAdjustmentService extends BaseService<PartnerDebtAdjustment> {

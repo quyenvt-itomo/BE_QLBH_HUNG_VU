@@ -1,10 +1,10 @@
 import { BaseEntity } from "@/shared/base/BaseEntity";
 import { Column, Entity, Index } from "typeorm";
 
-export enum OtpPurposeEnum {
-  QUOTATION_CUSTOMER_APPROVE = "QUOTATION_CUSTOMER_APPROVE",
-  LOGIN_VERIFY = "LOGIN_VERIFY",
-  PASSWORD_RESET = "PASSWORD_RESET",
+export enum OtpPurpose {
+  QUOTATION_CUSTOMER_APPROVE = "quotation_customer_approve",
+  LOGIN_VERIFY = "login_verify",
+  PASSWORD_RESET = "password_reset",
 }
 
 /**
@@ -23,7 +23,7 @@ export class OtpToken extends BaseEntity {
 
   /** Mục đích sử dụng OTP */
   @Column({ type: "varchar", length: 50 })
-  purpose: OtpPurposeEnum;
+  purpose: OtpPurpose;
 
   /** ID của đối tượng liên quan (vd: quotationId, userId) */
   @Column({ type: "uuid" })

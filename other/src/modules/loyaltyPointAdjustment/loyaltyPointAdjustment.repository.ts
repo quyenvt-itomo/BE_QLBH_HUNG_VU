@@ -9,7 +9,7 @@ import {
 } from "./loyaltyPointAdjustment.select";
 import { injectable } from "inversify";
 import { SelectQueryBuilder } from "typeorm";
-import { FundTransactionTypeEnum } from "@/shared/constants/enum";
+import { FundTransactionType } from "@/shared/constants/enum";
 
 /**
  * LoyaltyPointAdjustment Repository
@@ -33,7 +33,7 @@ export class LoyaltyPointAdjustmentRepository extends BaseRepository<LoyaltyPoin
       COALESCE(
         (${qb.alias}.deltaPoints *
           CASE
-            WHEN ${qb.alias}.direction = '${FundTransactionTypeEnum.INCREASE}' THEN 1
+            WHEN ${qb.alias}.direction = '${FundTransactionType.INCREASE}' THEN 1
             ELSE -1
           END
         )::float8,

@@ -2,7 +2,7 @@ import { injectable, inject } from "inversify";
 import { ProductService } from "./product.service";
 import { PRODUCT_TYPES } from "./product.types";
 import { BaseController } from "@/shared/base/BaseController";
-import { Product } from "@/database/models/company/Product";
+import { Product } from "@/database/models/Product";
 import { Request, Response, NextFunction } from "express";
 import { ProductQueryDto } from "./product.validator";
 

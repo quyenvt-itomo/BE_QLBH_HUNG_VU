@@ -12,7 +12,7 @@ export const InventoryAdjustmentSelectFull: FindOptionsSelect<InventoryAdjustmen
     reason: true,
     totalAdjustmentQuantity: true,
     totalAdjustmentValue: true,
-    isInitialAdjustment: true,
+    isInitial: true,
     lines: {
       id: true,
       adjustmentId: true,

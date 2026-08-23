@@ -29,8 +29,8 @@ export const OrderSelectBasic: FindOptionsSelect<Order> = {
   taxAmount: true,
   totalAmount: true,
 
-  shippingProviderId: true,
-  shippingProviderSnapshot: true,
+  shipperId: true,
+  shipperSnapshot: true,
   shippingFee: true,
   isFreeShipping: true,
   status: true,
@@ -40,7 +40,7 @@ export const OrderSelectFull: FindOptionsSelect<Order> = {
   ...OrderSelectBasic,
   partner: PartnerSelectFull,
   employee: EmployeeSelectFull,
-  shippingProvider: PartnerSelectFull,
+  shipper: PartnerSelectFull,
   lines: OrderLineSelectFull,
   store: true,
 
@@ -51,7 +51,7 @@ export const OrderSelectFull: FindOptionsSelect<Order> = {
 export const OrderRelations: FindOptionsRelations<Order> = {
   partner: PartnerRelations,
   employee: EmployeeRelations,
-  shippingProvider: PartnerRelations,
+  shipper: PartnerRelations,
   lines: OrderLineRelations,
   store: true,
 

@@ -1,7 +1,7 @@
 import { BaseNumericColumnOptions } from "@/shared/base/BaseEntity";
 import { Column, Entity, JoinColumn, ManyToOne } from "typeorm";
 import { Fund, FundSnapshot } from "./Fund";
-import { TransactionTypeEnum } from "@/shared/constants/enum";
+import { TransactionType } from "@/shared/constants/enum";
 import { BaseEntityWithCompany } from "./BaseEntityWithCompany";
 
 @Entity("fund_adjustments")
@@ -28,16 +28,16 @@ export class FundAdjustment extends BaseEntityWithCompany {
 
   @Column({
     type: "enum",
-    enum: TransactionTypeEnum,
-    default: TransactionTypeEnum.IN,
+    enum: TransactionType,
+    default: TransactionType.IN,
   })
-  type: TransactionTypeEnum;
+  type: TransactionType;
 
   @Column({ type: "text", nullable: true, default: null })
   reason: string | null; // lý do điều chỉnh, do người dùng nhập vào để giải thích cho sự chênh lệch giữa số tiền hệ thống và số tiền thực tế
 
   @Column({ type: "boolean", default: false })
-  isInitialAdjustment: boolean; // là phiếu điều chỉnh quỹ đầu kỳ
+  isInitial: boolean; // là phiếu điều chỉnh quỹ đầu kỳ
 
   // * ======================== RELATIONS ========================= //
   @ManyToOne(() => Fund, (fund) => fund.fundAdjustments, {

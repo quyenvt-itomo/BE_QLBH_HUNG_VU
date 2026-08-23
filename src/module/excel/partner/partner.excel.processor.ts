@@ -16,7 +16,7 @@ import { PAYMENT_TERM_TYPES } from "../../paymentTerm/paymentTerm.types";
 import { PaymentTermService } from "../../paymentTerm/paymentTerm.service";
 import { BadRequestError } from "@/shared/types/errors";
 import { RequestContext } from "@/shared/types/interfaces";
-import { PartnerType, Partner } from "@/database/models/company/Partner";
+import { PartnerType, Partner } from "@/database/models/Partner";
 import { AttributeType } from "@/database/models/Attribute";
 import logger from "@/shared/utils/logger";
 import { withTransaction } from "@/shared/base/TransactionManager";

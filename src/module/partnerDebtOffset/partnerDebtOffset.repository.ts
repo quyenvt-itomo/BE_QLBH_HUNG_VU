@@ -2,7 +2,7 @@ import {
   BaseRepository,
   IFindPaginationOptions,
 } from "@/shared/base/BaseRepository";
-import { PartnerDebtOffset } from "@/database/models/company/PartnerDebtOffset";
+import { PartnerDebtOffset } from "@/database/models/PartnerDebtOffset";
 import {
   PartnerDebtOffsetSelectFull,
   PartnerDebtOffsetRelations,

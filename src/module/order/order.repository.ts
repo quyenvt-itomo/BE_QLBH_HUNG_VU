@@ -2,7 +2,7 @@ import {
   BaseRepository,
   IFindPaginationOptions,
 } from "@/shared/base/BaseRepository";
-import { Order, OrderSnapshot } from "@/database/models/company/Order";
+import { Order, OrderSnapshot } from "@/database/models/store/Order";
 import {
   OrderSelectFull,
   OrderSelectList,

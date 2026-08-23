@@ -1,10 +1,10 @@
-﻿import type { RequestContext } from "@/shared/types/interfaces";
+import type { RequestContext } from "@/shared/types/interfaces";
 import { injectable, inject } from "inversify";
 import { BaseService } from "@/shared/base/BaseService";
 import { PartnerRepository } from "./partner.repository";
 import { PARTNER_TYPES } from "./partner.types";
-import { Partner } from "@/database/models/company/Partner";
-import { PartnerContact } from "@/database/models/company/PartnerContact";
+import { Partner } from "@/database/models/Partner";
+import { PartnerContact } from "@/database/models/PartnerContact";
 import { Request } from "express";
 import { DeepPartial, EntityManager } from "typeorm";
 import {

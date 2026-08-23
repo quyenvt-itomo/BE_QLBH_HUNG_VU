@@ -18,7 +18,7 @@ export const PartnerDebtAdjustmentSelectFull: FindOptionsSelect<PartnerDebtAdjus
     deltaAmount: true,
     type: true,
     reason: true,
-    isInitialAdjustment: true,
+    isInitial: true,
     partner: {
       id: true,
       code: true,
