@@ -2,7 +2,7 @@ import { Entity, Column, ManyToOne, OneToMany, JoinColumn } from "typeorm";
 import { BaseEntity } from "@/shared/base/BaseEntity";
 import { Address } from "@/shared/base/BaseValidator";
 import { TeamOperation } from "./TeamOperation";
-import { CompanyUser } from "./CompanyUser";
+import { StoreUser } from "./StoreUser";
 import { Role } from "./company/Role";
 import { Employee } from "./company/Employee";
 
@@ -15,7 +15,7 @@ export enum OrganizationTypeEnum {
   TEAM = "team",
 }
 
-export const CompanyType = [
+export const StoreType = [
   OrganizationTypeEnum.HEADQUARTER,
   OrganizationTypeEnum.COMPANY,
 ];
@@ -86,8 +86,8 @@ export class Organization extends BaseEntity {
   @OneToMany(() => TeamOperation, (teamOp) => teamOp.team, { cascade: true })
   operations: TeamOperation[];
 
-  @OneToMany(() => CompanyUser, (companyUser) => companyUser.company)
-  companyUsers: CompanyUser[];
+  @OneToMany(() => StoreUser, (companyUser) => companyUser.company)
+  companyUsers: StoreUser[];
 
   @OneToMany(() => Role, (role) => role.company, { cascade: true })
   roles: Role[];

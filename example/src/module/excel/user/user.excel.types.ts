@@ -12,7 +12,7 @@ export const USER_COLUMNS: ExportColumnConfig[] = [
     width: 14,
     options: ["Có", "Không"],
   },
-  { field: "sourceCompanyName", header: "Công ty nguồn", width: 25 },
+  { field: "sourceStoreName", header: "Công ty nguồn", width: 25 },
   { field: "note", header: "Ghi chú", width: 30 },
 ];
 
@@ -25,6 +25,6 @@ export interface RawUserRow {
   email?: string;
   phone?: string;
   isActive?: string;
-  sourceCompanyName?: string;
+  sourceStoreName?: string;
   note?: string;
 }

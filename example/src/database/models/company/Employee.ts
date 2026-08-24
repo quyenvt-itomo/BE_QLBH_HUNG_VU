@@ -9,7 +9,7 @@ import {
   InsuranceInfo,
   Representative,
 } from "@/shared/base/BaseValidator";
-import { BaseEntityWithCompany } from "./BaseEntityWithCompany";
+import { BaseEntityWithStore } from "./BaseEntityWithStore";
 import { BaseNumericColumnOptions } from "@/shared/base/BaseEntity";
 import { Organization } from "../Organization";
 import { JobPosition } from "./JobPosition";
@@ -46,7 +46,7 @@ export interface EmployeeSnapshot {
 }
 
 @Entity("employees")
-export class Employee extends BaseEntityWithCompany {
+export class Employee extends BaseEntityWithStore {
   // TODO: THÔNG TIN CÁ NHÂN
   @Column({ type: "varchar", length: 50 })
   code: string;

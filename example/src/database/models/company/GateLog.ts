@@ -1,5 +1,5 @@
 import { Entity, Column, ManyToOne, JoinColumn, OneToMany } from "typeorm";
-import { BaseEntityWithCompany } from "./BaseEntityWithCompany";
+import { BaseEntityWithStore } from "./BaseEntityWithStore";
 import { StockDocument, StockDocumentSnapshot } from "./StockDocument";
 import { Partner, PartnerSnapshot } from "./Partner";
 import { Warehouse, WarehouseSnapshot } from "./Warehouse";
@@ -29,7 +29,7 @@ export interface GateLogSnapshot {
 }
 
 @Entity("gate_logs")
-export class GateLog extends BaseEntityWithCompany {
+export class GateLog extends BaseEntityWithStore {
   // =====================================================
   // THÔNG TIN CƠ BẢN
   // =====================================================

@@ -90,7 +90,6 @@ export class AuthService extends BaseService<User> {
       password: undefined,
       permissions,
       allStores: stores,
-      allCompanys: stores,
       currentStore,
       role: user.role,
       isAdmin,

@@ -1,5 +1,5 @@
 import { Entity, Column, OneToMany, ManyToOne, JoinColumn } from "typeorm";
-import { BaseEntityWithCompany } from "./BaseEntityWithCompany";
+import { BaseEntityWithStore } from "./BaseEntityWithStore";
 import { PurchaseQuotationLine } from "./PurchaseQuotationLine";
 import { Employee, EmployeeSnapshot } from "./Employee";
 import { ApproveStatus } from "@/shared/constants/enum";
@@ -15,7 +15,7 @@ export enum PurchaseQuotationType {
 }
 
 @Entity("purchase_quotations")
-export class PurchaseQuotation extends BaseEntityWithCompany {
+export class PurchaseQuotation extends BaseEntityWithStore {
   @Column({ type: "timestamptz", default: () => "CURRENT_TIMESTAMP" })
   timeAt: Date;
   @Column({ type: "varchar", length: 50 })

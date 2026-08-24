@@ -2,7 +2,7 @@ import { zodValidate } from "@/shared/middleware/validation.middleware";
 import { Router } from "express";
 import { inject, injectable } from "inversify";
 import {
-  AssignCompanyUserSchema,
+  AssignStoreUserSchema,
   CreateUserSchema,
   UpdateUserSchema,
   UserParamsSchema,
@@ -73,8 +73,8 @@ export class UserRouter {
       "/:id/assign-company",
       permissionMiddleware("user", "update"),
       zodValidate(UserParamsSchema, "params"),
-      zodValidate(AssignCompanyUserSchema, "body"),
-      this.userController.assignCompanyUser,
+      zodValidate(AssignStoreUserSchema, "body"),
+      this.userController.assignStoreUser,
     );
   }
 

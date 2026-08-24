@@ -2,7 +2,7 @@ import { BaseNumericColumnOptions } from "@/shared/base/BaseEntity";
 import { Column, Entity, JoinColumn, ManyToOne } from "typeorm";
 import { Partner, PartnerSnapshot } from "./Partner";
 import { TransactionType } from "@/shared/constants/enum";
-import { BaseEntityWithCompany } from "./BaseEntityWithCompany";
+import { BaseEntityWithStore } from "./BaseEntityWithStore";
 import { PartnerDebtSideEnum } from "./DebtTransaction";
 import { InvoiceSnapshot } from "./Invoice";
 
@@ -12,7 +12,7 @@ import { InvoiceSnapshot } from "./Invoice";
  * Có thể điều chỉnh cho riêng 1 hóa đơn (invoiceId) hoặc điều chỉnh tổng (invoiceId = null).
  */
 @Entity("debt_adjustments")
-export class PartnerDebtAdjustment extends BaseEntityWithCompany {
+export class PartnerDebtAdjustment extends BaseEntityWithStore {
   @Column({ type: "varchar", length: 25 })
   code: string;
 

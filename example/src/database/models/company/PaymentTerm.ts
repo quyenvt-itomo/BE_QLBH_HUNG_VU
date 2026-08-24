@@ -1,5 +1,5 @@
 import { Entity, Column, OneToMany } from "typeorm";
-import { BaseEntityWithCompany } from "./BaseEntityWithCompany";
+import { BaseEntityWithStore } from "./BaseEntityWithStore";
 import { BaseNumericColumnOptions } from "@/shared/base/BaseEntity";
 import { Partner } from "./Partner";
 
@@ -13,7 +13,7 @@ export interface PaymentTermSnapshot {
 }
 
 @Entity("payment_terms")
-export class PaymentTerm extends BaseEntityWithCompany {
+export class PaymentTerm extends BaseEntityWithStore {
   @Column({ type: "varchar", length: 255 })
   name: string;
 

@@ -6,7 +6,7 @@ import {
   Index,
   OneToMany,
 } from "typeorm";
-import { BaseEntityWithCompany } from "./BaseEntityWithCompany";
+import { BaseEntityWithStore } from "./BaseEntityWithStore";
 import { PurchaseRequisition } from "./PurchaseRequisition";
 import { Employee, EmployeeSnapshot } from "./Employee";
 import { Partner, PartnerSnapshot } from "./Partner";
@@ -23,7 +23,7 @@ export interface ReferralCodeLineSnapshot {
 
 @Entity("referral_codes")
 @Index("IDX_referral_codes_code", ["code"])
-export class ReferralCode extends BaseEntityWithCompany {
+export class ReferralCode extends BaseEntityWithStore {
   @Column({ type: "varchar", length: 100 })
   code: string;
 

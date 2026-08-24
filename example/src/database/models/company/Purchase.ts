@@ -1,5 +1,5 @@
 import { Entity, Column, OneToMany, ManyToOne, JoinColumn } from "typeorm";
-import { BaseEntityWithCompany } from "./BaseEntityWithCompany";
+import { BaseEntityWithStore } from "./BaseEntityWithStore";
 import { BaseNumericColumnOptions } from "@/shared/base/BaseEntity";
 import { PurchaseLine } from "./PurchaseLine";
 import { DiscountTypeEnum, ApproveStatus } from "@/shared/constants/enum";
@@ -33,7 +33,7 @@ export interface PurchaseSnapshot {
 }
 
 @Entity("purchases")
-export class Purchase extends BaseEntityWithCompany {
+export class Purchase extends BaseEntityWithStore {
   @Column({ type: "timestamptz", default: () => "CURRENT_TIMESTAMP" })
   orderedAt: Date; // Ngày đặt hàng
   @Column({ type: "varchar", length: 50 })

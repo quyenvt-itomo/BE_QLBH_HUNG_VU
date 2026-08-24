@@ -109,7 +109,7 @@ export interface UserContext {
   employeeId?: string;
 }
 
-export interface CompanyContext {
+export interface StoreContext {
   storeId: string;
   companyName: string;
   companyCode: string;
@@ -160,7 +160,7 @@ export interface RequestContext {
   query?: any;
   permissions?: PermissionStructure;
   userContext?: UserContext;
-  storeContext?: CompanyContext;
+  storeContext?: StoreContext;
 }
 
 export interface AuthTokens {

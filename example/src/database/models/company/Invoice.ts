@@ -1,5 +1,5 @@
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from "typeorm";
-import { BaseEntityWithCompany } from "./BaseEntityWithCompany";
+import { BaseEntityWithStore } from "./BaseEntityWithStore";
 import { Partner, PartnerSnapshot } from "./Partner";
 import { Order, OrderSnapshot } from "./Order";
 import { Purchase, PurchaseSnapshot } from "./Purchase";
@@ -70,7 +70,7 @@ export interface InvoiceSnapshot {
 }
 
 @Entity("invoices")
-export class Invoice extends BaseEntityWithCompany {
+export class Invoice extends BaseEntityWithStore {
   @Column({ type: "timestamptz" })
   invoiceDate: Date;
   @Column({ type: "varchar", length: 20 })

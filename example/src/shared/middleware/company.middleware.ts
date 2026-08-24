@@ -1,4 +1,4 @@
-import { CompanyType, Organization } from "@/database/models/Organization";
+import { StoreType, Organization } from "@/database/models/Organization";
 import { Request, Response, NextFunction } from "express";
 import { BadRequestError } from "../types/errors";
 import DatabaseConfig from "@/config/database";
@@ -18,7 +18,7 @@ export const companyResolver = async (
 
     const companyRepo = DatabaseConfig.getRepository(Organization);
     const company = await companyRepo.findOne({
-      where: { id: storeId, type: In(CompanyType) },
+      where: { id: storeId, type: In(StoreType) },
     });
 
     if (!company) {

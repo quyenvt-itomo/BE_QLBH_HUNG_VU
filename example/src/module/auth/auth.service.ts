@@ -19,7 +19,7 @@ import {
   MODULES,
   PermissionStructure,
 } from "@/shared/middleware/permission.middleware";
-import { CompanyType, Organization } from "@/database/models/Organization";
+import { StoreType, Organization } from "@/database/models/Organization";
 import { ORGANIZATION_TYPES } from "../organization/organization.types";
 import { OrganizationRepository } from "../organization/organization.repository";
 import { In } from "typeorm";
@@ -27,7 +27,7 @@ import { Role } from "@/database/models/company/Role";
 import { Employee } from "@/database/models/company/Employee";
 import { ATTRIBUTE_TYPES } from "../attribute/attribute.types";
 import { AttributeRepository } from "../attribute/attribute.repository";
-import { CompanyUser } from "@/database/models/CompanyUser";
+import { StoreUser } from "@/database/models/StoreUser";
 import {
   LoginApproval,
   LoginApprovalStatusEnum,
@@ -88,7 +88,7 @@ export class AuthService extends BaseService<User> {
 
       if (!isApproved) {
         // Create pending approvals for each company this user belongs to
-        const companyUserRepo = DatabaseConfig.getRepository(CompanyUser);
+        const companyUserRepo = DatabaseConfig.getRepository(StoreUser);
         const companyUsers = await companyUserRepo.find({
           where: { userId: user.id },
         });
@@ -153,10 +153,10 @@ export class AuthService extends BaseService<User> {
     let permissions: PermissionStructure = {};
     let role: Role | undefined = undefined;
     let employee: Employee | undefined = undefined;
-    let currentCompany: Organization | undefined;
-    let allCompanys = await this.organizationRepository.findByOptions({
+    let currentStore: Organization | undefined;
+    let allStores = await this.organizationRepository.findByOptions({
       where: {
-        type: In(CompanyType),
+        type: In(StoreType),
       },
     });
     let importExcel: Module[] = [];
@@ -168,26 +168,26 @@ export class AuthService extends BaseService<User> {
       exportExcel = [...MODULES];
     } else {
       // Lọc đi những công ty mà user không có quyền truy cập
-      allCompanys = allCompanys.filter((company) =>
+      allStores = allStores.filter((company) =>
         user.companyUsers?.some((cu) => cu.storeId === company.id),
       );
     }
 
-    if (!allCompanys.length) {
+    if (!allStores.length) {
       throw new ForbiddenError("Tài khoản không có quyền truy cập công ty nào");
     }
 
-    const finalCompanyId = storeId || allCompanys[0]?.id;
+    const finalStoreId = storeId || allStores[0]?.id;
 
     const companyUser = user.companyUsers?.find(
-      (cu) => cu.storeId === finalCompanyId,
+      (cu) => cu.storeId === finalStoreId,
     );
 
-    currentCompany = allCompanys.find((c) => c.id === finalCompanyId);
+    currentStore = allStores.find((c) => c.id === finalStoreId);
     role = companyUser?.role;
     employee = companyUser?.employee;
 
-    if (!currentCompany) {
+    if (!currentStore) {
       throw new ForbiddenError("Tài khoản không có quyền truy cập công ty này");
     }
 
@@ -203,8 +203,8 @@ export class AuthService extends BaseService<User> {
     return {
       ...user,
       permissions,
-      allCompanys,
-      currentCompany,
+      allStores,
+      currentStore,
       role,
       employee,
       defaultWeightUnit,

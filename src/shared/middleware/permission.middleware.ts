@@ -20,10 +20,10 @@ export const MODULES = [
   "purchaseReturn", // Đổi trả hàng mua
   "storeTransfer", // Chuyển kho
   "inventoryAdjustment", // Điều chỉnh tồn kho
+  "internalExport", // Xuất nội bộ
 
   // Tài chính & kế toán
-  "income", // Thu tiền
-  "expense", // Chi tiền
+  "incomeExpense", // Thu chi
   "fund", // Quỹ
   "fundAdjustment", // Điều chỉnh số dư quỹ
   "fundTransfer", // Chuyển quỹ
@@ -64,7 +64,6 @@ export const ReadOnlyModules: Module[] = [
   "vatReport",
 ];
 export const ApprovalModules: Module[] = [];
-export const CustomerApprovalModules: Module[] = [];
 export const CompleteModules: Module[] = ["sale", "saleReturn"];
 export const readPermissionFallbackMap: Partial<Record<Module, Module[]>> = {
   product: [
@@ -74,6 +73,7 @@ export const readPermissionFallbackMap: Partial<Record<Module, Module[]>> = {
     "purchaseReturn",
     "inventoryAdjustment",
     "storeTransfer",
+    "internalExport",
   ],
   customer: ["sale"],
   fund: ["fundTransfer", "fundAdjustment"],

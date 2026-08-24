@@ -1,12 +1,12 @@
 import { BaseNumericColumnOptions } from "@/shared/base/BaseEntity";
 import { Column, Entity, JoinColumn, ManyToOne } from "typeorm";
-import { BaseEntityWithCompany } from "./BaseEntityWithCompany";
+import { BaseEntityWithStore } from "./BaseEntityWithStore";
 import { EmployeeSnapshot } from "./Employee";
 import { Employee } from "./Employee";
 import { TransactionType } from "@/shared/constants/enum";
 
 @Entity("vat_debt_adjustments")
-export class VatDebtAdjustment extends BaseEntityWithCompany {
+export class VatDebtAdjustment extends BaseEntityWithStore {
   @Column({ type: "varchar", length: 25 })
   code: string; // mã phiếu
 

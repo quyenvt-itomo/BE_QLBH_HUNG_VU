@@ -8,7 +8,7 @@ import { OrderCommission } from "./OrderCommission";
 import { Quotation } from "./Quotation";
 import { MeshSpec, MeshSpecSnapshot } from "./MeshSpec";
 import { CommissionAllocation } from "./CommissionAllocation";
-import { BaseEntityWithCompany } from "./BaseEntityWithCompany";
+import { BaseEntityWithStore } from "./BaseEntityWithStore";
 import { Invoice } from "./Invoice";
 import { CommissionMode } from "@/shared/constants/enum";
 
@@ -24,7 +24,7 @@ export interface OrderSnapshot {
 }
 
 @Entity("orders")
-export class Order extends BaseEntityWithCompany {
+export class Order extends BaseEntityWithStore {
   @Column({ type: "timestamptz", default: () => "CURRENT_TIMESTAMP" })
   timeAt: Date;
   @Column({ type: "varchar", length: 50 })

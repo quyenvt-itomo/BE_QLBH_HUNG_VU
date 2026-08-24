@@ -3,11 +3,11 @@ import {
   Module,
   PermissionStructure,
 } from "@/shared/middleware/permission.middleware";
-import { CompanyUser } from "../CompanyUser";
-import { BaseEntityWithCompany } from "./BaseEntityWithCompany";
+import { StoreUser } from "../StoreUser";
+import { BaseEntityWithStore } from "./BaseEntityWithStore";
 
 @Entity("roles")
-export class Role extends BaseEntityWithCompany {
+export class Role extends BaseEntityWithStore {
   @Column({ type: "varchar", length: 255 })
   name: string;
 
@@ -21,6 +21,6 @@ export class Role extends BaseEntityWithCompany {
   exportExcel: Module[];
 
   // ============================== RELATIONSHIPS ==============================
-  @OneToMany(() => CompanyUser, (companyUser) => companyUser.role)
-  companyUsers: CompanyUser[];
+  @OneToMany(() => StoreUser, (companyUser) => companyUser.role)
+  companyUsers: StoreUser[];
 }

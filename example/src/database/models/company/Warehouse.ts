@@ -1,6 +1,6 @@
 import { Entity, Column, ManyToOne, JoinColumn, OneToMany } from "typeorm";
 import { Address } from "@/shared/base/BaseValidator";
-import { BaseEntityWithCompany } from "./BaseEntityWithCompany";
+import { BaseEntityWithStore } from "./BaseEntityWithStore";
 import { Employee } from "./Employee";
 import { InventoryAdjustment } from "./InventoryAdjustment";
 
@@ -11,7 +11,7 @@ export interface WarehouseSnapshot {
 }
 
 @Entity("warehouses")
-export class Warehouse extends BaseEntityWithCompany {
+export class Warehouse extends BaseEntityWithStore {
   @Column({ type: "varchar", length: 20 })
   code: string;
   @Column({ type: "varchar", length: 255 })

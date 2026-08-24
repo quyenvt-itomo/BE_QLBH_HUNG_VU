@@ -1,11 +1,11 @@
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from "typeorm";
 import { WarehouseTransferLine } from "./WarehouseTransferLine";
 import { Warehouse, WarehouseSnapshot } from "./Warehouse";
-import { BaseEntityWithCompany } from "./BaseEntityWithCompany";
+import { BaseEntityWithStore } from "./BaseEntityWithStore";
 import { UserSnapshot } from "@/shared/base/BaseEntity";
 
 @Entity("warehouse_transfers")
-export class WarehouseTransfer extends BaseEntityWithCompany {
+export class WarehouseTransfer extends BaseEntityWithStore {
   @Column({ type: "timestamptz" })
   timeAt: Date; // Ngày tạo phiếu
 

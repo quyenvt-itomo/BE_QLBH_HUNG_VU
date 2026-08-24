@@ -1,5 +1,5 @@
 import { Entity, Column, OneToMany, ManyToOne, JoinColumn } from "typeorm";
-import { BaseEntityWithCompany } from "./BaseEntityWithCompany";
+import { BaseEntityWithStore } from "./BaseEntityWithStore";
 import { PurchaseRequisitionLine } from "./PurchaseRequisitionLine";
 import { ApproveStatus } from "@/shared/constants/enum";
 import { Employee, EmployeeSnapshot } from "./Employee";
@@ -9,7 +9,7 @@ import { Production, ProductionSnapshot } from "./Production";
 import { ReferralCode } from "./ReferralCode";
 
 @Entity("purchase_requisitions")
-export class PurchaseRequisition extends BaseEntityWithCompany {
+export class PurchaseRequisition extends BaseEntityWithStore {
   @Column({ type: "timestamptz", default: () => "CURRENT_TIMESTAMP" })
   timeAt: Date;
   @Column({ type: "varchar", length: 50 })

@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import logger from "../utils/logger";
-import { injectCompanyIdToArrays } from "../utils/utils";
+import { injectStoreIdToArrays } from "../utils/utils";
 
 /**
  * Middleware bơm thông tin người dùng (creator/updater) và storeId vào dữ liệu request.
@@ -45,7 +45,7 @@ export const injectRequestContext = (
 
       // Inject storeId xuống các array con (chỉ áp dụng cho body)
       if (scope === "body" && next.storeId) {
-        next = injectCompanyIdToArrays(next, next.storeId);
+        next = injectStoreIdToArrays(next, next.storeId);
       }
 
       return next;

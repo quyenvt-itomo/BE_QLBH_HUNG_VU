@@ -142,4 +142,5 @@ vite.config.ts.timestamp-*
 uploads/*
 !uploads/.gitkeep!uploads/.gitkeep
 
-
+example
+other

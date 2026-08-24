@@ -1,5 +1,5 @@
 import { Entity, Column, OneToMany, ManyToOne, JoinColumn } from "typeorm";
-import { BaseEntityWithCompany } from "./BaseEntityWithCompany";
+import { BaseEntityWithStore } from "./BaseEntityWithStore";
 import { BaseNumericColumnOptions } from "@/shared/base/BaseEntity";
 import { InventoryConversionLine } from "./InventoryConversionLine";
 import { Employee, EmployeeSnapshot } from "./Employee";
@@ -34,7 +34,7 @@ export interface InventoryConversionSnapshot {
 // Giá trị kho giữ nguyên (quy đổi ngang giá)
 // =====================================================
 @Entity("inventory_conversions")
-export class InventoryConversion extends BaseEntityWithCompany {
+export class InventoryConversion extends BaseEntityWithStore {
   // =====================================================
   // THÔNG TIN CƠ BẢN
   // =====================================================

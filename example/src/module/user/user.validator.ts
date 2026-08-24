@@ -7,7 +7,7 @@ import {
   BaseCodeSchema,
 } from "@/shared/base/BaseValidator";
 
-export const CompanyUserItemSchema = z.object({
+export const StoreUserItemSchema = z.object({
   id: z.uuid().optional(),
   storeId: z.uuid(),
   roleId: z.uuid().nullish(),
@@ -23,7 +23,7 @@ export const CreateUserSchema = BaseCreateSchema.extend({
   password: z.string().trim().max(255).optional(),
   roleId: z.uuid().nullish(),
   employeeId: z.uuid().nullish(),
-  companyUsers: z.array(CompanyUserItemSchema).optional(),
+  companyUsers: z.array(StoreUserItemSchema).optional(),
 });
 
 export const UpdateUserSchema = BaseUpdateSchema.extend({
@@ -34,14 +34,14 @@ export const UpdateUserSchema = BaseUpdateSchema.extend({
   isActive: z.boolean().nullish(),
   roleId: z.uuid().nullish(),
   employeeId: z.uuid().nullish(),
-  companyUsers: z.array(CompanyUserItemSchema).optional(),
+  companyUsers: z.array(StoreUserItemSchema).optional(),
 });
 
 export const UserQuerySchema = BaseQuerySchema.extend({});
 
 export const UserParamsSchema = BaseParamsSchema;
 
-export const AssignCompanyUserSchema = z.object({
+export const AssignStoreUserSchema = z.object({
   roleId: z.uuid().nullish(),
   employeeId: z.uuid().nullish(),
 });
@@ -50,4 +50,4 @@ export type CreateUserDto = z.infer<typeof CreateUserSchema>;
 export type UpdateUserDto = z.infer<typeof UpdateUserSchema>;
 export type UserQueryDto = z.infer<typeof UserQuerySchema>;
 export type UserParamsDto = z.infer<typeof UserParamsSchema>;
-export type AssignCompanyUserDto = z.infer<typeof AssignCompanyUserSchema>;
+export type AssignStoreUserDto = z.infer<typeof AssignStoreUserSchema>;

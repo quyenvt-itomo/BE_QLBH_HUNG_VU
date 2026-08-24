@@ -5,7 +5,7 @@ import {
   BankAccount,
   Representative,
 } from "@/shared/base/BaseValidator";
-import { BaseEntityWithCompany } from "./BaseEntityWithCompany";
+import { BaseEntityWithStore } from "./BaseEntityWithStore";
 import { Employee } from "./Employee";
 import { PaymentTerm } from "./PaymentTerm";
 import { PartnerContact } from "./PartnerContact";
@@ -30,7 +30,7 @@ export interface PartnerSnapshot {
 }
 
 @Entity("partners")
-export class Partner extends BaseEntityWithCompany {
+export class Partner extends BaseEntityWithStore {
   // TODO: THÔNG TIN CHUNG
   @Column({ type: "uuid", nullable: true, default: null })
   groupId: string | null;

@@ -171,7 +171,7 @@ const STORE_ID_INJECT_KEYS = [
   "menuItems",
   "itemModifierGroups",
 ];
-export function injectCompanyIdToArrays<T extends Record<string, any>>(
+export function injectStoreIdToArrays<T extends Record<string, any>>(
   data: T,
   storeId: string,
 ): T {

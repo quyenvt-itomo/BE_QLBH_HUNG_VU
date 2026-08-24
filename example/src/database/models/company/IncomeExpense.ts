@@ -1,7 +1,7 @@
 import { BaseNumericColumnOptions } from "@/shared/base/BaseEntity";
 import { Column, Entity, In, JoinColumn, ManyToOne, OneToMany } from "typeorm";
 import { Fund, FundSnapshot } from "./Fund";
-import { BaseEntityWithCompany } from "./BaseEntityWithCompany";
+import { BaseEntityWithStore } from "./BaseEntityWithStore";
 import { Partner, PartnerSnapshot } from "./Partner";
 import { Attribute, AttributeSnapshot } from "../Attribute";
 import { Order, OrderSnapshot } from "./Order";
@@ -16,7 +16,7 @@ export enum IncomeExpenseTypeEnum {
 }
 
 @Entity("income_expenses")
-export class IncomeExpense extends BaseEntityWithCompany {
+export class IncomeExpense extends BaseEntityWithStore {
   @Column({ type: "timestamptz" })
   occurredAt: Date;
 

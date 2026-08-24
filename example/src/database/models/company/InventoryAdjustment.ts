@@ -1,11 +1,11 @@
 import { Column, Entity, ManyToOne, OneToMany } from "typeorm";
 import { InventoryAdjustmentLine } from "./InventoryAdjustmentLine";
-import { BaseEntityWithCompany } from "./BaseEntityWithCompany";
+import { BaseEntityWithStore } from "./BaseEntityWithStore";
 import { BaseNumericColumnOptions } from "@/shared/base/BaseEntity";
 import { Warehouse } from "./Warehouse";
 
 @Entity("inventory_adjustments")
-export class InventoryAdjustment extends BaseEntityWithCompany {
+export class InventoryAdjustment extends BaseEntityWithStore {
   @Column({ type: "varchar" })
   code: string; // mã phiếu
 

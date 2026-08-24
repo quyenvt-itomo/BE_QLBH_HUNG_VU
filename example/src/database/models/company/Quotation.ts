@@ -1,5 +1,5 @@
 import { Entity, Column, OneToMany, ManyToOne, JoinColumn } from "typeorm";
-import { BaseEntityWithCompany } from "./BaseEntityWithCompany";
+import { BaseEntityWithStore } from "./BaseEntityWithStore";
 import { QuotationLine } from "./QuotationLine";
 import { ApproveStatus, CommissionMode } from "@/shared/constants/enum";
 import { Employee, EmployeeSnapshot } from "./Employee";
@@ -11,7 +11,7 @@ import { MeshSpec, MeshSpecSnapshot } from "./MeshSpec";
 import { BaseNumericColumnOptions } from "@/shared/base/BaseEntity";
 
 @Entity("quotations")
-export class Quotation extends BaseEntityWithCompany {
+export class Quotation extends BaseEntityWithStore {
   @Column({ type: "timestamptz", default: () => "CURRENT_TIMESTAMP" })
   timeAt: Date;
   @Column({ type: "varchar", length: 50 })

@@ -299,7 +299,7 @@ export abstract class BaseRepository<T extends ObjectLiteral> {
     const repo = this.getRepository(manager);
 
     const entityMetadata = repo.metadata;
-    const hasCompanyIdColumn = entityMetadata.columns.some(
+    const hasStoreIdColumn = entityMetadata.columns.some(
       (col) => col.propertyName === "storeId",
     );
     const storeId = req?.storeContext?.storeId;
@@ -314,7 +314,7 @@ export abstract class BaseRepository<T extends ObjectLiteral> {
         relations: this.relations,
       };
 
-      if (storeId && hasCompanyIdColumn) {
+      if (storeId && hasStoreIdColumn) {
         options.where = { ...options.where, storeId } as any;
       }
 
@@ -335,7 +335,7 @@ export abstract class BaseRepository<T extends ObjectLiteral> {
     const qb = repo.createQueryBuilder("entity");
     qb.where("entity.id = :id", { id });
 
-    if (storeId && hasCompanyIdColumn) {
+    if (storeId && hasStoreIdColumn) {
       qb.andWhere("(entity.storeId = :storeId OR entity.storeId IS NULL)", {
         storeId,
       });
@@ -620,10 +620,10 @@ export abstract class BaseRepository<T extends ObjectLiteral> {
     // nếu trong options có storeId thì và entity có storeId thì filter theo storeId
     if (options.storeId) {
       const entityMetadata = repository.metadata;
-      const hasCompanyIdColumn = entityMetadata.columns.some(
+      const hasStoreIdColumn = entityMetadata.columns.some(
         (col) => col.propertyName === "storeId",
       );
-      if (hasCompanyIdColumn) {
+      if (hasStoreIdColumn) {
         qb.andWhere("(entity.storeId = :storeId OR entity.storeId IS NULL)", {
           storeId: options.storeId,
         });
@@ -950,7 +950,7 @@ export abstract class BaseRepository<T extends ObjectLiteral> {
       (column) => column.propertyName === "sortOrder",
     );
 
-    const hasCompanyIdColumn = entityInfo?.columns?.some(
+    const hasStoreIdColumn = entityInfo?.columns?.some(
       (column) => column.propertyName === "storeId",
     );
 
@@ -959,7 +959,7 @@ export abstract class BaseRepository<T extends ObjectLiteral> {
         ? ({
             [this.sortOrderScope]: (data as any)[this.sortOrderScope],
           } as FindOptionsWhere<T>)
-        : hasCompanyIdColumn
+        : hasStoreIdColumn
           ? ({
               storeId: (data as any).storeId,
             } as FindOptionsWhere<T>)
@@ -970,7 +970,7 @@ export abstract class BaseRepository<T extends ObjectLiteral> {
       );
     }
 
-    if (hasCompanyIdColumn) {
+    if (hasStoreIdColumn) {
       (data as any).storeId = storeId || (data as any).storeId;
     }
 
@@ -1013,7 +1013,7 @@ export abstract class BaseRepository<T extends ObjectLiteral> {
     const hasCodeColumn = entityInfo?.columns?.some(
       (column) => column.propertyName === "code",
     );
-    const hasCompanyIdColumn = entityInfo?.columns?.some(
+    const hasStoreIdColumn = entityInfo?.columns?.some(
       (column) => column.propertyName === "storeId",
     );
 
@@ -1022,7 +1022,7 @@ export abstract class BaseRepository<T extends ObjectLiteral> {
         ? ({
             [this.sortOrderScope]: (data as any)[this.sortOrderScope],
           } as FindOptionsWhere<T>)
-        : hasCompanyIdColumn
+        : hasStoreIdColumn
           ? ({
               storeId: (data as any)[0]?.storeId,
             } as FindOptionsWhere<T>)
@@ -1048,7 +1048,7 @@ export abstract class BaseRepository<T extends ObjectLiteral> {
       }
     }
 
-    if (hasCompanyIdColumn) {
+    if (hasStoreIdColumn) {
       const storeId = req?.storeContext?.storeId;
       data.forEach((item) => {
         (item as any).storeId = storeId || (item as any).storeId;

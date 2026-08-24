@@ -48,7 +48,7 @@ export class UserExcelTemplate {
       "  • isActive: nhập 'Có' để kích hoạt, để trống hoặc 'Không' để vô hiệu",
     ]);
     inst.addRow([
-      "  • sourceCompanyName: Tên công ty nguồn — hệ thống sẽ tự tìm theo tên",
+      "  • sourceStoreName: Tên công ty nguồn — hệ thống sẽ tự tìm theo tên",
     ]);
     inst.addRow([
       "  • VD: ND001 | Nguyễn Văn A | nva | nva@company.com | 0901234567 | Có | Công ty ABC | Ghi chú",
@@ -97,7 +97,7 @@ export class UserExcelTemplate {
         email: u.email || "",
         phone: u.phone || "",
         isActive: u.isActive ? "Có" : "Không",
-        sourceCompanyName: u.sourceCompany?.name || "",
+        sourceStoreName: u.sourceStore?.name || "",
         note: u.note || "",
       });
     }

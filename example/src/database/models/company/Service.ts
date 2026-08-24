@@ -1,5 +1,5 @@
 import { Entity, Column, OneToMany } from "typeorm";
-import { BaseEntityWithCompany } from "./BaseEntityWithCompany";
+import { BaseEntityWithStore } from "./BaseEntityWithStore";
 import { BaseNumericColumnOptions } from "@/shared/base/BaseEntity";
 import { ServiceUnit } from "./ServiceUnit";
 
@@ -15,7 +15,7 @@ export enum ServiceTypeEnum {
 }
 
 @Entity("services")
-export class Service extends BaseEntityWithCompany {
+export class Service extends BaseEntityWithStore {
   @Column({
     type: "enum",
     enum: ServiceTypeEnum,

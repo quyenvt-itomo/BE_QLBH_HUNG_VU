@@ -1,5 +1,5 @@
 import { Entity, Column, OneToMany, ManyToOne, JoinColumn } from "typeorm";
-import { BaseEntityWithCompany } from "./BaseEntityWithCompany";
+import { BaseEntityWithStore } from "./BaseEntityWithStore";
 import { Order, OrderSnapshot } from "./Order";
 import { Employee, EmployeeSnapshot } from "./Employee";
 import { BaseQuantityNumericColumnOptions } from "@/shared/base/BaseEntity";
@@ -44,7 +44,7 @@ export interface ProductionSnapshot {
 }
 
 @Entity("productions")
-export class Production extends BaseEntityWithCompany {
+export class Production extends BaseEntityWithStore {
   @Column({ type: "varchar", length: 20, default: ProductionTypeEnum.NORMAL })
   type: ProductionTypeEnum;
   @Column({ type: "timestamptz", default: () => "CURRENT_TIMESTAMP" })

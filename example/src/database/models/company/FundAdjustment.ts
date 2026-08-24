@@ -2,10 +2,10 @@ import { BaseNumericColumnOptions } from "@/shared/base/BaseEntity";
 import { Column, Entity, JoinColumn, ManyToOne } from "typeorm";
 import { Fund, FundSnapshot } from "./Fund";
 import { TransactionType } from "@/shared/constants/enum";
-import { BaseEntityWithCompany } from "./BaseEntityWithCompany";
+import { BaseEntityWithStore } from "./BaseEntityWithStore";
 
 @Entity("fund_adjustments")
-export class FundAdjustment extends BaseEntityWithCompany {
+export class FundAdjustment extends BaseEntityWithStore {
   @Column({ type: "varchar" })
   code: string;
 

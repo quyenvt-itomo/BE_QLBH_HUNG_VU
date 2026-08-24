@@ -4,7 +4,7 @@ import { BaseService } from "@/shared/base/BaseService";
 import { OrganizationRepository } from "./organization.repository";
 import { ORGANIZATION_TYPES } from "./organization.types";
 import {
-  CompanyType,
+  StoreType,
   Organization,
   OrganizationTypeEnum,
 } from "@/database/models/Organization";
@@ -51,7 +51,7 @@ export class OrganizationService extends BaseService<Organization> {
     manager: EntityManager,
     req?: RequestContext,
   ): Promise<void> {
-    if (data.type && CompanyType.includes(data.type)) {
+    if (data.type && StoreType.includes(data.type)) {
       data.roles = roleSeeder;
     }
 

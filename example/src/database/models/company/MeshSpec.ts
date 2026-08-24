@@ -1,5 +1,5 @@
 import { Entity, Column, OneToMany, ManyToOne, JoinColumn } from "typeorm";
-import { BaseEntityWithCompany } from "./BaseEntityWithCompany";
+import { BaseEntityWithStore } from "./BaseEntityWithStore";
 import { MeshSpecLine } from "./MeshSpecLine";
 import { Partner, PartnerSnapshot } from "./Partner";
 import { Employee, EmployeeSnapshot } from "./Employee";
@@ -17,7 +17,7 @@ export interface MeshSpecSnapshot {
 }
 
 @Entity("mesh_specs")
-export class MeshSpec extends BaseEntityWithCompany {
+export class MeshSpec extends BaseEntityWithStore {
   @Column({ type: "timestamptz", default: () => "CURRENT_TIMESTAMP" })
   timeAt: Date;
   @Column({ type: "varchar", length: 50 })

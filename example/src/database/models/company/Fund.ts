@@ -1,4 +1,4 @@
-import { BaseEntityWithCompany } from "./BaseEntityWithCompany";
+import { BaseEntityWithStore } from "./BaseEntityWithStore";
 import { Column, Entity, OneToMany } from "typeorm";
 import { FundAdjustment } from "./FundAdjustment";
 import { BankAccount } from "@/shared/base/BaseValidator";
@@ -16,7 +16,7 @@ export interface FundSnapshot {
 }
 
 @Entity("funds")
-export class Fund extends BaseEntityWithCompany {
+export class Fund extends BaseEntityWithStore {
   @Column({ type: "varchar", length: 25 })
   code: string;
 

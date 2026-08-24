@@ -5,9 +5,9 @@ import { User } from "./User";
 import { Employee } from "./company/Employee";
 import { Role } from "./company/Role";
 
-// CompanyUser entity for system, club, friend, and tournament notifications
+// StoreUser entity for system, club, friend, and tournament notifications
 @Entity("company_users")
-export class CompanyUser extends BaseEntity {
+export class StoreUser extends BaseEntity {
   @Column({ type: "uuid" })
   storeId: string;
 

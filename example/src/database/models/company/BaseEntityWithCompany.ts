@@ -6,7 +6,7 @@ import type { Organization } from "../Organization";
  * Base Entity with Soft Delete Support
  * Tất cả entities nên extend từ class này để có soft delete functionality
  */
-export abstract class BaseEntityWithCompany extends BaseEntity {
+export abstract class BaseEntityWithStore extends BaseEntity {
   @Index()
   @Column({ type: "uuid" })
   storeId: string;

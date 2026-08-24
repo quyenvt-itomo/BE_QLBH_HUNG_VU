@@ -22,7 +22,7 @@ type UserImportData = Partial<
     | "phone"
     | "isActive"
     | "note"
-    | "sourceCompanyId"
+    | "sourceStoreId"
   >
 >;
 
@@ -63,13 +63,13 @@ export class UserExcelProcessor {
           if (!row.code || !row.name || !row.username)
             throw new Error("Thiếu mã, tên hoặc username");
 
-          // Resolve sourceCompanyName → sourceCompanyId
-          let sourceCompanyId: string | null = null;
-          if (row.sourceCompanyName) {
+          // Resolve sourceStoreName → sourceStoreId
+          let sourceStoreId: string | null = null;
+          if (row.sourceStoreName) {
             const org = await this.organizationService.findOne({
-              where: { name: row.sourceCompanyName },
+              where: { name: row.sourceStoreName },
             });
-            sourceCompanyId = org?.id || null;
+            sourceStoreId = org?.id || null;
           }
 
           const data: UserImportData = {
@@ -79,7 +79,7 @@ export class UserExcelProcessor {
             email: row.email || null,
             phone: row.phone || null,
             isActive: row.isActive !== "Không",
-            sourceCompanyId,
+            sourceStoreId,
             note: row.note || null,
           };
           await withTransaction(async (manager) => {
@@ -131,7 +131,7 @@ export class UserExcelProcessor {
         email: String(row.getCell(4).value || "").trim(),
         phone: String(row.getCell(5).value || "").trim(),
         isActive: String(row.getCell(6).value || "").trim(),
-        sourceCompanyName: String(row.getCell(7).value || "").trim(),
+        sourceStoreName: String(row.getCell(7).value || "").trim(),
         note: String(row.getCell(8).value || "").trim(),
       });
     });

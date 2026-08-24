@@ -1,5 +1,5 @@
 import { Entity, Column, ManyToOne, OneToMany, JoinColumn } from "typeorm";
-import { BaseEntityWithCompany } from "./BaseEntityWithCompany";
+import { BaseEntityWithStore } from "./BaseEntityWithStore";
 import { BaseNumericColumnOptions } from "@/shared/base/BaseEntity";
 import { Attribute } from "../Attribute";
 import { ProductExtraUnit } from "./ProductExtraUnit";
@@ -29,7 +29,7 @@ export interface StockMetadata {
 }
 
 @Entity("products")
-export class Product extends BaseEntityWithCompany {
+export class Product extends BaseEntityWithStore {
   @Column({ type: "enum", enum: ProductType })
   type: ProductType;
   @Column({ type: "uuid", nullable: true, default: null })

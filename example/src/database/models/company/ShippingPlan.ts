@@ -1,5 +1,5 @@
 import { Entity, Column, OneToMany, ManyToOne, JoinColumn } from "typeorm";
-import { BaseEntityWithCompany } from "./BaseEntityWithCompany";
+import { BaseEntityWithStore } from "./BaseEntityWithStore";
 import { BaseNumericColumnOptions } from "@/shared/base/BaseEntity";
 import { Partner, PartnerSnapshot } from "./Partner";
 import { ApproveStatus } from "@/shared/constants/enum";
@@ -18,7 +18,7 @@ export interface ShippingPlanSnapshot {
 }
 
 @Entity("shipping_plans")
-export class ShippingPlan extends BaseEntityWithCompany {
+export class ShippingPlan extends BaseEntityWithStore {
   @Column({ type: "varchar", length: 50 })
   code: string;
 

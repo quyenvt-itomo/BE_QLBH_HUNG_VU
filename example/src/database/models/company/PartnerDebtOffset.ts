@@ -1,7 +1,7 @@
 import { BaseNumericColumnOptions } from "@/shared/base/BaseEntity";
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from "typeorm";
 import { Partner, PartnerSnapshot } from "./Partner";
-import { BaseEntityWithCompany } from "./BaseEntityWithCompany";
+import { BaseEntityWithStore } from "./BaseEntityWithStore";
 import { PartnerDebtOffsetLine } from "./PartnerDebtOffsetLine";
 
 /**
@@ -12,7 +12,7 @@ import { PartnerDebtOffsetLine } from "./PartnerDebtOffsetLine";
  * Mỗi dòng sinh 1 transaction DECREASE (OUT) cho chính hóa đơn đó.
  */
 @Entity("debt_offsets")
-export class PartnerDebtOffset extends BaseEntityWithCompany {
+export class PartnerDebtOffset extends BaseEntityWithStore {
   @Column({ type: "varchar", length: 25 })
   code: string;
 

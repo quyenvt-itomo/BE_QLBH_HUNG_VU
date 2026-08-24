@@ -19,7 +19,7 @@ import {
 import { CreateUserDto } from "./user.validator";
 import { ROLE_TYPES } from "../role/role.types";
 import { RoleRepository } from "../role/role.repository";
-import { CompanyUser } from "@/database/models/CompanyUser";
+import { StoreUser } from "@/database/models/StoreUser";
 import { Role } from "@/database/models/company/Role";
 import { Employee } from "@/database/models/company/Employee";
 import { EMPLOYEE_TYPES } from "../employee/employee.types";
@@ -28,7 +28,7 @@ import { withTransaction } from "@/shared/base/TransactionManager";
 
 type UserWriteData = DeepPartial<User> & Record<string, any>;
 
-type CompanyUserWritePayload = {
+type StoreUserWritePayload = {
   storeId: string;
   roleId: string | null;
   employeeId: string | null;
@@ -85,7 +85,7 @@ export class UserService extends BaseService<User> {
     }
     // User thường: chỉ sửa được user do chính công ty mình tạo
     const storeId = req?.storeContext?.storeId;
-    if (entity.sourceCompanyId && entity.sourceCompanyId !== storeId) {
+    if (entity.sourceStoreId && entity.sourceStoreId !== storeId) {
       return {
         can: false,
         reason: "Chỉ công ty sở hữu tài khoản này mới có thể sửa",
@@ -103,7 +103,7 @@ export class UserService extends BaseService<User> {
       return { can: true };
     }
     const storeId = req?.storeContext?.storeId;
-    if (entity.sourceCompanyId && entity.sourceCompanyId !== storeId) {
+    if (entity.sourceStoreId && entity.sourceStoreId !== storeId) {
       return {
         can: false,
         reason: "Chỉ công ty sở hữu tài khoản này mới có thể xóa",
@@ -140,11 +140,11 @@ export class UserService extends BaseService<User> {
       if (item.id) baseWhere.id = Not(item.id);
       const found = await this.repository.findByOptions({
         where: orConditions.map((or) => ({ ...baseWhere, ...or })),
-        relations: { sourceCompany: true },
+        relations: { sourceStore: true },
       } as any);
       if (found.length > 0) {
         const existingUser = found[0] as any;
-        const companyName = existingUser?.sourceCompany?.name || "hệ thống";
+        const companyName = existingUser?.sourceStore?.name || "hệ thống";
         const fieldLabels: Record<string, string> = {
           username: "Tên đăng nhập",
           code: "Mã",
@@ -181,7 +181,7 @@ export class UserService extends BaseService<User> {
     if (data.password) {
       data.password = await AuthUtils.hashPassword(data.password);
     }
-    await this.prepareCompanyUsersForWrite(data, manager, req, false);
+    await this.prepareStoreUsersForWrite(data, manager, req, false);
   }
 
   // =====================================================
@@ -202,7 +202,7 @@ export class UserService extends BaseService<User> {
         throw new ForbiddenError(canUpdate.reason || "Không thể sửa");
       }
     }
-    await this.prepareCompanyUsersForWrite(data, manager, req, true, existing);
+    await this.prepareStoreUsersForWrite(data, manager, req, true, existing);
   }
 
   // =====================================================
@@ -226,7 +226,7 @@ export class UserService extends BaseService<User> {
   // mà không cần quyền sửa toàn bộ User
   // =====================================================
 
-  async assignCompanyUser(
+  async assignStoreUser(
     userId: string,
     data: { roleId?: string | null; employeeId?: string | null },
     req?: RequestContext,
@@ -238,15 +238,15 @@ export class UserService extends BaseService<User> {
 
     await withTransaction(async (manager) => {
       // Validate references thuộc công ty
-      await this.validateCompanyUserReferences(
+      await this.validateStoreUserReferences(
         storeId,
         data.roleId,
         data.employeeId,
         manager,
       );
 
-      // Chỉ cập nhật nếu user đã có CompanyUser trong công ty này
-      const cu = await manager.findOne(CompanyUser, {
+      // Chỉ cập nhật nếu user đã có StoreUser trong công ty này
+      const cu = await manager.findOne(StoreUser, {
         where: { userId, storeId } as any,
       });
 
@@ -264,7 +264,7 @@ export class UserService extends BaseService<User> {
       if (data.employeeId !== undefined) {
         cu.employeeId = data.employeeId ?? null;
       }
-      await manager.save(CompanyUser, cu);
+      await manager.save(StoreUser, cu);
     });
   }
 
@@ -272,8 +272,8 @@ export class UserService extends BaseService<User> {
   // VALIDATE ROLE & EMPLOYEE THUỘC CÔNG TY
   // =====================================================
 
-  private async validateRoleEmployeeBelongToCompany(
-    companyUsers: DeepPartial<CompanyUser>[],
+  private async validateRoleEmployeeBelongToStore(
+    companyUsers: DeepPartial<StoreUser>[],
     manager: EntityManager,
   ): Promise<void> {
     const errors: IError[] = [];
@@ -315,13 +315,13 @@ export class UserService extends BaseService<User> {
       throw new ValidationError("Dữ liệu không hợp lệ", errors);
   }
 
-  private async resolveCompanyUserInput(
+  private async resolveStoreUserInput(
     data: UserWriteData,
     req?: RequestContext,
   ): Promise<{
     isAdmin: boolean;
     storeId: string | null;
-    companyUsers: DeepPartial<CompanyUser>[] | undefined;
+    companyUsers: DeepPartial<StoreUser>[] | undefined;
     roleId: string | null | undefined;
     employeeId: string | null | undefined;
   }> {
@@ -329,7 +329,7 @@ export class UserService extends BaseService<User> {
     const storeId = req?.storeContext?.storeId || null;
     const rawData = data as Record<string, any>;
     const companyUsers = rawData.companyUsers as
-      | DeepPartial<CompanyUser>[]
+      | DeepPartial<StoreUser>[]
       | undefined;
     const roleId = rawData.roleId as string | null | undefined;
     const employeeId = rawData.employeeId as string | null | undefined;
@@ -341,13 +341,13 @@ export class UserService extends BaseService<User> {
     return { isAdmin, storeId, companyUsers, roleId, employeeId };
   }
 
-  private buildCompanyUserPayload(
+  private buildStoreUserPayload(
     storeId: string,
     roleId: string | null | undefined,
     employeeId: string | null | undefined,
     includeSnapshot: boolean,
     snapshot?: Awaited<ReturnType<EmployeeRepository["getSnapshot"]>> | null,
-  ): CompanyUserWritePayload {
+  ): StoreUserWritePayload {
     return {
       storeId,
       roleId: roleId ?? null,
@@ -356,7 +356,7 @@ export class UserService extends BaseService<User> {
     };
   }
 
-  private async prepareCompanyUsersForWrite(
+  private async prepareStoreUsersForWrite(
     data: UserWriteData,
     manager: EntityManager,
     req?: RequestContext,
@@ -364,28 +364,28 @@ export class UserService extends BaseService<User> {
     existing?: User | null,
   ): Promise<void> {
     const { isAdmin, storeId, companyUsers, roleId, employeeId } =
-      await this.resolveCompanyUserInput(data, req);
+      await this.resolveStoreUserInput(data, req);
 
     if (!storeId) {
       throw new ValidationError("Thiếu thông tin công ty", "storeId");
     }
 
     const rawData = data as Record<string, any>;
-    rawData.sourceCompanyId = rawData.sourceCompanyId ?? storeId;
+    rawData.sourceStoreId = rawData.sourceStoreId ?? storeId;
 
     if (isAdmin) {
       if (!companyUsers?.length) return;
-      this.assertNoDuplicateCompanyUsers(companyUsers);
-      await this.validateRoleEmployeeBelongToCompany(companyUsers, manager);
+      this.assertNoDuplicateStoreUsers(companyUsers);
+      await this.validateRoleEmployeeBelongToStore(companyUsers, manager);
       if (isUpdate && existing) {
-        await this.syncCompanyUsers(existing.id, companyUsers, manager);
+        await this.syncStoreUsers(existing.id, companyUsers, manager);
       } else {
         rawData.companyUsers = companyUsers;
       }
       return;
     }
 
-    await this.validateCompanyUserReferences(
+    await this.validateStoreUserReferences(
       storeId,
       roleId,
       employeeId,
@@ -396,7 +396,7 @@ export class UserService extends BaseService<User> {
       const existingCu = existing?.companyUsers?.find(
         (cu) => cu.storeId === storeId,
       );
-      const payload = this.buildCompanyUserPayload(
+      const payload = this.buildStoreUserPayload(
         storeId,
         roleId,
         employeeId,
@@ -407,9 +407,9 @@ export class UserService extends BaseService<User> {
         if (roleId !== undefined) existingCu.roleId = roleId ?? null;
         if (employeeId !== undefined)
           existingCu.employeeId = employeeId ?? null;
-        await manager.save(CompanyUser, existingCu);
+        await manager.save(StoreUser, existingCu);
       } else if (roleId !== undefined || employeeId !== undefined) {
-        await manager.save(CompanyUser, {
+        await manager.save(StoreUser, {
           userId: existing?.id,
           ...payload,
         });
@@ -418,12 +418,12 @@ export class UserService extends BaseService<User> {
     }
 
     rawData.companyUsers = [
-      this.buildCompanyUserPayload(storeId, roleId, employeeId, false),
+      this.buildStoreUserPayload(storeId, roleId, employeeId, false),
     ];
   }
 
-  private assertNoDuplicateCompanyUsers(
-    companyUsers: DeepPartial<CompanyUser>[],
+  private assertNoDuplicateStoreUsers(
+    companyUsers: DeepPartial<StoreUser>[],
   ): void {
     const dup = this.checkDuplicate(companyUsers, ["storeId"], "companyUsers");
     if (dup.length > 0) {
@@ -431,7 +431,7 @@ export class UserService extends BaseService<User> {
     }
   }
 
-  private async validateCompanyUserReferences(
+  private async validateStoreUserReferences(
     storeId: string,
     roleId: string | null | undefined,
     employeeId: string | null | undefined,
@@ -468,12 +468,12 @@ export class UserService extends BaseService<User> {
   // SYNC COMPANY USERS
   // =====================================================
 
-  private async syncCompanyUsers(
+  private async syncStoreUsers(
     userId: string,
-    incoming: DeepPartial<CompanyUser>[],
+    incoming: DeepPartial<StoreUser>[],
     manager: EntityManager,
   ): Promise<void> {
-    const existing = await manager.find(CompanyUser, {
+    const existing = await manager.find(StoreUser, {
       where: { userId } as any,
     });
     const existingById = new Map(existing.map((item) => [item.id, item]));
@@ -494,7 +494,7 @@ export class UserService extends BaseService<User> {
       .filter((item) => !incomingIds.has(item.id))
       .map((item) => item.id);
     if (toDeleteIds.length > 0)
-      await manager.softDelete(CompanyUser, toDeleteIds);
+      await manager.softDelete(StoreUser, toDeleteIds);
     const employeeIds = Array.from(
       new Set(
         incoming
@@ -522,6 +522,6 @@ export class UserService extends BaseService<User> {
         ? (snapshots.get(item.employeeId) ?? null)
         : null,
     }));
-    if (toSave.length > 0) await manager.save(CompanyUser, toSave as any);
+    if (toSave.length > 0) await manager.save(StoreUser, toSave as any);
   }
 }

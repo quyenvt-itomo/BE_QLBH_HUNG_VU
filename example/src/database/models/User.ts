@@ -1,6 +1,6 @@
 import { BaseEntity } from "@/shared/base/BaseEntity";
 import { Column, Entity, ManyToOne, OneToMany } from "typeorm";
-import { CompanyUser } from "./CompanyUser";
+import { StoreUser } from "./StoreUser";
 import { Organization } from "./Organization";
 
 @Entity("users")
@@ -27,14 +27,14 @@ export class User extends BaseEntity {
   isActive: boolean;
 
   @Column({ type: "uuid", nullable: true, default: null })
-  sourceCompanyId: string | null;
+  sourceStoreId: string | null;
 
   // ============================== RELATIONSHIPS ==============================
-  @OneToMany(() => CompanyUser, (companyUser) => companyUser.user, {
+  @OneToMany(() => StoreUser, (companyUser) => companyUser.user, {
     cascade: true,
   })
-  companyUsers?: CompanyUser[];
+  companyUsers?: StoreUser[];
 
   @ManyToOne(() => Organization, { onDelete: "SET NULL" })
-  sourceCompany?: Organization;
+  sourceStore?: Organization;
 }

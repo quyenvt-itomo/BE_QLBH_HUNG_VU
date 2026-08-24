@@ -2,14 +2,14 @@ import { BaseNumericColumnOptions } from "@/shared/base/BaseEntity";
 import { Column, Entity, JoinColumn, ManyToOne } from "typeorm";
 import { PartnerContact, PartnerContactSnapshot } from "./PartnerContact";
 import { TransactionType } from "@/shared/constants/enum";
-import { BaseEntityWithCompany } from "./BaseEntityWithCompany";
+import { BaseEntityWithStore } from "./BaseEntityWithStore";
 
 /**
  * Phiếu điều chỉnh công nợ (đầu kỳ / cân số / mất mát…).
  * deltaAmount = |expected - counted|, type được suy ra ở service.
  */
 @Entity("commission_debt_adjustments")
-export class CommissionDebtAdjustment extends BaseEntityWithCompany {
+export class CommissionDebtAdjustment extends BaseEntityWithStore {
   @Column({ type: "varchar", length: 25 })
   code: string;
 

@@ -1,5 +1,5 @@
 import { Entity, Column, OneToMany, ManyToOne, JoinColumn } from "typeorm";
-import { BaseEntityWithCompany } from "./BaseEntityWithCompany";
+import { BaseEntityWithStore } from "./BaseEntityWithStore";
 import { BaseNumericColumnOptions } from "@/shared/base/BaseEntity";
 import { PaymentRequestLine } from "./PaymentRequestLine";
 import { ApproveStatus } from "@/shared/constants/enum";
@@ -29,7 +29,7 @@ export interface PaymentRequestSnapshot {
 }
 
 @Entity("payment_requests")
-export class PaymentRequest extends BaseEntityWithCompany {
+export class PaymentRequest extends BaseEntityWithStore {
   @Column({ type: "timestamptz", default: () => "CURRENT_TIMESTAMP" })
   timeAt: Date; // Ngày đề nghị
   @Column({ type: "varchar", length: 50 })

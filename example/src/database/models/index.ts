@@ -7,7 +7,7 @@ import { Notification } from "./Notification";
 import { Organization } from "./Organization";
 import { TeamOperation } from "./TeamOperation";
 import { User } from "./User";
-import { CompanyUser } from "./CompanyUser";
+import { StoreUser } from "./StoreUser";
 import { LoginApproval } from "./LoginApproval";
 import { OtpToken } from "./OtpToken";
 import { OperationLog } from "./OperationLog";
@@ -123,7 +123,7 @@ export const entities = [
   TeamOperation,
   Notification,
   User,
-  CompanyUser,
+  StoreUser,
   LoginApproval,
   OtpToken,
   OperationLog,

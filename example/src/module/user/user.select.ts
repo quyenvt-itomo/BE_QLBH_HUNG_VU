@@ -10,13 +10,13 @@ export const UserSelectBasic: FindOptionsSelect<User> = {
   email: true,
   phone: true,
   isActive: true,
-  sourceCompanyId: true,
+  sourceStoreId: true,
 };
 
 export const UserSelectFull: FindOptionsSelect<User> = {
   ...UserSelectBasic,
   password: true,
-  sourceCompany: true,
+  sourceStore: true,
   companyUsers: true,
 };
 
@@ -26,5 +26,5 @@ export const UserRelations: FindOptionsRelations<User> = {
     role: true,
     employee: true,
   },
-  sourceCompany: true,
+  sourceStore: true,
 };

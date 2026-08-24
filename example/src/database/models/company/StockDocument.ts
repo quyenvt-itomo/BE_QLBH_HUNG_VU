@@ -1,5 +1,5 @@
 import { Entity, Column, OneToMany, ManyToOne, JoinColumn } from "typeorm";
-import { BaseEntityWithCompany } from "./BaseEntityWithCompany";
+import { BaseEntityWithStore } from "./BaseEntityWithStore";
 import { BaseNumericColumnOptions } from "@/shared/base/BaseEntity";
 import { StockDocumentLine } from "./StockDocumentLine";
 import { Partner, PartnerSnapshot } from "./Partner";
@@ -62,7 +62,7 @@ export interface StockDocumentSnapshot {
 }
 
 @Entity("stock_documents")
-export class StockDocument extends BaseEntityWithCompany {
+export class StockDocument extends BaseEntityWithStore {
   // Ngày hiệu lực dự kiến (Ngày nhập đối với nhập mua, ngày xuất dự kiến đối với xuất bán)
   @Column({ type: "timestamptz", nullable: true, default: null })
   effectiveDate: Date | null;

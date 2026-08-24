@@ -1,5 +1,5 @@
 import { Entity, Column, ManyToOne, JoinColumn } from "typeorm";
-import { BaseEntityWithCompany } from "./BaseEntityWithCompany";
+import { BaseEntityWithStore } from "./BaseEntityWithStore";
 import { Attribute, AttributeSnapshot } from "../Attribute";
 
 export interface JobPositionSnapshot {
@@ -11,7 +11,7 @@ export interface JobPositionSnapshot {
 }
 
 @Entity("job_positions")
-export class JobPosition extends BaseEntityWithCompany {
+export class JobPosition extends BaseEntityWithStore {
   @Column({ type: "varchar", length: 255 })
   name: string;
   @Column({ type: "varchar", length: 255, nullable: true, default: null })
