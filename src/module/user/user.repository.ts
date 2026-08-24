@@ -4,10 +4,16 @@ import {
   BaseRepository,
   IFindPaginationOptions,
 } from "@/shared/base/BaseRepository";
-import { UserRelations, UserRelationsList, UserSelectFull, UserSelectList } from "./user.select";
+import {
+  UserRelations,
+  UserRelationsList,
+  UserSelectFull,
+  UserSelectList,
+} from "./user.select";
 import { EntityManager, SelectQueryBuilder } from "typeorm";
 import { UserSnapshot } from "@/shared/base/BaseEntity";
 import { getUserSnapshot } from "@/shared/utils/utils";
+import { UserQueryDto } from "./user.validator";
 @injectable()
 export class UserRepository extends BaseRepository<User> {
   protected entityClass = User;
@@ -21,18 +27,30 @@ export class UserRepository extends BaseRepository<User> {
     options: IFindPaginationOptions<User>,
   ): Promise<void> {
     const alias = qb.alias;
-    const { storeId } = options;
+    const { storeId, storeIds, roleId, roleIds } =
+      (options?.moreQuery as UserQueryDto) || {};
 
-    qb.andWhere(
-      `(${alias}.username NOT ILIKE :admin OR ${alias}.username IS NULL)`,
-      { admin: "%admin%" },
-    );
+    qb.andWhere(`(${alias}.username NOT ILIKE :admin)`, { admin: "%admin%" });
 
     if (storeId) {
-      // chỉ lấy những người dùng được phân quyền trong công ty này (join vowis relationship companyUsers, phỉa tồn tại 1 bản ghi có storeId này)
-      qb.innerJoin(`${alias}.companyUsers`, "cu", "cu.storeId = :storeId", {
+      qb.innerJoin(`${alias}.storeUsers`, "su", "su.storeId = :storeId", {
         storeId,
       });
+    } else if (this.checkArrayFilter(storeIds)) {
+      qb.innerJoin(
+        `${alias}.storeUsers`,
+        "su",
+        "su.storeId IN (:...storeIds)",
+        {
+          storeIds,
+        },
+      );
+    }
+
+    if (roleId) {
+      qb.andWhere(`${alias}.roleId = :roleId`, { roleId });
+    } else if (this.checkArrayFilter(roleIds)) {
+      qb.andWhere(`${alias}.roleId IN (:...roleIds)`, { roleIds });
     }
   }
 

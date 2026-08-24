@@ -5,6 +5,7 @@ import {
   BaseParamsSchema,
   BaseQuerySchema,
   BaseUpdateSchema,
+  zArrayable,
 } from "@/shared/base/BaseValidator";
 
 export const ExtraUnitSchema = z.object({
@@ -39,6 +40,7 @@ export const UpdateProductSchema = BaseUpdateSchema.extend({
 export const ProductQuerySchema = BaseQuerySchema.extend({
   storeId: z.uuid().optional(),
   groupId: z.uuid().optional(),
+  productCategoryIds: zArrayable(z.uuid()),
 });
 export const ProductParamsSchema = BaseParamsSchema;
 export type CreateProductDto = z.infer<typeof CreateProductSchema>;

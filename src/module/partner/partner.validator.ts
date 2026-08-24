@@ -9,6 +9,7 @@ import {
   BaseUpdateSchema,
   DateTransform,
   RepresentativeSchema,
+  zBooleanLike,
 } from "@/shared/base/BaseValidator";
 import { CreatePartnerContactSchema } from "../partnerContact/partnerContact.validator";
 
@@ -50,7 +51,11 @@ export const UpdatePartnerSchema = BaseUpdateSchema.extend({
 // Extend BaseQuerySchema with Partner-specific filters
 export const PartnerQuerySchema = BaseQuerySchema.extend({
   type: z.enum(PartnerType),
+  isOrganization: zBooleanLike(),
   offsetAt: DateTransform.optional(),
+  supplierGroupId: z.uuid().optional(),
+  customerGroupId: z.uuid().optional(),
+  shipperGroupId: z.uuid().optional(),
 });
 
 export const PartnerParamsSchema = BaseParamsSchema;

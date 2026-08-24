@@ -1,7 +1,16 @@
 import { injectable } from "inversify";
 import { Role } from "@/database/models/Role";
-import { BaseRepository } from "@/shared/base/BaseRepository";
-import { RoleRelations, RoleRelationsList, RoleSelectFull, RoleSelectList } from "./role.select";
+import {
+  BaseRepository,
+  IFindPaginationOptions,
+} from "@/shared/base/BaseRepository";
+import {
+  RoleRelations,
+  RoleRelationsList,
+  RoleSelectFull,
+  RoleSelectList,
+} from "./role.select";
+import { SelectQueryBuilder } from "typeorm";
 @injectable()
 export class RoleRepository extends BaseRepository<Role> {
   protected entityClass = Role;
@@ -9,4 +18,14 @@ export class RoleRepository extends BaseRepository<Role> {
   protected selectedFieldsForList = RoleSelectList;
   protected relations = RoleRelations;
   protected relationsForList = RoleRelationsList;
+
+  protected async extendQueryBuilder(
+    qb: SelectQueryBuilder<Role>,
+    options: IFindPaginationOptions<Role>,
+  ): Promise<void> {
+    const alias = qb.alias;
+
+    // Đếm số user cho mỗi role
+    qb.loadRelationCountAndMap(`${alias}.userCount`, `${alias}.users`);
+  }
 }
