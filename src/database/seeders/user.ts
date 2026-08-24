@@ -2,7 +2,7 @@ import { DeepPartial } from "typeorm";
 import { User } from "../models/User";
 
 export const adminSeeder: DeepPartial<User> = {
-  code: "ND-ADMIN",
+  code: "ADMINSTRATOR",
   username: "admin",
   name: "Quản trị hệ thống",
   email: null,

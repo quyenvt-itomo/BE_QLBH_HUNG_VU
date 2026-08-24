@@ -3,3 +3,4 @@ export * from "./otpToken.repository";
 export * from "./otpToken.service";
 export * from "./otpToken.controller";
 export * from "./otpToken.route";
+export * from "./otpToken.container";

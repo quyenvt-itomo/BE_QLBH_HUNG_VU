@@ -6,3 +6,4 @@ export * from "./inventoryAdjustment.service";
 export * from "./inventoryAdjustment.controller";
 export * from "./inventoryAdjustment.route";
 export * from "./inventoryAdjustment.validator";
+export * from "./inventoryAdjustment.container";

@@ -6,3 +6,4 @@ export * from "./productPriceHistory.service";
 export * from "./productPriceHistory.controller";
 export * from "./productPriceHistory.route";
 export * from "./productPriceHistory.validator";
+export * from "./productPriceHistory.container";

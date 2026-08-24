@@ -3,3 +3,4 @@ export * from "./storeProduct.repository";
 export * from "./storeProduct.service";
 export * from "./storeProduct.controller";
 export * from "./storeProduct.route";
+export * from "./storeProduct.container";

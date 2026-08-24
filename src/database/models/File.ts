@@ -2,56 +2,22 @@ import { Entity, Column, Index } from "typeorm";
 import { BaseEntity } from "@/shared/base/BaseEntity";
 
 export enum EntityType {
-  AUTH = "auth",
   USER = "user",
   NOTIFICATION = "notification",
   ROLE = "role",
-  ITEM = "item",
-  SUPPLIER = "supplier",
-  CUSTOMER = "customer",
   ATTRIBUTE = "attribute",
-  ORDER = "order",
-  WAREHOUSE = "warehouse",
-  STORE = "store",
-  FUND = "fund",
-  EMPLOYEE = "employee",
-  EMPLOYEE_CONTRACT = "employeeContract",
-  EXCEL_IMPORT = "excelImport",
-  PRODUCT = "product",
-  SERVICE = "service",
   PARTNER = "partner",
-  ORGANIZATION = "organization",
-  JOB_POSITION = "jobPosition",
-  // Purchase
-  PURCHASE_REQUISITION = "purchaseRequisition",
-  PURCHASE_QUOTATION = "purchaseQuotation",
-  PURCHASE = "purchase",
-  SHIPPING_PLAN = "shippingPlan",
-  // Sales
-  QUOTATION = "quotation",
-  QUOTATION_REQUEST = "quotationRequest",
-  // Inventory
-  STOCK_DOCUMENT = "stockDocument",
+  PRODUCT = "product",
+  STORE = "store",
+  ORDER = "order",
   INVENTORY_ADJUSTMENT = "inventoryAdjustment",
-  INVENTORY_CONVERSION = "inventoryConversion",
-  WAREHOUSE_TRANSFER = "warehouseTransfer",
-  // Production
-  PRODUCTION = "production",
-  BILL_OF_MATERIAL = "billOfMaterial",
-  // Accounting
-  INVOICE = "invoice",
-  PAYMENT_REQUEST = "paymentRequest",
-  INCOME_EXPENSE = "incomeExpense",
+  STORE_TRANSFER = "storeTransfer",
+  FUND = "fund",
   FUND_ADJUSTMENT = "fundAdjustment",
   FUND_TRANSFER = "fundTransfer",
-  PARTNER_DEBT_ADJUSTMENT = "partnerDebtAdjustment",
-  PARTNER_DEBT_OFFSET = "partnerDebtOffset",
-  COMMISSION_DEBT_ADJUSTMENT = "commissionDebtAdjustment",
+  INCOME_EXPENSE = "incomeExpense",
+  DEBT_ADJUSTMENT = "debtAdjustment",
   VAT_DEBT_ADJUSTMENT = "vatDebtAdjustment",
-  // Gate
-  GATE_LOG = "gateLog",
-  // Referral
-  REFERRAL_CODE = "referralCode",
 }
 
 export enum FileStatus {

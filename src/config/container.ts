@@ -1,154 +1,67 @@
 import { Container } from "inversify";
 import DatabaseConfig from "./database";
 import { TYPES } from "@/shared/types/container.types";
-import { AUTH_TYPES } from "@/module/auth/auth.types";
-import { AuthRepository } from "@/module/auth/auth.repository";
-import { AuthService } from "@/module/auth/auth.service";
-import { AuthController } from "@/module/auth/auth.controller";
-import { AuthRouter } from "@/module/auth/auth.route";
-import { PRODUCT_TYPES } from "@/module/product/product.types";
-import { ProductRepository } from "@/module/product/product.repository";
-import { ProductService } from "@/module/product/product.service";
-import { ProductController } from "@/module/product/product.controller";
-import { ProductRouter } from "@/module/product/product.route";
-import { PARTNER_TYPES } from "@/module/partner/partner.types";
-import { PartnerRepository } from "@/module/partner/partner.repository";
-import { PartnerService } from "@/module/partner/partner.service";
-import { PartnerController } from "@/module/partner/partner.controller";
-import { PartnerRouter } from "@/module/partner/partner.route";
-import { ORDER_TYPES } from "@/module/order/order.types";
-import { OrderRepository } from "@/module/order/order.repository";
-import { OrderService } from "@/module/order/order.service";
-import { OrderController } from "@/module/order/order.controller";
-import { OrderRouter } from "@/module/order/order.route";
-import { ATTRIBUTE_TYPES } from "@/module/attribute/attribute.types";
-import { AttributeRepository } from "@/module/attribute/attribute.repository";
-import { AttributeService } from "@/module/attribute/attribute.service";
-import { AttributeController } from "@/module/attribute/attribute.controller";
-import { AttributeRouter } from "@/module/attribute/attribute.route";
-import { FILE_TYPES } from "@/module/file/file.types";
-import { FileRepository } from "@/module/file/file.repository";
-import { FileService } from "@/module/file/file.service";
-import { FileController } from "@/module/file/file.controller";
-import { FileRouter } from "@/module/file/file.route";
-import { STORE_TYPES } from "@/module/store/store.types";
-import { StoreRepository } from "@/module/store/store.repository";
-import { StoreService } from "@/module/store/store.service";
-import { StoreController } from "@/module/store/store.controller";
-import { StoreRouter } from "@/module/store/store.route";
-import { PARTNER_CONTACT_TYPES } from "@/module/partnerContact/partnerContact.types";
-import { PartnerContactRepository } from "@/module/partnerContact/partnerContact.repository";
-import { PartnerContactService } from "@/module/partnerContact/partnerContact.service";
-import { PartnerContactController } from "@/module/partnerContact/partnerContact.controller";
-import { PartnerContactRouter } from "@/module/partnerContact/partnerContact.route";
-import { INVENTORY_TYPES } from "@/module/inventory/inventory.types";
-import { InventoryService } from "@/module/inventory/inventory.service";
-import { InventoryController } from "@/module/inventory/inventory.controller";
-import { InventoryRecalculateService } from "@/module/inventory/inventoryRecalculate.service";
-import { StockMetadataHelper } from "@/module/inventory/stockMetadata.helper";
-import { InventoryAdjustmentService } from "@/module/inventoryAdjustment/inventoryAdjustment.service";
-import { InventoryAdjustmentController } from "@/module/inventoryAdjustment/inventoryAdjustment.controller";
-import { InventoryAdjustmentRepository } from "@/module/inventoryAdjustment/inventoryAdjustment.repository";
-import { INVENTORY_ADJUSTMENT_TYPES } from "@/module/inventoryAdjustment/inventoryAdjustment.types";
-import { InventoryAdjustmentRouter } from "@/module/inventoryAdjustment/inventoryAdjustment.route";
-import { InventoryTransactionService } from "@/module/inventoryTransaction/inventoryTransaction.service";
-import { InventoryTransactionController } from "@/module/inventoryTransaction/inventoryTransaction.controller";
-import { InventoryTransactionRepository } from "@/module/inventoryTransaction/inventoryTransaction.repository";
-import { INVENTORY_TRANSACTION_TYPES } from "@/module/inventoryTransaction/inventoryTransaction.types";
-import { InventoryTransactionRouter } from "@/module/inventoryTransaction/inventoryTransaction.route";
-import { StoreTransferService } from "@/module/storeTransfer/storeTransfer.service";
-import { StoreTransferController } from "@/module/storeTransfer/storeTransfer.controller";
-import { StoreTransferRepository } from "@/module/storeTransfer/storeTransfer.repository";
-import { STORE_TRANSFER_TYPES } from "@/module/storeTransfer/storeTransfer.types";
-import { StoreTransferRouter } from "@/module/storeTransfer/storeTransfer.route";
-import { ProductPriceHistoryService } from "@/module/productPriceHistory/productPriceHistory.service";
-import { ProductPriceHistoryController } from "@/module/productPriceHistory/productPriceHistory.controller";
-import { ProductPriceHistoryRepository } from "@/module/productPriceHistory/productPriceHistory.repository";
-import { PRODUCT_PRICE_HISTORY_TYPES } from "@/module/productPriceHistory/productPriceHistory.types";
-import { ProductPriceHistoryRouter } from "@/module/productPriceHistory/productPriceHistory.route";
-import { bindSimpleModule } from "@/module/_shared/simple.bind";
-import { FundRepository, FundService, FundController, FundRouter, FUND_TYPES } from "@/module/fund";
-import { FundAdjustmentRepository, FundAdjustmentService, FundAdjustmentController, FundAdjustmentRouter, FUND_ADJUSTMENT_TYPES } from "@/module/fundAdjustment";
-import { FundTransactionRepository, FundTransactionService, FundTransactionController, FundTransactionRouter, FUND_TRANSACTION_TYPES } from "@/module/fundTransaction";
-import { FundTransferRepository, FundTransferService, FundTransferController, FundTransferRouter, FUND_TRANSFER_TYPES } from "@/module/fundTransfer";
-import { IncomeExpenseRepository, IncomeExpenseService, IncomeExpenseController, IncomeExpenseRouter, INCOME_EXPENSE_TYPES } from "@/module/incomeExpense";
-import { NotificationRepository, NotificationService, NotificationController, NotificationRouter, NOTIFICATION_TYPES } from "@/module/notification";
-import { OtpTokenRepository, OtpTokenService, OtpTokenController, OtpTokenRouter, OTP_TOKEN_TYPES } from "@/module/otpToken";
-import { ProductExtraUnitRepository, ProductExtraUnitService, ProductExtraUnitController, ProductExtraUnitRouter, PRODUCT_EXTRA_UNIT_TYPES } from "@/module/productExtraUnit";
-import { RoleRepository, RoleService, RoleController, RoleRouter, ROLE_TYPES } from "@/module/role";
-import { StoreProductRepository, StoreProductService, StoreProductController, StoreProductRouter, STORE_PRODUCT_TYPES } from "@/module/storeProduct";
-import { StoreUserRepository, StoreUserService, StoreUserController, StoreUserRouter, STORE_USER_TYPES } from "@/module/storeUser";
-import { UserRepository, UserService, UserController, UserRouter, USER_TYPES } from "@/module/user";
-import { DebtAdjustmentRepository, DebtAdjustmentService, DebtAdjustmentController, DebtAdjustmentRouter, DEBT_ADJUSTMENT_TYPES } from "@/module/debtAdjustment";
-import { VatAdjustmentRepository, VatAdjustmentService, VatAdjustmentController, VatAdjustmentRouter, VAT_ADJUSTMENT_TYPES } from "@/module/vatDebtAdjustment";
-import { VatTransactionRepository, VatTransactionService, VatTransactionController, VatTransactionRouter, VAT_TRANSACTION_TYPES } from "@/module/vatTransaction";
+import { attributeModule } from "@/module/attribute";
+import { authModule } from "@/module/auth";
+import { debtAdjustmentModule } from "@/module/debtAdjustment";
+import { fileModule } from "@/module/file";
+import { fundModule } from "@/module/fund";
+import { fundAdjustmentModule } from "@/module/fundAdjustment";
+import { fundTransactionModule } from "@/module/fundTransaction";
+import { fundTransferModule } from "@/module/fundTransfer";
+import { incomeExpenseModule } from "@/module/incomeExpense";
+import { inventoryModule } from "@/module/inventory";
+import { inventoryAdjustmentModule } from "@/module/inventoryAdjustment";
+import { inventoryTransactionModule } from "@/module/inventoryTransaction";
+import { notificationModule } from "@/module/notification";
+import { orderModule } from "@/module/order";
+import { otpTokenModule } from "@/module/otpToken";
+import { partnerModule } from "@/module/partner";
+import { partnerContactModule } from "@/module/partnerContact";
+import { productModule } from "@/module/product";
+import { productExtraUnitModule } from "@/module/productExtraUnit";
+import { productPriceHistoryModule } from "@/module/productPriceHistory";
+import { roleModule } from "@/module/role";
+import { storeModule } from "@/module/store";
+import { storeProductModule } from "@/module/storeProduct";
+import { storeTransferModule } from "@/module/storeTransfer";
+import { storeUserModule } from "@/module/storeUser";
+import { userModule } from "@/module/user";
+import { vatAdjustmentModule } from "@/module/vatDebtAdjustment";
+import { vatTransactionModule } from "@/module/vatTransaction";
 
+// ================== Container Setup ====================
 export const container = new Container();
+
 container.bind(TYPES.DataSource).toConstantValue(DatabaseConfig);
-container.bind(AUTH_TYPES.AuthRepository).to(AuthRepository).inSingletonScope();
-container.bind(AUTH_TYPES.AuthService).to(AuthService).inSingletonScope();
-container.bind(AUTH_TYPES.AuthController).to(AuthController).inSingletonScope();
-container.bind(AUTH_TYPES.AuthRouter).to(AuthRouter).inSingletonScope();
-container.bind(INVENTORY_TYPES.StockMetadataHelper).to(StockMetadataHelper).inSingletonScope();
-container.bind(INVENTORY_TYPES.InventoryRecalculateService).to(InventoryRecalculateService).inSingletonScope();
-container.bind(INVENTORY_TYPES.InventoryService).to(InventoryService).inSingletonScope();
-container.bind(INVENTORY_TYPES.InventoryController).to(InventoryController).inSingletonScope();
-container.bind(PRODUCT_TYPES.ProductRepository).to(ProductRepository).inSingletonScope();
-container.bind(PRODUCT_TYPES.ProductService).to(ProductService).inSingletonScope();
-container.bind(PRODUCT_TYPES.ProductController).to(ProductController).inSingletonScope();
-container.bind(PRODUCT_TYPES.ProductRouter).to(ProductRouter).inSingletonScope();
-container.bind(PARTNER_TYPES.PartnerRepository).to(PartnerRepository).inSingletonScope();
-container.bind(PARTNER_TYPES.PartnerService).to(PartnerService).inSingletonScope();
-container.bind(PARTNER_TYPES.PartnerController).to(PartnerController).inSingletonScope();
-container.bind(PARTNER_TYPES.PartnerRouter).to(PartnerRouter).inSingletonScope();
-container.bind(ORDER_TYPES.OrderRepository).to(OrderRepository).inSingletonScope();
-container.bind(ORDER_TYPES.OrderService).to(OrderService).inSingletonScope();
-container.bind(ORDER_TYPES.OrderController).to(OrderController).inSingletonScope();
-container.bind(ORDER_TYPES.OrderRouter).to(OrderRouter).inSingletonScope();
-container.bind(ATTRIBUTE_TYPES.AttributeRepository).to(AttributeRepository).inSingletonScope();
-container.bind(ATTRIBUTE_TYPES.AttributeService).to(AttributeService).inSingletonScope();
-container.bind(ATTRIBUTE_TYPES.AttributeController).to(AttributeController).inSingletonScope();
-container.bind(ATTRIBUTE_TYPES.AttributeRouter).to(AttributeRouter).inSingletonScope();
-container.bind(FILE_TYPES.FileRepository).to(FileRepository).inSingletonScope();
-container.bind(FILE_TYPES.FileService).to(FileService).inSingletonScope();
-container.bind(FILE_TYPES.FileController).to(FileController).inSingletonScope();
-container.bind(FILE_TYPES.FileRouter).to(FileRouter).inSingletonScope();
-container.bind(STORE_TYPES.StoreRepository).to(StoreRepository).inSingletonScope();
-container.bind(STORE_TYPES.StoreService).to(StoreService).inSingletonScope();
-container.bind(STORE_TYPES.StoreController).to(StoreController).inSingletonScope();
-container.bind(STORE_TYPES.StoreRouter).to(StoreRouter).inSingletonScope();
-container.bind(PARTNER_CONTACT_TYPES.PartnerContactRepository).to(PartnerContactRepository).inSingletonScope();
-container.bind(PARTNER_CONTACT_TYPES.PartnerContactService).to(PartnerContactService).inSingletonScope();
-container.bind(PARTNER_CONTACT_TYPES.PartnerContactController).to(PartnerContactController).inSingletonScope();
-container.bind(PARTNER_CONTACT_TYPES.PartnerContactRouter).to(PartnerContactRouter).inSingletonScope();
-container.bind(INVENTORY_ADJUSTMENT_TYPES.Repository).to(InventoryAdjustmentRepository).inSingletonScope();
-container.bind(INVENTORY_ADJUSTMENT_TYPES.Service).to(InventoryAdjustmentService).inSingletonScope();
-container.bind(INVENTORY_ADJUSTMENT_TYPES.Controller).to(InventoryAdjustmentController).inSingletonScope();
-container.bind(INVENTORY_ADJUSTMENT_TYPES.Router).toDynamicValue((context) => new InventoryAdjustmentRouter(context.container.get(INVENTORY_ADJUSTMENT_TYPES.Controller))).inSingletonScope();
-container.bind(INVENTORY_TRANSACTION_TYPES.Repository).to(InventoryTransactionRepository).inSingletonScope();
-container.bind(INVENTORY_TRANSACTION_TYPES.Service).to(InventoryTransactionService).inSingletonScope();
-container.bind(INVENTORY_TRANSACTION_TYPES.Controller).to(InventoryTransactionController).inSingletonScope();
-container.bind(INVENTORY_TRANSACTION_TYPES.Router).toDynamicValue((context) => new InventoryTransactionRouter(context.container.get(INVENTORY_TRANSACTION_TYPES.Controller))).inSingletonScope();
-container.bind(STORE_TRANSFER_TYPES.Repository).to(StoreTransferRepository).inSingletonScope();
-container.bind(STORE_TRANSFER_TYPES.Service).to(StoreTransferService).inSingletonScope();
-container.bind(STORE_TRANSFER_TYPES.Controller).to(StoreTransferController).inSingletonScope();
-container.bind(STORE_TRANSFER_TYPES.Router).toDynamicValue((context) => new StoreTransferRouter(context.container.get(STORE_TRANSFER_TYPES.Controller))).inSingletonScope();
-container.bind(PRODUCT_PRICE_HISTORY_TYPES.Repository).to(ProductPriceHistoryRepository).inSingletonScope();
-container.bind(PRODUCT_PRICE_HISTORY_TYPES.Service).to(ProductPriceHistoryService).inSingletonScope();
-container.bind(PRODUCT_PRICE_HISTORY_TYPES.Controller).to(ProductPriceHistoryController).inSingletonScope();
-container.bind(PRODUCT_PRICE_HISTORY_TYPES.Router).toDynamicValue((context) => new ProductPriceHistoryRouter(context.container.get(PRODUCT_PRICE_HISTORY_TYPES.Controller))).inSingletonScope();
-bindSimpleModule(container, FUND_TYPES, FundRepository, FundService, FundController, FundRouter);
-bindSimpleModule(container, FUND_ADJUSTMENT_TYPES, FundAdjustmentRepository, FundAdjustmentService, FundAdjustmentController, FundAdjustmentRouter);
-bindSimpleModule(container, FUND_TRANSACTION_TYPES, FundTransactionRepository, FundTransactionService, FundTransactionController, FundTransactionRouter);
-bindSimpleModule(container, FUND_TRANSFER_TYPES, FundTransferRepository, FundTransferService, FundTransferController, FundTransferRouter);
-bindSimpleModule(container, INCOME_EXPENSE_TYPES, IncomeExpenseRepository, IncomeExpenseService, IncomeExpenseController, IncomeExpenseRouter);
-bindSimpleModule(container, NOTIFICATION_TYPES, NotificationRepository, NotificationService, NotificationController, NotificationRouter);
-bindSimpleModule(container, OTP_TOKEN_TYPES, OtpTokenRepository, OtpTokenService, OtpTokenController, OtpTokenRouter);
-bindSimpleModule(container, PRODUCT_EXTRA_UNIT_TYPES, ProductExtraUnitRepository, ProductExtraUnitService, ProductExtraUnitController, ProductExtraUnitRouter);
-bindSimpleModule(container, ROLE_TYPES, RoleRepository, RoleService, RoleController, RoleRouter);
-bindSimpleModule(container, STORE_PRODUCT_TYPES, StoreProductRepository, StoreProductService, StoreProductController, StoreProductRouter);
-bindSimpleModule(container, STORE_USER_TYPES, StoreUserRepository, StoreUserService, StoreUserController, StoreUserRouter);
-bindSimpleModule(container, USER_TYPES, UserRepository, UserService, UserController, UserRouter);
-bindSimpleModule(container, DEBT_ADJUSTMENT_TYPES, DebtAdjustmentRepository, DebtAdjustmentService, DebtAdjustmentController, DebtAdjustmentRouter);
-bindSimpleModule(container, VAT_ADJUSTMENT_TYPES, VatAdjustmentRepository, VatAdjustmentService, VatAdjustmentController, VatAdjustmentRouter);
-bindSimpleModule(container, VAT_TRANSACTION_TYPES, VatTransactionRepository, VatTransactionService, VatTransactionController, VatTransactionRouter);
+
+container.load(
+  authModule,
+  attributeModule,
+  fileModule,
+  notificationModule,
+  otpTokenModule,
+  userModule,
+  roleModule,
+  storeModule,
+  partnerModule,
+  partnerContactModule,
+  productModule,
+  productExtraUnitModule,
+  orderModule,
+  inventoryModule,
+  inventoryAdjustmentModule,
+  inventoryTransactionModule,
+  storeTransferModule,
+  productPriceHistoryModule,
+  fundModule,
+  fundAdjustmentModule,
+  fundTransactionModule,
+  fundTransferModule,
+  incomeExpenseModule,
+  debtAdjustmentModule,
+  vatAdjustmentModule,
+  vatTransactionModule,
+  storeProductModule,
+  storeUserModule,
+);

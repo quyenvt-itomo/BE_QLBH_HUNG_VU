@@ -4,7 +4,10 @@ import { container } from "@/config/container";
 import DatabaseConfig from "@/config/database";
 import { getCode } from "@/shared/utils/code.utils";
 import { companyResolver } from "@/shared/middleware/company.middleware";
-import { authenticate, authorization } from "@/shared/middleware/auth.middleware";
+import {
+  authenticate,
+  authorization,
+} from "@/shared/middleware/auth.middleware";
 import { asyncHandler } from "@/shared/utils/controller.utils";
 import { AUTH_TYPES } from "@/module/auth/auth.types";
 import { AuthRouter } from "@/module/auth/auth.route";
@@ -67,49 +70,192 @@ import { InventoryTransaction } from "@/database/models/store/InventoryTransacti
 const router = Router();
 router.use(companyResolver);
 router.get("/code", getCode);
-router.use("/auth", container.get<AuthRouter>(AUTH_TYPES.AuthRouter).getRouter());
+router.use(
+  "/auth",
+  container.get<AuthRouter>(AUTH_TYPES.AuthRouter).getRouter(),
+);
 router.use(authenticate, authorization);
 
-router.use("/attribute", container.get<AttributeRouter>(ATTRIBUTE_TYPES.AttributeRouter).getRouter());
-router.use("/file", container.get<FileRouter>(FILE_TYPES.FileRouter).getRouter());
-router.use("/store", container.get<StoreRouter>(STORE_TYPES.StoreRouter).getRouter());
-router.use("/product", container.get<ProductRouter>(PRODUCT_TYPES.ProductRouter).getRouter());
+router.use(
+  "/attribute",
+  container.get<AttributeRouter>(ATTRIBUTE_TYPES.AttributeRouter).getRouter(),
+);
+router.use(
+  "/file",
+  container.get<FileRouter>(FILE_TYPES.FileRouter).getRouter(),
+);
+router.use(
+  "/store",
+  container.get<StoreRouter>(STORE_TYPES.StoreRouter).getRouter(),
+);
+router.use(
+  "/product",
+  container.get<ProductRouter>(PRODUCT_TYPES.ProductRouter).getRouter(),
+);
 
-const partnerRouter = container.get<PartnerRouter>(PARTNER_TYPES.PartnerRouter).getRouter();
-router.use("/customer", (req: any, _res, next) => { req.partnerContext = { module: "customer", type: "customer" }; next(); }, partnerRouter);
-router.use("/supplier", (req: any, _res, next) => { req.partnerContext = { module: "supplier", type: "supplier" }; next(); }, partnerRouter);
-router.use("/shipper", (req: any, _res, next) => { req.partnerContext = { module: "shipper", type: "shipper" }; next(); }, partnerRouter);
-router.use("/partner-contact", container.get<PartnerContactRouter>(PARTNER_CONTACT_TYPES.PartnerContactRouter).getRouter());
+const partnerRouter = container
+  .get<PartnerRouter>(PARTNER_TYPES.PartnerRouter)
+  .getRouter();
+router.use(
+  "/customer",
+  (req: any, _res, next) => {
+    req.partnerContext = { module: "customer", type: "customer" };
+    next();
+  },
+  partnerRouter,
+);
+router.use(
+  "/supplier",
+  (req: any, _res, next) => {
+    req.partnerContext = { module: "supplier", type: "supplier" };
+    next();
+  },
+  partnerRouter,
+);
+router.use(
+  "/shipper",
+  (req: any, _res, next) => {
+    req.partnerContext = { module: "shipper", type: "shipper" };
+    next();
+  },
+  partnerRouter,
+);
+router.use(
+  "/partner-contact",
+  container
+    .get<PartnerContactRouter>(PARTNER_CONTACT_TYPES.PartnerContactRouter)
+    .getRouter(),
+);
 
-router.use("/sale", orderContextMiddleware("sale"), container.get<OrderRouter>(ORDER_TYPES.OrderRouter).getRouter());
-router.use("/sale-return", orderContextMiddleware("saleReturn"), container.get<OrderRouter>(ORDER_TYPES.OrderRouter).getRouter());
-router.use("/purchase", orderContextMiddleware("purchase"), container.get<OrderRouter>(ORDER_TYPES.OrderRouter).getRouter());
-router.use("/purchase-return", orderContextMiddleware("purchaseReturn"), container.get<OrderRouter>(ORDER_TYPES.OrderRouter).getRouter());
+router.use(
+  "/sale",
+  orderContextMiddleware("sale"),
+  container.get<OrderRouter>(ORDER_TYPES.OrderRouter).getRouter(),
+);
+router.use(
+  "/sale-return",
+  orderContextMiddleware("saleReturn"),
+  container.get<OrderRouter>(ORDER_TYPES.OrderRouter).getRouter(),
+);
+router.use(
+  "/purchase",
+  orderContextMiddleware("purchase"),
+  container.get<OrderRouter>(ORDER_TYPES.OrderRouter).getRouter(),
+);
+router.use(
+  "/purchase-return",
+  orderContextMiddleware("purchaseReturn"),
+  container.get<OrderRouter>(ORDER_TYPES.OrderRouter).getRouter(),
+);
 
-router.use(container.get<IncomeExpenseRouter>(INCOME_EXPENSE_TYPES.Router).getRouter());
+router.use(
+  container.get<IncomeExpenseRouter>(INCOME_EXPENSE_TYPES.Router).getRouter(),
+);
 router.use("/fund", container.get<FundRouter>(FUND_TYPES.Router).getRouter());
-router.use("/fund-adjustment", container.get<FundAdjustmentRouter>(FUND_ADJUSTMENT_TYPES.Router).getRouter());
-router.use("/fund-transaction", container.get<FundTransactionRouter>(FUND_TRANSACTION_TYPES.Router).getRouter());
-router.use("/fund-transfer", container.get<FundTransferRouter>(FUND_TRANSFER_TYPES.Router).getRouter());
-router.use("/inventory-adjustment", container.get<InventoryAdjustmentRouter>(INVENTORY_ADJUSTMENT_TYPES.Router).getRouter());
-router.use("/inventory-transaction", container.get<InventoryTransactionRouter>(INVENTORY_TRANSACTION_TYPES.Router).getRouter());
-router.use("/store-transfer", container.get<StoreTransferRouter>(STORE_TRANSFER_TYPES.Router).getRouter());
-router.use("/product-price-history", container.get<ProductPriceHistoryRouter>(PRODUCT_PRICE_HISTORY_TYPES.Router).getRouter());
-router.use("/notification", container.get<NotificationRouter>(NOTIFICATION_TYPES.Router).getRouter());
-router.use("/product-extra-unit", container.get<ProductExtraUnitRouter>(PRODUCT_EXTRA_UNIT_TYPES.Router).getRouter());
+router.use(
+  "/fund-adjustment",
+  container.get<FundAdjustmentRouter>(FUND_ADJUSTMENT_TYPES.Router).getRouter(),
+);
+router.use(
+  "/fund-transaction",
+  container
+    .get<FundTransactionRouter>(FUND_TRANSACTION_TYPES.Router)
+    .getRouter(),
+);
+router.use(
+  "/fund-transfer",
+  container.get<FundTransferRouter>(FUND_TRANSFER_TYPES.Router).getRouter(),
+);
+router.use(
+  "/inventory-adjustment",
+  container
+    .get<InventoryAdjustmentRouter>(INVENTORY_ADJUSTMENT_TYPES.Router)
+    .getRouter(),
+);
+router.use(
+  "/inventory-transaction",
+  container
+    .get<InventoryTransactionRouter>(INVENTORY_TRANSACTION_TYPES.Router)
+    .getRouter(),
+);
+router.use(
+  "/store-transfer",
+  container.get<StoreTransferRouter>(STORE_TRANSFER_TYPES.Router).getRouter(),
+);
+router.use(
+  "/product-price-history",
+  container
+    .get<ProductPriceHistoryRouter>(PRODUCT_PRICE_HISTORY_TYPES.Router)
+    .getRouter(),
+);
+router.use(
+  "/notification",
+  container
+    .get<NotificationRouter>(NOTIFICATION_TYPES.NotificationRouter)
+    .getRouter(),
+);
+router.use(
+  "/product-extra-unit",
+  container
+    .get<ProductExtraUnitRouter>(PRODUCT_EXTRA_UNIT_TYPES.Router)
+    .getRouter(),
+);
 router.use("/role", container.get<RoleRouter>(ROLE_TYPES.Router).getRouter());
-router.use("/store-product", container.get<StoreProductRouter>(STORE_PRODUCT_TYPES.Router).getRouter());
-router.use("/store-user", container.get<StoreUserRouter>(STORE_USER_TYPES.Router).getRouter());
+router.use(
+  "/store-product",
+  container.get<StoreProductRouter>(STORE_PRODUCT_TYPES.Router).getRouter(),
+);
+router.use(
+  "/store-user",
+  container.get<StoreUserRouter>(STORE_USER_TYPES.Router).getRouter(),
+);
 router.use("/user", container.get<UserRouter>(USER_TYPES.Router).getRouter());
-router.use("/debt-adjustment", container.get<DebtAdjustmentRouter>(DEBT_ADJUSTMENT_TYPES.Router).getRouter());
-router.use("/vat-adjustment", container.get<VatAdjustmentRouter>(VAT_ADJUSTMENT_TYPES.Router).getRouter());
-router.use("/vat-transaction", container.get<VatTransactionRouter>(VAT_TRANSACTION_TYPES.Router).getRouter());
+router.use(
+  "/debt-adjustment",
+  container.get<DebtAdjustmentRouter>(DEBT_ADJUSTMENT_TYPES.Router).getRouter(),
+);
+router.use(
+  "/vat-adjustment",
+  container.get<VatAdjustmentRouter>(VAT_ADJUSTMENT_TYPES.Router).getRouter(),
+);
+router.use(
+  "/vat-transaction",
+  container.get<VatTransactionRouter>(VAT_TRANSACTION_TYPES.Router).getRouter(),
+);
 
-const inventoryController = container.get<InventoryController>(INVENTORY_TYPES.InventoryController);
+const inventoryController = container.get<InventoryController>(
+  INVENTORY_TYPES.InventoryController,
+);
 router.get("/inventory", asyncHandler(inventoryController.getStockReport));
-router.get("/inventory/report", asyncHandler(inventoryController.getStockReport));
-router.get("/inventory/transactions", asyncHandler(inventoryController.getTransactionDetails));
-router.get("/inventory-report/products", asyncHandler(async (_req, res) => { const data = await DatabaseConfig.getRepository(Product).find({ where: { deletedAt: IsNull() } as any }); res.json({ success: true, statusCode: 200, message: "OK", data }); }));
-router.get("/inventory-transaction-report", asyncHandler(async (req, res) => { const where: any = { deletedAt: IsNull() }; if (req.query.productId) where.productId = req.query.productId; if (req.query.storeId) where.storeId = req.query.storeId; const data = await DatabaseConfig.getRepository(InventoryTransaction).find({ where, order: { occurredAt: "ASC", createdAt: "ASC", id: "ASC" } as any }); res.json({ success: true, statusCode: 200, message: "OK", data }); }));
+router.get(
+  "/inventory/report",
+  asyncHandler(inventoryController.getStockReport),
+);
+router.get(
+  "/inventory/transactions",
+  asyncHandler(inventoryController.getTransactionDetails),
+);
+router.get(
+  "/inventory-report/products",
+  asyncHandler(async (_req, res) => {
+    const data = await DatabaseConfig.getRepository(Product).find({
+      where: { deletedAt: IsNull() } as any,
+    });
+    res.json({ success: true, statusCode: 200, message: "OK", data });
+  }),
+);
+router.get(
+  "/inventory-transaction-report",
+  asyncHandler(async (req, res) => {
+    const where: any = { deletedAt: IsNull() };
+    if (req.query.productId) where.productId = req.query.productId;
+    if (req.query.storeId) where.storeId = req.query.storeId;
+    const data = await DatabaseConfig.getRepository(InventoryTransaction).find({
+      where,
+      order: { occurredAt: "ASC", createdAt: "ASC", id: "ASC" } as any,
+    });
+    res.json({ success: true, statusCode: 200, message: "OK", data });
+  }),
+);
 
 export default router;

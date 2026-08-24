@@ -16,8 +16,12 @@ async function upsertRoles(manager: EntityManager): Promise<Map<string, Role>> {
   const repository = manager.getRepository(Role);
   const result = new Map<string, Role>();
   for (const seed of roleSeeders) {
-    const existing = await repository.findOne({ where: { name: seed.name!, type: seed.type! } as any });
-    const role = existing ? repository.merge(existing, seed) : repository.create(seed);
+    const existing = await repository.findOne({
+      where: { name: seed.name!, type: seed.type! } as any,
+    });
+    const role = existing
+      ? repository.merge(existing, seed)
+      : repository.create(seed);
     role.permissions = seed.permissions || createPermissions("empty");
     const saved = await repository.save(role);
     result.set(seed.name!, saved);
@@ -30,25 +34,41 @@ async function upsertStores(manager: EntityManager): Promise<Store[]> {
   const stores: Store[] = [];
   for (const seed of storeSeeders) {
     const existing = await repository.findOne({ where: { code: seed.code } });
-    stores.push(await repository.save(existing ? repository.merge(existing, seed) : repository.create(seed)));
+    stores.push(
+      await repository.save(
+        existing ? repository.merge(existing, seed) : repository.create(seed),
+      ),
+    );
   }
   return stores;
 }
 
-async function upsertAdmin(manager: EntityManager, systemRole: Role): Promise<User> {
+async function upsertAdmin(manager: EntityManager): Promise<User> {
   const repository = manager.getRepository(User);
-  const existing = await repository.findOne({ where: { username: adminSeeder.username! } });
-  const seed = { ...adminSeeder, roleId: systemRole.id, role: systemRole };
-  const user = existing ? repository.merge(existing, seed) : repository.create(seed);
+  const existing = await repository.findOne({
+    where: { username: adminSeeder.username! },
+  });
+  const user = existing
+    ? repository.merge(existing, adminSeeder)
+    : repository.create(adminSeeder);
   if (!existing) user.password = await AuthUtils.hashPassword("123456");
   return repository.save(user);
 }
 
-async function attachAdminToStores(manager: EntityManager, admin: User, stores: Store[]): Promise<void> {
+async function attachAdminToStores(
+  manager: EntityManager,
+  admin: User,
+  stores: Store[],
+): Promise<void> {
   const repository = manager.getRepository(StoreUser);
   for (const store of stores) {
-    const existing = await repository.findOne({ where: { userId: admin.id, storeId: store.id } as any });
-    if (!existing) await repository.save(repository.create({ userId: admin.id, storeId: store.id }));
+    const existing = await repository.findOne({
+      where: { userId: admin.id, storeId: store.id } as any,
+    });
+    if (!existing)
+      await repository.save(
+        repository.create({ userId: admin.id, storeId: store.id }),
+      );
   }
 }
 
@@ -64,9 +84,14 @@ async function seedAttributes(manager: EntityManager): Promise<void> {
     .execute();
 
   for (const seed of attributeSeeders) {
-    const existing = await repository.findOne({ where: { name: seed.name!, type: seed.type! } as any });
+    const existing = await repository.findOne({
+      where: { name: seed.name!, type: seed.type! } as any,
+    });
     if (existing) {
-      await repository.update(existing.id, { isDefault: seed.isDefault ?? existing.isDefault, deletedAt: null } as any);
+      await repository.update(existing.id, {
+        isDefault: seed.isDefault ?? existing.isDefault,
+        deletedAt: null,
+      } as any);
     } else {
       await repository.save(repository.create(seed));
     }
@@ -81,10 +106,12 @@ export class DatabaseSeeder {
       await DatabaseConfig.transaction(async (manager) => {
         const roles = await upsertRoles(manager);
         const stores = await upsertStores(manager);
-        const admin = await upsertAdmin(manager, roles.get("Quản trị hệ thống")!);
+        const admin = await upsertAdmin(manager);
         await attachAdminToStores(manager, admin, stores);
         await seedAttributes(manager);
-        console.log(`✅ Seeded ${stores.length} stores, admin user, roles and current attributes.`);
+        console.log(
+          `✅ Seeded ${stores.length} stores, admin user, roles and current attributes.`,
+        );
       });
       console.log("🔐 Default login: admin / 123456");
     } finally {

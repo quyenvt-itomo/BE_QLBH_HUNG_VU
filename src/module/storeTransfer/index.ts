@@ -6,3 +6,4 @@ export * from "./storeTransfer.service";
 export * from "./storeTransfer.controller";
 export * from "./storeTransfer.route";
 export * from "./storeTransfer.validator";
+export * from "./storeTransfer.container";
