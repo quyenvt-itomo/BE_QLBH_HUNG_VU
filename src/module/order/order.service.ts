@@ -16,6 +16,17 @@ import { PRODUCT_TYPES } from "../product/product.types";
 import { ProductRepository } from "../product/product.repository";
 import { ATTRIBUTE_TYPES } from "../attribute/attribute.types";
 import { AttributeRepository } from "../attribute/attribute.repository";
+import { RateType } from "@/shared/constants/enum";
+
+const calculateRateAmount = (
+  baseAmount: number,
+  type: RateType | undefined,
+  value: number | null | undefined,
+): number => {
+  const normalizedValue = Math.max(0, Number(value) || 0);
+  if (type === RateType.PERCENT) return (baseAmount * normalizedValue) / 100;
+  return normalizedValue;
+};
 
 @injectable()
 export class OrderService extends BaseService<Order> {
@@ -35,10 +46,11 @@ export class OrderService extends BaseService<Order> {
 
   private async attachInfo(data: DeepPartial<Order>, manager: EntityManager): Promise<void> {
     await this.partnerRepository.attachInfo(data as any, manager);
-    const lines = [...((data.lines || []) as DeepPartial<OrderLine>[]), ...((data.returnLines || []) as DeepPartial<OrderLine>[])];
-    let grossAmount = 0;
-    let totalCost = 0;
-    for (const line of lines) {
+    const prepareLines = async (lines: DeepPartial<OrderLine>[]) => {
+      let grossAmount = 0;
+      let totalCost = 0;
+
+      for (const line of lines) {
       if (!line.productId) throw new Error("order.line.product_required");
       await this.productRepository.attachInfo(line, manager);
       if (!line.productSnapshot) throw new Error("product.not_found");
@@ -49,19 +61,47 @@ export class OrderService extends BaseService<Order> {
       line.totalCost = (Number(line.quantity) || 0) * Number(line.conversionRateAtTime) * (Number(line.costPriceAtTime) || 0);
       grossAmount += Number(line.subTotal);
       totalCost += Number(line.totalCost);
-    }
-    data.grossAmount = grossAmount;
-    data.discountAmount = Number(data.discountValue) || 0;
-    data.netAmount = Math.max(0, grossAmount - Number(data.discountAmount));
-    data.taxAmount = Number(data.taxValue) || 0;
-    data.totalAmount = Number(data.netAmount) + Number(data.taxAmount);
-    data.totalCost = totalCost;
-    data.returnGrossAmount = Number(data.returnGrossAmount) || 0;
-    data.returnDiscountAmount = Number(data.returnDiscountAmount) || 0;
-    data.returnNetAmount = Number(data.returnNetAmount) || 0;
-    data.returnTaxAmount = Number(data.returnTaxAmount) || 0;
-    data.returnTotalAmount = Number(data.returnTotalAmount) || 0;
-    data.returnTotalCost = Number(data.returnTotalCost) || 0;
+      }
+
+      return { grossAmount, totalCost };
+    };
+
+    const sale = await prepareLines((data.lines || []) as DeepPartial<OrderLine>[]);
+    const returned = await prepareLines((data.returnLines || []) as DeepPartial<OrderLine>[]);
+
+    const discountAmount = Math.min(
+      sale.grossAmount,
+      calculateRateAmount(sale.grossAmount, data.discountType, data.discountValue),
+    );
+    const netAmount = Math.max(0, sale.grossAmount - discountAmount);
+    const taxAmount = calculateRateAmount(netAmount, data.taxType, data.taxValue);
+    const returnDiscountAmount = Math.min(
+      returned.grossAmount,
+      calculateRateAmount(
+        returned.grossAmount,
+        data.returnDiscountType,
+        data.returnDiscountValue,
+      ),
+    );
+    const returnNetAmount = Math.max(0, returned.grossAmount - returnDiscountAmount);
+    const returnTaxAmount = calculateRateAmount(
+      returnNetAmount,
+      data.returnTaxType,
+      data.returnTaxValue,
+    );
+
+    data.grossAmount = sale.grossAmount;
+    data.discountAmount = discountAmount;
+    data.netAmount = netAmount;
+    data.taxAmount = taxAmount;
+    data.totalAmount = netAmount + taxAmount;
+    data.totalCost = sale.totalCost;
+    data.returnGrossAmount = returned.grossAmount;
+    data.returnDiscountAmount = returnDiscountAmount;
+    data.returnNetAmount = returnNetAmount;
+    data.returnTaxAmount = returnTaxAmount;
+    data.returnTotalAmount = returnNetAmount + returnTaxAmount;
+    data.returnTotalCost = returned.totalCost;
     data.settlementAmount = Number(data.totalAmount) - Number(data.returnTotalAmount);
   }
 
@@ -79,7 +119,27 @@ export class OrderService extends BaseService<Order> {
     if (req?.storeContext?.storeId && current.storeId !== req.storeContext.storeId) throw new Error("store.scope.mismatch");
     const merged = { ...current, ...data } as DeepPartial<Order>;
     await this.attachInfo(merged, manager);
-    Object.assign(data, { type: current.type, storeId: current.storeId, lines: merged.lines, returnLines: merged.returnLines, partnerSnapshot: merged.partnerSnapshot, shipperSnapshot: merged.shipperSnapshot, grossAmount: merged.grossAmount, discountAmount: merged.discountAmount, netAmount: merged.netAmount, taxAmount: merged.taxAmount, totalAmount: merged.totalAmount, totalCost: merged.totalCost, settlementAmount: merged.settlementAmount });
+    Object.assign(data, {
+      type: current.type,
+      storeId: current.storeId,
+      lines: merged.lines,
+      returnLines: merged.returnLines,
+      partnerSnapshot: merged.partnerSnapshot,
+      shipperSnapshot: merged.shipperSnapshot,
+      grossAmount: merged.grossAmount,
+      discountAmount: merged.discountAmount,
+      netAmount: merged.netAmount,
+      taxAmount: merged.taxAmount,
+      totalAmount: merged.totalAmount,
+      totalCost: merged.totalCost,
+      returnGrossAmount: merged.returnGrossAmount,
+      returnDiscountAmount: merged.returnDiscountAmount,
+      returnNetAmount: merged.returnNetAmount,
+      returnTaxAmount: merged.returnTaxAmount,
+      returnTotalAmount: merged.returnTotalAmount,
+      returnTotalCost: merged.returnTotalCost,
+      settlementAmount: merged.settlementAmount,
+    });
   }
 
   private async recalculate(data: Order, manager: EntityManager): Promise<void> {

@@ -33,8 +33,14 @@ export const CreateOrderSchema = BaseCreateSchema.extend({
   discountType: z.enum(RateType).optional().default(RateType.AMOUNT),
   discountValue: z.number().nullish(),
 
+  returnDiscountType: z.enum(RateType).optional().default(RateType.AMOUNT),
+  returnDiscountValue: z.number().nullish(),
+
   taxType: z.enum(RateType).optional().default(RateType.AMOUNT),
   taxValue: z.number().nullish(),
+
+  returnTaxType: z.enum(RateType).optional().default(RateType.AMOUNT),
+  returnTaxValue: z.number().nullish(),
 
   shipperId: z.uuid().nullish(),
   shippingFee: z.number().min(0).nullish(),
@@ -73,6 +79,15 @@ export const UpdateOrderSchema = BaseUpdateSchema.extend({
 
   discountType: z.enum(RateType).optional(),
   discountValue: z.number().optional(),
+
+  returnDiscountType: z.enum(RateType).optional(),
+  returnDiscountValue: z.number().optional(),
+
+  taxType: z.enum(RateType).optional(),
+  taxValue: z.number().optional(),
+
+  returnTaxType: z.enum(RateType).optional(),
+  returnTaxValue: z.number().optional(),
 
   shipperId: z.uuid().nullish(),
   shippingFee: z.number().min(0).nullish(),
