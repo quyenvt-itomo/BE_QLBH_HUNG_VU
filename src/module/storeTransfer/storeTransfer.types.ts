@@ -1,1 +1,1 @@
-export const STORE_TRANSFER_TYPES = { Repository: Symbol.for("StoreTransferRepository"), Service: Symbol.for("StoreTransferService"), Controller: Symbol.for("StoreTransferController"), Router: Symbol.for("StoreTransferRouter") };
+export const STORE_TRANSFER_TYPES = { Repository: Symbol.for("StoreTransferRepository"), LineRepository: Symbol.for("StoreTransferLineRepository"), Service: Symbol.for("StoreTransferService"), Controller: Symbol.for("StoreTransferController"), Router: Symbol.for("StoreTransferRouter") };

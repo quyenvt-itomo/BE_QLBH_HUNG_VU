@@ -5,9 +5,17 @@ import {
   ActionValue,
   RequestContext,
 } from "@/shared/types/interfaces";
-import { ForbiddenError, ValidationError } from "@/shared/types/errors";
+import {
+  BadRequestError,
+  ForbiddenError,
+  ValidationError,
+} from "@/shared/types/errors";
 import { BaseService } from "@/shared/base/BaseService";
-import { Attribute, AttributeType } from "@/database/models/Attribute";
+import {
+  Attribute,
+  AttributeType,
+  isStoreScopedAttributeType,
+} from "@/database/models/Attribute";
 import { AttributeRepository } from "./attribute.repository";
 import { ATTRIBUTE_TYPES } from "./attribute.types";
 
@@ -16,7 +24,7 @@ export class AttributeService extends BaseService<Attribute> {
   private static readonly MAX_PRODUCT_GROUP_DEPTH = 3;
   protected repository: AttributeRepository;
   protected uniqueFields: (keyof Attribute)[] = ["name"];
-  protected uniqueScope: (keyof Attribute)[] = ["type"];
+  protected uniqueScope: (keyof Attribute)[] = ["type", "storeId"];
   protected searchableFields = ["name"];
   protected shouldAttachFiles(): boolean {
     return false;
@@ -38,16 +46,94 @@ export class AttributeService extends BaseService<Attribute> {
   ): Promise<void> {
     const existing = await this.repository.getById(id, manager);
     if (!existing) return;
+    this.validateStoreAccess(existing, req);
     const canUpdate = await this.canUpdate(existing, req);
     if (!canUpdate.can) throw new ForbiddenError(canUpdate.reason);
+    this.validateStoreScopeForWrite(data, existing, req);
     await this.validateHierarchy(id, data, manager, existing);
   }
 
   async validateBeforeCreate(
     data: DeepPartial<Attribute>,
     manager: EntityManager,
+    req?: RequestContext,
   ): Promise<void> {
+    this.attachStoreScope(data, req);
     await this.validateHierarchy(undefined, data, manager);
+  }
+
+  private attachStoreScope(
+    data: DeepPartial<Attribute>,
+    req?: RequestContext,
+  ): void {
+    if (isStoreScopedAttributeType(data.type)) {
+      const contextStoreId = req?.storeContext?.storeId;
+
+      if (!contextStoreId && !data.storeId) {
+        throw new ValidationError("Vui lòng chọn cửa hàng", "storeId");
+      }
+
+      data.storeId = contextStoreId || data.storeId;
+      return;
+    }
+
+    data.storeId = null;
+  }
+
+  private validateStoreAccess(entity: Attribute, req?: RequestContext): void {
+    if (!entity.storeId) return;
+    if (
+      !req?.storeContext?.storeId ||
+      req.storeContext.storeId !== entity.storeId
+    ) {
+      throw new ForbiddenError("attribute.store_forbidden", [
+        {
+          field: "storeId",
+          message: "Không có quyền truy cập thuộc tính của cửa hàng khác",
+        },
+      ]);
+    }
+  }
+
+  private validateStoreScopeForWrite(
+    data: DeepPartial<Attribute>,
+    existing: Attribute,
+    req?: RequestContext,
+  ): void {
+    const type = (data.type || existing.type) as AttributeType;
+    const contextStoreId = req?.storeContext?.storeId;
+
+    if (isStoreScopedAttributeType(type)) {
+      const storeId = existing.storeId || contextStoreId;
+      if (!storeId || (contextStoreId && storeId !== contextStoreId)) {
+        throw new ValidationError("attribute.store_required", [
+          {
+            field: "storeId",
+            message: "Thuộc tính này bắt buộc thuộc một cửa hàng",
+          },
+        ]);
+      }
+      if (data.storeId && data.storeId !== storeId) {
+        throw new BadRequestError("attribute.store_invalid", [
+          {
+            field: "storeId",
+            message: "Không thể chuyển thuộc tính sang cửa hàng khác",
+          },
+        ]);
+      }
+      data.storeId = storeId;
+      return;
+    }
+
+    if (data.storeId) {
+      throw new ValidationError("attribute.store_invalid", [
+        {
+          field: "storeId",
+          message: "Thuộc tính dùng chung không được gắn cửa hàng",
+        },
+      ]);
+    }
+    data.storeId = null;
   }
 
   private async validateHierarchy(
@@ -57,7 +143,10 @@ export class AttributeService extends BaseService<Attribute> {
     existing?: Attribute,
   ): Promise<void> {
     const type = (data.type || existing?.type) as AttributeType | undefined;
-    const hasParentField = Object.prototype.hasOwnProperty.call(data, "parentId");
+    const hasParentField = Object.prototype.hasOwnProperty.call(
+      data,
+      "parentId",
+    );
     const parentId = hasParentField ? data.parentId : existing?.parentId;
 
     if (type !== AttributeType.PRODUCT_GROUP) {
@@ -144,12 +233,24 @@ export class AttributeService extends BaseService<Attribute> {
       return depth;
     };
 
+    if (
+      !id &&
+      parentId &&
+      depthOf(parentId) + 1 > AttributeService.MAX_PRODUCT_GROUP_DEPTH
+    ) {
+      throw new ValidationError("attribute.depth_invalid", [
+        {
+          field: "parentId",
+          message: `Nhóm sản phẩm chỉ được phép tối đa ${AttributeService.MAX_PRODUCT_GROUP_DEPTH} cấp`,
+        },
+      ]);
+    }
+
     const idsToCheck = Array.from(parentById.keys());
     if (id && !idsToCheck.includes(id)) idsToCheck.push(id);
     if (
       idsToCheck.some(
-        (nodeId) =>
-          depthOf(nodeId) > AttributeService.MAX_PRODUCT_GROUP_DEPTH,
+        (nodeId) => depthOf(nodeId) > AttributeService.MAX_PRODUCT_GROUP_DEPTH,
       )
     ) {
       throw new ValidationError("attribute.depth_invalid", [
@@ -166,6 +267,7 @@ export class AttributeService extends BaseService<Attribute> {
     manager: EntityManager,
     req?: RequestContext,
   ): Promise<void> {
+    this.validateStoreAccess(data, req);
     const canDelete = await this.canDelete(data, req);
     if (!canDelete.can) throw new ForbiddenError(canDelete.reason);
   }
@@ -222,8 +324,11 @@ export class AttributeService extends BaseService<Attribute> {
     type: AttributeType,
     req?: RequestContext,
   ): Promise<{ id: string; name: string }> {
+    const storeId = isStoreScopedAttributeType(type)
+      ? req?.storeContext?.storeId
+      : null;
     let attr = await this.repository.findOne({
-      where: { name: ILike(name), type },
+      where: { name: ILike(name), type, storeId } as any,
     });
 
     if (!attr) {

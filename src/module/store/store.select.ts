@@ -16,5 +16,7 @@ export const StoreSelectBasic: FindOptionsSelect<Store> = {
 export const StoreSelectFull: FindOptionsSelect<Store> = {
   ...StoreSelectBasic,
 };
+export const StoreSelectList = StoreSelectBasic;
 
 export const StoreRelations: FindOptionsRelations<Store> = {};
+export const StoreRelationsList: FindOptionsRelations<Store> = {};

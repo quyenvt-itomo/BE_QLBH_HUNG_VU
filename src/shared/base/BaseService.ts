@@ -23,6 +23,7 @@ import {
   FindManyOptions,
   FindOneOptions,
   In,
+  IsNull,
   Not,
   ObjectLiteral,
 } from "typeorm";
@@ -219,7 +220,7 @@ export abstract class BaseService<T extends BaseEntity> {
   ): Promise<ApiResponse<T[]>> {
     let page = options.page || 1;
     const size = options.size || 20;
-    const storeId = options.storeId || req?.storeContext?.storeId;
+    const storeId = req?.storeContext?.storeId || options.storeId;
 
     const optionData: IFindPaginationOptions<T> = {
       ...options,
@@ -787,7 +788,7 @@ export abstract class BaseService<T extends BaseEntity> {
 
     if (Object.keys(occurrences).length === 0) return errors;
 
-    const repoMap = RepositoryFactory.getRepositories();
+    const repoMap = RepositoryFactory.getRepositories(manager);
 
     // For each related entity, batch check IDs
     await Promise.all(
@@ -809,8 +810,8 @@ export abstract class BaseService<T extends BaseEntity> {
         }
 
         // query existing ids in tenant schema
-        const found = await repo.findByOptions({
-          where: { id: In(ids as any), deletedAt: null } as any,
+        const found = await repo.find({
+          where: { id: In(ids as any), deletedAt: IsNull() } as any,
         });
 
         const foundIds = new Set(found.map((f: any) => String(f.id)));

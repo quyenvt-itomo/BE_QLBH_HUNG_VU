@@ -1,8 +1,47 @@
+import { inject, injectable } from "inversify";
+import { DeepPartial, EntityManager } from "typeorm";
 import { IncomeExpense, IncomeExpenseType } from "@/database/models/store/IncomeExpense";
-import { Fund } from "@/database/models/Fund";
-import { Partner } from "@/database/models/Partner";
-import { Attribute } from "@/database/models/Attribute";
-import { IsNull } from "typeorm";
-import { SimpleService } from "../_shared/simple.service";
+import { BaseService } from "@/shared/base/BaseService";
+import { RequestContext } from "@/shared/types/interfaces";
+import { generateCode } from "@/shared/utils/code.utils";
+import { FUND_TYPES } from "../fund/fund.types";
+import { FundRepository } from "../fund/fund.repository";
+import { PARTNER_TYPES } from "../partner/partner.types";
+import { PartnerRepository } from "../partner/partner.repository";
+import { ATTRIBUTE_TYPES } from "../attribute/attribute.types";
+import { AttributeRepository } from "../attribute/attribute.repository";
 import { IncomeExpenseRepository } from "./incomeExpense.repository";
-export class IncomeExpenseService extends SimpleService<IncomeExpense> { constructor(repository: IncomeExpenseRepository) { super(repository, "store", "incomeExpense"); } async validateBeforeCreate(data: any, manager: any, req?: any): Promise<void> { await super.validateBeforeCreate(data, manager, req); if (!data.type) throw new Error("incomeExpense.type.required"); if (![IncomeExpenseType.INCOME, IncomeExpenseType.EXPENSE].includes(data.type)) throw new Error("incomeExpense.type.invalid"); if (data.fundId) { const fund = await manager.getRepository(Fund).findOne({ where: { id: data.fundId, deletedAt: IsNull() } as any }); if (!fund) throw new Error("fund.not_found"); data.fundSnapshot = { id: fund.id, code: fund.code, name: fund.name, type: fund.type }; } if (data.partnerId) { const partner = await manager.getRepository(Partner).findOne({ where: { id: data.partnerId, deletedAt: IsNull() } as any }); if (!partner) throw new Error("partner.not_found"); data.partnerSnapshot = { id: partner.id, type: partner.type, groupId: partner.groupId, isOrganization: partner.isOrganization, name: partner.name, code: partner.code, email: partner.email, phone: partner.phone, taxCode: partner.taxCode, addresses: partner.addresses || [], representative: partner.representative, banks: partner.banks || [] }; } if (data.categoryId) { const category = await manager.getRepository(Attribute).findOne({ where: { id: data.categoryId, deletedAt: IsNull() } as any }); if (!category) throw new Error("category.not_found"); data.categorySnapshot = { id: category.id, name: category.name }; } } }
+import { INCOME_EXPENSE_TYPES } from "./incomeExpense.types";
+@injectable()
+export class IncomeExpenseService extends BaseService<IncomeExpense> {
+  protected repository: IncomeExpenseRepository;
+  protected uniqueFields: (keyof IncomeExpense)[] = ["code"];
+  protected uniqueScope: (keyof IncomeExpense)[] = ["storeId"];
+  protected searchableFields = ["code", "description"];
+  constructor(
+    @inject(INCOME_EXPENSE_TYPES.Repository) repository: IncomeExpenseRepository,
+    @inject(FUND_TYPES.Repository) private fundRepository: FundRepository,
+    @inject(PARTNER_TYPES.PartnerRepository) private partnerRepository: PartnerRepository,
+    @inject(ATTRIBUTE_TYPES.AttributeRepository) private attributeRepository: AttributeRepository,
+  ) { super(); this.repository = repository; }
+  async validateBeforeCreate(
+    data: DeepPartial<IncomeExpense>,
+    manager: EntityManager,
+    req?: RequestContext,
+  ): Promise<void> {
+    data.storeId = data.storeId || req?.storeContext?.storeId;
+    if (!data.storeId) throw new Error("store.required");
+    if (!data.code) data.code = await generateCode("incomeExpense", data.storeId);
+    if (!data.type) throw new Error("incomeExpense.type.required");
+    if (
+      ![IncomeExpenseType.INCOME, IncomeExpenseType.EXPENSE].includes(data.type)
+    )
+      throw new Error("incomeExpense.type.invalid");
+    await this.fundRepository.attachInfo(data, manager);
+    await this.partnerRepository.attachInfo(data, manager);
+    if (data.categoryId) {
+      await this.attributeRepository.attachInfo(data as any, manager);
+      if (!data.categorySnapshot) throw new Error("category.not_found");
+    }
+  }
+}

@@ -16,6 +16,7 @@ export const ExtraUnitSchema = z.object({
 
 export const CreateProductSchema = BaseCreateSchema.extend({
   groupId: z.uuid().nullish(),
+  brandId: z.uuid().nullish(),
   code: BaseCodeSchema.optional(),
   name: z.string().trim().min(1),
   baseUnitId: z.uuid().nullish(),
@@ -26,6 +27,7 @@ export const CreateProductSchema = BaseCreateSchema.extend({
 
 export const UpdateProductSchema = BaseUpdateSchema.extend({
   groupId: z.uuid().nullish(),
+  brandId: z.uuid().nullish(),
   code: BaseCodeSchema.optional(),
   name: z.string().trim().min(1).optional(),
   baseUnitId: z.uuid().nullish(),

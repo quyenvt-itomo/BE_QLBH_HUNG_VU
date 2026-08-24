@@ -1,3 +1,7 @@
+import { Router } from "express";
+import { inject, injectable } from "inversify";
+import { permissionMiddleware } from "@/shared/middleware/permission.middleware";
 import { ProductPriceHistoryController } from "./productPriceHistory.controller";
-import { simpleRoutes } from "../_shared/simple.route";
-export class ProductPriceHistoryRouter { constructor(private readonly controller: ProductPriceHistoryController) {} getRouter() { return simpleRoutes(this.controller, "product"); } }
+import { PRODUCT_PRICE_HISTORY_TYPES } from "./productPriceHistory.types";
+@injectable()
+export class ProductPriceHistoryRouter { private router = Router(); constructor(@inject(PRODUCT_PRICE_HISTORY_TYPES.Controller) controller: ProductPriceHistoryController) { this.router.get("/", permissionMiddleware("product", "read"), controller.getAllWithPagination); this.router.get("/:id", permissionMiddleware("product", "read"), controller.getById); } getRouter() { return this.router; } }

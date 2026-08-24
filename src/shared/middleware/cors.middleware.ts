@@ -28,7 +28,7 @@ const corsMiddleware = cors({
   allowedHeaders: [
     "Content-Type",
     "Authorization",
-    "x-company-id",
+    "x-store-id",
     "x-device-id",
     "x-timezone",
     "x-ip-address",

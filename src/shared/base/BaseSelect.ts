@@ -31,12 +31,16 @@ export type RelationSelectConfig<T> = {
 
 export const BaseSelect: FindOptionsSelect<BaseEntity> = {
   id: true,
+  tempId: true,
   creatorId: true,
   creatorSnapshot: true,
   updaterId: true,
   updaterSnapshot: true,
+  deleterId: true,
+  deleterSnapshot: true,
   createdAt: true,
   updatedAt: true,
+  deletedAt: true,
   note: true,
   isDefault: true,
   sortOrder: true,

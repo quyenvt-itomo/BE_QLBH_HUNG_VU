@@ -5,23 +5,28 @@ import {
   AttributeType,
   Product,
   ProductSnapshot,
-  StoreProduct,
 } from "@/database/models";
 import { IFindPaginationOptions } from "@/shared/base/BaseRepository";
 import { AttributeRepository } from "../attribute/attribute.repository";
 import { ATTRIBUTE_TYPES } from "../attribute/attribute.types";
-import { ProductRelations, ProductSelectFull } from "./product.select";
+import { ProductRelations, ProductRelationsList, ProductSelectFull, ProductSelectList } from "./product.select";
 import { ProductQueryDto } from "./product.validator";
+import { STORE_PRODUCT_TYPES } from "../storeProduct/storeProduct.types";
+import { StoreProductRepository } from "../storeProduct/storeProduct.repository";
 
 @injectable()
 export class ProductRepository extends BaseRepository<Product> {
   protected entityClass = Product;
   protected selectedFields = ProductSelectFull;
+  protected selectedFieldsForList = ProductSelectList;
   protected relations = ProductRelations;
+  protected relationsForList = ProductRelationsList;
 
   constructor(
     @inject(ATTRIBUTE_TYPES.AttributeRepository)
     private attributeRepository: AttributeRepository,
+    @inject(STORE_PRODUCT_TYPES.Repository)
+    private storeProductRepository: StoreProductRepository,
   ) {
     super();
   }
@@ -139,8 +144,7 @@ export class ProductRepository extends BaseRepository<Product> {
     rawProduct?: Product | null,
   ): Promise<number> {
     if (storeId) {
-      const storeProduct = await this.getRepository(manager)
-        .manager.getRepository(StoreProduct)
+      const storeProduct = await this.storeProductRepository.getRepository(manager)
         .findOne({ where: { productId, storeId } });
       if (storeProduct) return Number(storeProduct.costPrice) || 0;
     }

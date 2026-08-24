@@ -186,6 +186,57 @@ export abstract class BaseRepository<T extends ObjectLiteral> {
     });
   }
 
+  /**
+   * Apply a TypeORM select tree to a query-builder query.
+   * `leftJoinAndSelect` selects every column by default, so relation configs
+   * must be applied explicitly after all joins have been created.
+   */
+  private applySelectTree(
+    qb: SelectQueryBuilder<T>,
+    selectTree: any,
+    parentAlias = "entity",
+  ): void {
+    if (!selectTree || typeof selectTree !== "object") return;
+
+    const rootMetadata = (qb as any).expressionMap?.mainAlias?.metadata;
+    if (!rootMetadata) return;
+
+    const selections: string[] = [];
+
+    const addColumns = (metadata: any, alias: string, fields: any) => {
+      if (!fields || typeof fields !== "object") return;
+
+      for (const [propertyName, value] of Object.entries(fields)) {
+        const column = metadata.findColumnWithPropertyName(propertyName);
+        if (column && value === true) {
+          selections.push(`${alias}.${column.propertyName}`);
+          continue;
+        }
+
+        const relation = metadata.findRelationWithPropertyPath(propertyName);
+        if (!relation || value === false || value == null) continue;
+
+        const relationAlias = this.buildJoinAlias(alias, propertyName);
+        const relationIsJoined = (qb as any).expressionMap.joinAttributes?.some(
+          (join: any) => join?.alias?.name === relationAlias,
+        );
+        if (!relationIsJoined) continue;
+
+        if (value === true) {
+          for (const relationColumn of relation.inverseEntityMetadata.columns) {
+            selections.push(`${relationAlias}.${relationColumn.propertyName}`);
+          }
+          continue;
+        }
+
+        addColumns(relation.inverseEntityMetadata, relationAlias, value);
+      }
+    };
+
+    addColumns(rootMetadata, parentAlias, selectTree);
+    if (selections.length > 0) qb.select(selections);
+  }
+
   // sửa trong BaseRepository
   protected mapRawEntities(rawAndEntities: {
     entities: T[];
@@ -314,9 +365,12 @@ export abstract class BaseRepository<T extends ObjectLiteral> {
       this.joinRelations(qb, this.relations, "entity");
     }
 
+    this.applySelectTree(qb, this.selectedFields, "entity");
+
     // Gọi extendQueryBuilder để thêm các select/extra fields
     await this.extendQueryBuilder(qb, {
       moreQuery: req?.query,
+      storeId: req?.storeContext?.storeId,
     });
 
     // Nếu có extra select/group thì mapRawEntities, ngược lại getOne
@@ -368,6 +422,8 @@ export abstract class BaseRepository<T extends ObjectLiteral> {
     if (this.relations) {
       this.joinRelations(qb, this.relations, "entity");
     }
+
+    this.applySelectTree(qb, this.selectedFields, "entity");
 
     // Extend
     await this.extendQueryBuilder(qb, {
@@ -440,6 +496,13 @@ export abstract class BaseRepository<T extends ObjectLiteral> {
     if (allRelations && Object.keys(allRelations).length > 0) {
       this.joinRelations(qb, allRelations, "entity");
     }
+
+    const selectedFields =
+      options.select ||
+      (options.useFullDetail
+        ? this.selectedFields
+        : this.selectedFieldsForList || this.selectedFields);
+    this.applySelectTree(qb, selectedFields, "entity");
 
     if (options.keyword) {
       let textSearchableFields: string[] = [];
@@ -899,7 +962,9 @@ export abstract class BaseRepository<T extends ObjectLiteral> {
     }
 
     if (hasStoreIdColumn) {
-      (data as any).storeId = storeId || (data as any).storeId;
+      if ((data as any).storeId === undefined) {
+        (data as any).storeId = storeId || null;
+      }
     }
 
     const hasCodeColumn = entityInfo?.columns?.some(
@@ -979,7 +1044,9 @@ export abstract class BaseRepository<T extends ObjectLiteral> {
     if (hasStoreIdColumn) {
       const storeId = req?.storeContext?.storeId;
       data.forEach((item) => {
-        (item as any).storeId = storeId || (item as any).storeId;
+        if ((item as any).storeId === undefined) {
+          (item as any).storeId = storeId || null;
+        }
       });
     }
 

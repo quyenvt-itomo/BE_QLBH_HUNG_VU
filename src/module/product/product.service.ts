@@ -1,5 +1,5 @@
 import { inject, injectable } from "inversify";
-import { DeepPartial, EntityManager } from "typeorm";
+import { DeepPartial, EntityManager, In } from "typeorm";
 import { BaseService } from "@/shared/base/BaseService";
 import { AttributeType, Product } from "@/database/models";
 import { ProductPriceHistory } from "@/database/models/store/ProductPriceHistory";
@@ -15,6 +15,10 @@ import { withTransaction } from "@/shared/base/TransactionManager";
 import { ValidationError } from "@/shared/types/errors";
 import { AttributeRepository } from "../attribute/attribute.repository";
 import { ATTRIBUTE_TYPES } from "../attribute/attribute.types";
+import { STORE_PRODUCT_TYPES } from "../storeProduct/storeProduct.types";
+import { StoreProductRepository } from "../storeProduct/storeProduct.repository";
+import { PRODUCT_PRICE_HISTORY_TYPES } from "../productPriceHistory/productPriceHistory.types";
+import { ProductPriceHistoryRepository } from "../productPriceHistory/productPriceHistory.repository";
 
 @injectable()
 export class ProductService extends BaseService<Product> {
@@ -27,6 +31,10 @@ export class ProductService extends BaseService<Product> {
     private attributeRepository: AttributeRepository,
     @inject(INVENTORY_TYPES.InventoryRecalculateService)
     private inventory: InventoryRecalculateService,
+    @inject(STORE_PRODUCT_TYPES.Repository)
+    private storeProductRepository: StoreProductRepository,
+    @inject(PRODUCT_PRICE_HISTORY_TYPES.Repository)
+    private priceHistoryRepository: ProductPriceHistoryRepository,
   ) {
     super();
     this.repository = repository;
@@ -39,6 +47,7 @@ export class ProductService extends BaseService<Product> {
     if (data.salePrice == null) data.salePrice = 0;
     if (!data.code) data.code = await generateCode("product");
     await this.validateProductGroup(data.groupId, _manager);
+    await this.validateProductBrand(data.brandId, _manager);
   }
   async validateBeforeUpdate(
     _id: string,
@@ -46,6 +55,7 @@ export class ProductService extends BaseService<Product> {
     manager: EntityManager,
   ): Promise<void> {
     await this.validateProductGroup(data.groupId, manager);
+    await this.validateProductBrand(data.brandId, manager);
   }
 
   private async validateProductGroup(
@@ -60,6 +70,19 @@ export class ProductService extends BaseService<Product> {
       ]);
     }
   }
+
+  private async validateProductBrand(
+    brandId: string | null | undefined,
+    manager: EntityManager,
+  ): Promise<void> {
+    if (!brandId) return;
+    const brand = await this.attributeRepository.getById(brandId, manager);
+    if (brand.type !== AttributeType.BRAND) {
+      throw new ValidationError("product.brand_invalid", [
+        { field: "brandId", message: "Thương hiệu không hợp lệ" },
+      ]);
+    }
+  }
   async updateStoreCost(
     productId: string,
     storeId: string,
@@ -67,7 +90,7 @@ export class ProductService extends BaseService<Product> {
     manager?: EntityManager,
   ): Promise<void> {
     const run = async (em: EntityManager) => {
-      const repo = em.getRepository(StoreProduct);
+      const repo = this.storeProductRepository.getRepository(em);
       const current = await repo.findOne({
         where: { productId, storeId } as any,
       });
@@ -79,8 +102,8 @@ export class ProductService extends BaseService<Product> {
       await repo.save(
         repo.create({ ...(current || {}), productId, storeId, costPrice }),
       );
-      const history = await em.getRepository(ProductPriceHistory).save(
-        em.getRepository(ProductPriceHistory).create({
+      const history = await this.priceHistoryRepository.getRepository(em).save(
+        this.priceHistoryRepository.getRepository(em).create({
           storeId,
           productId,
           productSnapshot,
@@ -107,14 +130,20 @@ export class ProductService extends BaseService<Product> {
       where: { deletedAt: null },
       relations: { extraUnits: true },
     };
-    if ((query as any).groupId) options.where.groupId = (query as any).groupId;
+    if (query.productCategoryIds?.length) {
+      const categoryIds = await this.attributeRepository.getDescendantIds(
+        query.productCategoryIds,
+        AttributeType.PRODUCT_GROUP,
+      );
+      if (!categoryIds.length) return [];
+      options.where.groupId = In(categoryIds);
+    } else if (query.groupId) {
+      options.where.groupId = query.groupId;
+    }
     const products = await this.repository.find(options);
     const storeId = (query as any).storeId || req?.storeContext?.storeId;
     if (!storeId || !products.length) return products;
-    const histories = await this.repository
-      .getRepository()
-      .manager.getRepository(ProductPriceHistory)
-      .find({
+    const histories = await this.priceHistoryRepository.getRepository().find({
         where: {
           storeId,
           productId: (products as any).map((p: Product) => p.id),

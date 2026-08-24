@@ -7,7 +7,9 @@ import {
 import { PartnerContact } from "@/database/models";
 import {
   PartnerContactSelectFull,
+  PartnerContactSelectList,
   PartnerContactRelations,
+  PartnerContactRelationsList,
 } from "./partnerContact.select";
 
 /**
@@ -18,7 +20,9 @@ import {
 export class PartnerContactRepository extends BaseRepository<PartnerContact> {
   protected entityClass = PartnerContact;
   protected selectedFields = PartnerContactSelectFull;
+  protected selectedFieldsForList = PartnerContactSelectList;
   protected relations = PartnerContactRelations;
+  protected relationsForList = PartnerContactRelationsList;
 
   protected async extendQueryBuilder(
     qb: SelectQueryBuilder<PartnerContact>,

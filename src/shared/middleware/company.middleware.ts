@@ -9,8 +9,9 @@ export const companyResolver = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    const storeId = (req.headers["x-store-id"] ||
-      req.headers["x-company-id"]) as string | undefined;
+    const storeId = (req.headers["x-store-id"] || req.headers["x-store-id"]) as
+      | string
+      | undefined;
     if (!storeId) return next();
     const store = await DatabaseConfig.getRepository(Store).findOne({
       where: { id: storeId },

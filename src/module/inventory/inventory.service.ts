@@ -1,23 +1,31 @@
-import { injectable } from "inversify";
+import { inject, injectable } from "inversify";
 import { IsNull, EntityManager } from "typeorm";
 import { TransactionService } from "@/shared/base/TransactionService";
 import { ApiResponse } from "@/shared/types/interfaces";
 import { InventoryTransaction, InventoryRefType } from "@/database/models/store/InventoryTransaction";
-import { Product } from "@/database/models/Product";
 import { TransactionType } from "@/shared/constants/enum";
 import { GetStockReportQueryDto, GetTransactionDetailsQueryDto } from "./inventory.validator";
+import { INVENTORY_TYPES } from "./inventory.types";
+import { PRODUCT_TYPES } from "../product/product.types";
+import { ProductRepository } from "../product/product.repository";
+import { INVENTORY_TRANSACTION_TYPES } from "../inventoryTransaction/inventoryTransaction.types";
+import { InventoryTransactionRepository } from "../inventoryTransaction/inventoryTransaction.repository";
 
 @injectable()
 export class InventoryService extends TransactionService {
+  constructor(
+    @inject(PRODUCT_TYPES.ProductRepository) private productRepository: ProductRepository,
+    @inject(INVENTORY_TRANSACTION_TYPES.Repository) private transactionRepository: InventoryTransactionRepository,
+  ) { super(); }
   async getStockReport(params: GetStockReportQueryDto): Promise<ApiResponse> {
     const manager = await this.getManager();
     const startAt = params.startAt ? new Date(params.startAt) : new Date(0);
     const endAt = params.endAt ? new Date(params.endAt) : new Date();
-    const productQb = manager.getRepository(Product).createQueryBuilder("p").where("p.deletedAt IS NULL");
+    const productQb = this.productRepository.getRepository(manager).createQueryBuilder("p").where("p.deletedAt IS NULL");
     if (params.productIds?.length) productQb.andWhere("p.id IN (:...productIds)", { productIds: params.productIds });
     if (params.keyword) productQb.andWhere("(p.code ILIKE :keyword OR p.name ILIKE :keyword)", { keyword: `%${params.keyword}%` });
     const products = await productQb.getMany();
-    const transactions = await manager.getRepository(InventoryTransaction).find({ where: { deletedAt: IsNull() } as any, order: { occurredAt: "ASC", createdAt: "ASC" } as any });
+    const transactions = await this.transactionRepository.getRepository(manager).find({ where: { deletedAt: IsNull() } as any, order: { occurredAt: "ASC", createdAt: "ASC" } as any });
     const requestedStores = params.storeIds?.length ? new Set(params.storeIds) : params.storeId ? new Set([params.storeId]) : undefined;
     const data = products.flatMap((product) => {
       const productTransactions = transactions.filter((tx) => tx.productId === product.id && tx.occurredAt <= endAt && (!requestedStores || requestedStores.has(tx.storeId)));
@@ -37,7 +45,7 @@ export class InventoryService extends TransactionService {
 
   async getTransactionDetails(params: GetTransactionDetailsQueryDto): Promise<ApiResponse<InventoryTransaction[]>> {
     const manager = await this.getManager();
-    const rows = await manager.getRepository(InventoryTransaction).find({ where: { productId: params.productId, ...(params.storeId ? { storeId: params.storeId } : {}), deletedAt: IsNull() } as any, order: { occurredAt: "ASC", createdAt: "ASC" } as any });
+    const rows = await this.transactionRepository.getRepository(manager).find({ where: { productId: params.productId, ...(params.storeId ? { storeId: params.storeId } : {}), deletedAt: IsNull() } as any, order: { occurredAt: "ASC", createdAt: "ASC" } as any });
     const filtered = rows.filter((tx) => (!params.startAt || tx.occurredAt >= new Date(params.startAt)) && (!params.endAt || tx.occurredAt <= new Date(params.endAt)) && (!params.refType || tx.refType === params.refType));
     return { statusCode: 200, success: true, message: "OK", data: filtered.slice(((params.page || 1) - 1) * (params.size || 20), (params.page || 1) * (params.size || 20)), pagination: { currentPage: params.page || 1, size: params.size || 20, totalRecords: filtered.length, totalPages: Math.ceil(filtered.length / (params.size || 20)) } };
   }

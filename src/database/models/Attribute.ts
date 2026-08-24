@@ -7,20 +7,34 @@ import {
   ManyToOne,
   OneToMany,
 } from "typeorm";
+import { Store } from "./Store";
 
 export enum AttributeType {
+  // TODO: Hàng hóa
   UNIT = "unit", // đơn vị tính
+  PRODUCT_GROUP = "product_group", // nhóm hàng hóa
+  BRAND = "brand", // thương hiệu
+  LOCATION = "location", // vị trí kho/kệ
 
+  // TODO: Hạng mục thu chi
   INCOME_CATEGORY = "income_category", // loại thu
   EXPENSE_CATEGORY = "expense_category", // loại chi
 
-  // Nhóm hàng hóa
-  PRODUCT_GROUP = "product_group", // nhóm hàng hóa
-
+  // TODO: Đối tác
   CUSTOMER_GROUP = "customer_group", // nhóm khách hàng
   SUPPLIER_GROUP = "supplier_group", // nhóm nhà cung cấp
   SHIPPER_GROUP = "shipper_group", // nhóm đơn vị vận chuyển
 }
+
+/** Attribute types whose records belong to one store instead of being global. */
+export const STORE_SCOPED_ATTRIBUTE_TYPES: readonly AttributeType[] = [
+  AttributeType.LOCATION,
+];
+
+export const isStoreScopedAttributeType = (
+  type?: AttributeType | null,
+): boolean =>
+  type ? STORE_SCOPED_ATTRIBUTE_TYPES.includes(type) : false;
 
 export const DEFAULT_WEIGHT_UNIT = "Kg";
 export const DEFAULT_MESH_UNIT = "Tấm";
@@ -55,13 +69,23 @@ export class Attribute extends BaseEntity {
   @Index()
   @Column({ type: "uuid", nullable: true })
   parentId?: string | null;
-
-  @ManyToOne(() => Attribute, (attr) => attr.children, {
-    onDelete: "CASCADE",
-  })
+  @ManyToOne(() => Attribute, (attr) => attr.children, { onDelete: "CASCADE" })
   @JoinColumn({ name: "parentId" })
   parent?: Attribute;
 
   @OneToMany(() => Attribute, (attr) => attr.parent)
   children?: Attribute[];
+
+  @Index()
+  @Column({ type: "uuid", nullable: true, default: null })
+  storeId?: string | null;
+  @ManyToOne(() => Store, { onDelete: "CASCADE" })
+  @JoinColumn({ name: "storeId" })
+  store?: Store | null;
+
+  /** Computed statistics populated by AttributeRepository list queries. */
+  productCount?: number;
+  partnerCount?: number;
+  incomeExpenseCount?: number;
+  incomeExpenseAmount?: number;
 }

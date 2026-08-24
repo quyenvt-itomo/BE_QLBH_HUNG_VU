@@ -1,4 +1,7 @@
+import { inject, injectable } from "inversify";
 import { ProductExtraUnit } from "@/database/models/ProductExtraUnit";
-import { SimpleController } from "../_shared/simple.controller";
+import { BaseController } from "@/shared/base/BaseController";
 import { ProductExtraUnitService } from "./productExtraUnit.service";
-export class ProductExtraUnitController extends SimpleController<ProductExtraUnit> { constructor(service: ProductExtraUnitService) { super(service); } }
+import { PRODUCT_EXTRA_UNIT_TYPES } from "./productExtraUnit.types";
+@injectable()
+export class ProductExtraUnitController extends BaseController<ProductExtraUnit> { protected service: ProductExtraUnitService; constructor(@inject(PRODUCT_EXTRA_UNIT_TYPES.Service) service: ProductExtraUnitService) { super(); this.service = service; } }

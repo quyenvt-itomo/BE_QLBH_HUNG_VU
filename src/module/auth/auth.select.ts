@@ -11,15 +11,23 @@ export const AuthSelectBasic: FindOptionsSelect<User> = {
   phone: true,
   isActive: true,
 };
+export const AuthSelectList = AuthSelectBasic;
 
 export const AuthSelectFull: FindOptionsSelect<User> = {
   ...AuthSelectBasic,
   password: true,
-  storeUsers: true,
-};
+  role: { id: true, type: true, name: true, permissions: true },
+  storeUsers: {
+    id: true,
+    storeId: true,
+    userId: true,
+    store: { id: true, code: true, name: true, phone: true, isActive: true },
+  },
+} as any;
 
 export const AuthRelations: FindOptionsRelations<User> = {
   storeUsers: {
     store: true,
   },
 };
+export const AuthRelationsList: FindOptionsRelations<User> = {};

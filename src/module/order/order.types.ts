@@ -3,5 +3,6 @@ export const ORDER_TYPES = {
   OrderController: Symbol.for("OrderController"),
   OrderRepository: Symbol.for("OrderRepository"),
   OrderRouter: Symbol.for("OrderRouter"),
+  OrderLineRepository: Symbol.for("OrderLineRepository"),
 };
 export type OrderModule = "sale" | "saleReturn" | "purchase" | "purchaseReturn";

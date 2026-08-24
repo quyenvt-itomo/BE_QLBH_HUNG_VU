@@ -2,14 +2,16 @@ import { inject, injectable } from "inversify";
 import { DeepPartial, EntityManager } from "typeorm";
 import { BaseService } from "@/shared/base/BaseService";
 import { RequestContext } from "@/shared/types/interfaces";
-import { Product } from "@/database/models/Product";
 import { ProductPriceHistory } from "@/database/models/store/ProductPriceHistory";
-import { StoreProduct } from "@/database/models/store/StoreProduct";
 import { ProductPriceHistoryRepository } from "./productPriceHistory.repository";
 import { PRODUCT_PRICE_HISTORY_TYPES } from "./productPriceHistory.types";
 import { INVENTORY_TYPES } from "../inventory/inventory.types";
 import { InventoryRecalculateService } from "../inventory/inventoryRecalculate.service";
 import { generateCode } from "@/shared/utils/code.utils";
+import { PRODUCT_TYPES } from "../product/product.types";
+import { ProductRepository } from "../product/product.repository";
+import { STORE_PRODUCT_TYPES } from "../storeProduct/storeProduct.types";
+import { StoreProductRepository } from "../storeProduct/storeProduct.repository";
 
 @injectable()
 export class ProductPriceHistoryService extends BaseService<ProductPriceHistory> {
@@ -20,6 +22,10 @@ export class ProductPriceHistoryService extends BaseService<ProductPriceHistory>
     repository: ProductPriceHistoryRepository,
     @inject(INVENTORY_TYPES.InventoryRecalculateService)
     private readonly inventory: InventoryRecalculateService,
+    @inject(PRODUCT_TYPES.ProductRepository)
+    private readonly productRepository: ProductRepository,
+    @inject(STORE_PRODUCT_TYPES.Repository)
+    private readonly storeProductRepository: StoreProductRepository,
   ) {
     super();
     this.repository = repository;
@@ -59,21 +65,13 @@ export class ProductPriceHistoryService extends BaseService<ProductPriceHistory>
       throw new Error("productPriceHistory.costPrice.invalid");
     }
 
-    const product = await manager
-      .getRepository(Product)
-      .findOne({ where: { id: payload.productId } as any });
-    if (!product) throw new Error("product.not_found");
-    const storeProduct = await manager
-      .getRepository(StoreProduct)
-      .findOne({ where: { productId: payload.productId, storeId } as any });
+    const productSnapshot = await this.productRepository.getSnapshot(payload.productId, manager);
+    if (!productSnapshot) throw new Error("product.not_found");
+    const storeProduct = await this.storeProductRepository.getRepository(manager).findOne({ where: { productId: payload.productId, storeId } as any });
     const before = Number(storeProduct?.costPrice) || 0;
 
     payload.storeId = storeId;
-    payload.productSnapshot = {
-      id: product.id,
-      code: product.code,
-      name: product.name,
-    };
+    payload.productSnapshot = productSnapshot;
     payload.deltaCostPrice = costPrice - before;
     payload.code =
       payload.code || (await generateCode("pricehistory", storeId));
@@ -83,7 +81,7 @@ export class ProductPriceHistoryService extends BaseService<ProductPriceHistory>
     data: ProductPriceHistory,
     manager: EntityManager,
   ): Promise<void> {
-    const storeProductRepository = manager.getRepository(StoreProduct);
+    const storeProductRepository = this.storeProductRepository.getRepository(manager);
     const current = await storeProductRepository.findOne({
       where: { productId: data.productId!, storeId: data.storeId } as any,
     });

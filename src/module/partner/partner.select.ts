@@ -16,15 +16,27 @@ export const PartnerSelectBasic: FindOptionsSelect<Partner> = {
   representative: true,
   banks: true,
   maxDebtAmount: true,
+  group: { id: true, name: true, type: true, parentId: true, storeId: true },
 };
+export const PartnerSelectList = PartnerSelectBasic;
 
 export const PartnerSelectFull: FindOptionsSelect<Partner> = {
   ...PartnerSelectBasic,
-  group: true,
-  contacts: true,
-};
+  group: { id: true, name: true, type: true, parentId: true, storeId: true },
+  contacts: {
+    id: true,
+    partnerId: true,
+    name: true,
+    email: true,
+    phone: true,
+    banks: true,
+  },
+} as any;
 
 export const PartnerRelations: FindOptionsRelations<Partner> = {
   group: true,
   contacts: true,
+};
+export const PartnerRelationsList: FindOptionsRelations<Partner> = {
+  group: true,
 };

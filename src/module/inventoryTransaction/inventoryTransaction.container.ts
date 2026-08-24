@@ -9,19 +9,7 @@ export const inventoryTransactionModule = new ContainerModule((bind) => {
   bind(INVENTORY_TRANSACTION_TYPES.Repository)
     .to(InventoryTransactionRepository)
     .inSingletonScope();
-  bind(INVENTORY_TRANSACTION_TYPES.Service)
-    .toDynamicValue((context) => new InventoryTransactionService(
-      context.container.get(INVENTORY_TRANSACTION_TYPES.Repository),
-    ))
-    .inSingletonScope();
-  bind(INVENTORY_TRANSACTION_TYPES.Controller)
-    .toDynamicValue((context) => new InventoryTransactionController(
-      context.container.get(INVENTORY_TRANSACTION_TYPES.Service),
-    ))
-    .inSingletonScope();
-  bind(INVENTORY_TRANSACTION_TYPES.Router)
-    .toDynamicValue((context) => new InventoryTransactionRouter(
-      context.container.get(INVENTORY_TRANSACTION_TYPES.Controller),
-    ))
-    .inSingletonScope();
+  bind(INVENTORY_TRANSACTION_TYPES.Service).to(InventoryTransactionService).inSingletonScope();
+  bind(INVENTORY_TRANSACTION_TYPES.Controller).to(InventoryTransactionController).inSingletonScope();
+  bind(INVENTORY_TRANSACTION_TYPES.Router).to(InventoryTransactionRouter).inSingletonScope();
 });

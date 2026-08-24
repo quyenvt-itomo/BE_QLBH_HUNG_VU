@@ -1,7 +1,7 @@
 import { injectable } from "inversify";
 import { BaseRepository } from "@/shared/base/BaseRepository";
 import { File } from "@/database/models/File";
-import { FileSelectFull, FileRelations } from "./file.select";
+import { FileSelectFull, FileSelectList, FileRelations, FileRelationsList } from "./file.select";
 import { Brackets, IsNull, LessThan } from "typeorm";
 import { StorageStats } from "./file.types";
 import {
@@ -19,7 +19,9 @@ import {
 export class FileRepository extends BaseRepository<File> {
   protected entityClass = File;
   protected selectedFields = FileSelectFull;
+  protected selectedFieldsForList = FileSelectList;
   protected relations = FileRelations;
+  protected relationsForList = FileRelationsList;
 
   // Set main file (đặt isMain=true, còn lại=false)
   async setMainFile(

@@ -73,9 +73,7 @@ export class NotificationService extends BaseService<Notification> {
     try {
       if (userIds.length === 0) return;
 
-      const repo = manager
-        ? manager.getRepository(Notification)
-        : this.repository.getRepository();
+      const repo = this.repository.getRepository(manager);
 
       // Tạo 1 notification cho mỗi user
       const entities = userIds.map((userId) =>

@@ -3,9 +3,10 @@ import { DeepPartial, EntityManager } from "typeorm";
 import { BaseService } from "@/shared/base/BaseService";
 import { BadRequestError, IError } from "@/shared/types/errors";
 import { RequestContext } from "@/shared/types/interfaces";
-import { Partner } from "@/database/models";
+import { Partner, PartnerType } from "@/database/models";
 import { PARTNER_TYPES } from "./partner.types";
 import { PartnerRepository } from "./partner.repository";
+import { generateCode } from "@/shared/utils/code.utils";
 
 /**
  * Partner Service - Tenant Entity
@@ -42,6 +43,10 @@ export class PartnerService extends BaseService<Partner> {
       delete data.representative;
     }
 
+    if (!data.code) {
+      data.code = await generateCode(data.type || "partner");
+    }
+
     const { contacts } = data;
 
     const errors: IError[] = [];
@@ -68,5 +73,4 @@ export class PartnerService extends BaseService<Partner> {
       data.representative = null;
     }
   }
-
 }

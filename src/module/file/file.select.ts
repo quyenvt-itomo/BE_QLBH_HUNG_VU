@@ -32,8 +32,10 @@ export const FileSelectFull: FindOptionsSelect<File> = {
   updatedAt: true,
   deletedAt: true,
 };
+export const FileSelectList = FileSelectBasic;
 
 /**
  * Relations (File has no relations)
  */
 export const FileRelations: FindOptionsRelations<File> = {};
+export const FileRelationsList: FindOptionsRelations<File> = {};

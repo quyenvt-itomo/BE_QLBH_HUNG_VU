@@ -1,6 +1,26 @@
+import { inject, injectable } from "inversify";
+import { DeepPartial, EntityManager } from "typeorm";
 import { FundAdjustment } from "@/database/models/FundAdjustment";
-import { Fund } from "@/database/models/Fund";
-import { IsNull } from "typeorm";
-import { SimpleService } from "../_shared/simple.service";
+import { BaseService } from "@/shared/base/BaseService";
+import { RequestContext } from "@/shared/types/interfaces";
+import { generateCode } from "@/shared/utils/code.utils";
+import { FUND_TYPES } from "../fund/fund.types";
+import { FundRepository } from "../fund/fund.repository";
 import { FundAdjustmentRepository } from "./fundAdjustment.repository";
-export class FundAdjustmentService extends SimpleService<FundAdjustment> { constructor(repository: FundAdjustmentRepository) { super(repository, "store", "fundadjustment"); } async validateBeforeCreate(data: any, manager: any, req?: any): Promise<void> { await super.validateBeforeCreate(data, manager, req); if (!data.fundId) throw new Error("fund.required"); const fund = await manager.getRepository(Fund).findOne({ where: { id: data.fundId, deletedAt: IsNull() } as any }); if (!fund) throw new Error("fund.not_found"); data.fundSnapshot = { id: fund.id, code: fund.code, name: fund.name, type: fund.type }; data.deltaAmount = Number(data.countedAmount || 0) - Number(data.expectedAmount || 0); } }
+import { FUND_ADJUSTMENT_TYPES } from "./fundAdjustment.types";
+@injectable()
+export class FundAdjustmentService extends BaseService<FundAdjustment> {
+  protected repository: FundAdjustmentRepository;
+  protected uniqueFields: (keyof FundAdjustment)[] = ["code"];
+  constructor(
+    @inject(FUND_ADJUSTMENT_TYPES.Repository) repository: FundAdjustmentRepository,
+    @inject(FUND_TYPES.Repository) private fundRepository: FundRepository,
+  ) { super(); this.repository = repository; }
+  async validateBeforeCreate(data: DeepPartial<FundAdjustment>, manager: EntityManager, req?: RequestContext): Promise<void> {
+    if (!data.code) data.code = await generateCode("fundadjustment");
+    if (!data.fundId) throw new Error("fund.required");
+    await this.fundRepository.attachInfo(data, manager);
+    if (!data.fundSnapshot) throw new Error("fund.not_found");
+    data.deltaAmount = Number(data.countedAmount || 0) - Number(data.expectedAmount || 0);
+  }
+}

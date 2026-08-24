@@ -7,7 +7,12 @@ export const AttributeSelectBasic: FindOptionsSelect<Attribute> = {
   name: true,
   type: true,
   parentId: true,
+  storeId: true,
+  parent: { id: true, name: true, type: true, parentId: true },
+  store: { id: true, name: true, code: true },
 };
+
+export const AttributeSelectList = AttributeSelectBasic;
 
 export const AttributeSelectFull: FindOptionsSelect<Attribute> = {
   ...AttributeSelectBasic,
@@ -17,8 +22,18 @@ export const AttributeSelectFull: FindOptionsSelect<Attribute> = {
     type: true,
     parentId: true,
   },
+  store: {
+    id: true,
+    name: true,
+    code: true,
+  },
 };
 
 export const AttributeRelations: FindOptionsRelations<Attribute> = {
   parent: true,
+  store: true,
+};
+export const AttributeRelationsList: FindOptionsRelations<Attribute> = {
+  parent: true,
+  store: true,
 };

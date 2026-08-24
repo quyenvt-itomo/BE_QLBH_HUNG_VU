@@ -6,6 +6,7 @@ import { AuthUtils } from "@/shared/utils/auth.utils";
 import { JwtPayload } from "@/shared/types/interfaces";
 import DatabaseConfig from "@/config/database";
 import { User } from "@/database/models/User";
+import { RoleType } from "@/database/models/Role";
 import { getUserSnapshot } from "@/shared/utils/utils";
 import { createPermissions, MODULES } from "./permission.middleware";
 
@@ -64,10 +65,11 @@ export const authorization = async (
       throw new UnauthorizedError("User is inactive or not found");
 
     const isAdmin = AuthUtils.isAdmin(user);
-    const storeId = req.storeContext?.storeId || req.storeContext?.storeId;
+    const hasSystemScope = isAdmin || user.role?.type === RoleType.SYSTEM;
+    const storeId = req.storeContext?.storeId;
     if (
       storeId &&
-      !isAdmin &&
+      !hasSystemScope &&
       !(user.storeUsers || []).some(
         (membership) => membership.storeId === storeId,
       )

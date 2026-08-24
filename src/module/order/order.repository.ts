@@ -6,16 +6,20 @@ import {
 } from "@/shared/base/BaseRepository";
 import { IncomeExpense, Order, OrderLine, OrderType } from "@/database/models";
 import { OrderQueryDto } from "./order.validator";
+import {
+  OrderRelations,
+  OrderRelationsList,
+  OrderSelectFull,
+  OrderSelectList,
+} from "./order.select";
 
 @injectable()
 export class OrderRepository extends BaseRepository<Order> {
   protected entityClass = Order;
-  protected relations = {
-    partner: true,
-    shipper: true,
-    lines: { product: true, unit: true },
-    refOrder: true,
-  } as any;
+  protected selectedFields = OrderSelectFull;
+  protected selectedFieldsForList = OrderSelectList;
+  protected relations = OrderRelations;
+  protected relationsForList = OrderRelationsList;
 
   protected async extendQueryBuilder(
     qb: SelectQueryBuilder<Order>,

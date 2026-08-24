@@ -38,37 +38,154 @@ type CodeConfig = {
  * income/expense and the four order types), but each type has its own prefix.
  */
 export const codeConfig: Record<string, CodeConfig> = {
-  user: { entity: User, prefix: "ND", length: 4, resetPeriod: "none", global: true },
-  file: { entity: File, prefix: "FILE", length: 5, resetPeriod: "none", global: true },
-  attribute: { entity: Attribute, prefix: "TT", length: 5, resetPeriod: "none", global: true },
-  role: { entity: Role, prefix: "VT", length: 3, resetPeriod: "none", global: true },
-  store: { entity: Store, prefix: "CH", length: 3, resetPeriod: "none", global: true },
-  partner: { entity: Partner, prefix: "DT", length: 5, resetPeriod: "none", global: true },
-  product: { entity: Product, prefix: "HH", length: 5, resetPeriod: "none", global: true },
-  pricehistory: { entity: ProductPriceHistory, prefix: "GVC", length: 4, resetPeriod: "monthly" },
-  fund: { entity: Fund, prefix: "QTK", length: 2, resetPeriod: "none", global: true },
-  fundadjustment: { entity: FundAdjustment, prefix: "DCQ", length: 3, resetPeriod: "monthly" },
-  fundtransfer: { entity: FundTransfer, prefix: "CQ", length: 3, resetPeriod: "monthly" },
-  income: { entity: IncomeExpense, prefix: "PT", length: 3, resetPeriod: "monthly" },
-  expense: { entity: IncomeExpense, prefix: "PC", length: 3, resetPeriod: "monthly" },
-  inventoryadjustment: { entity: InventoryAdjustment, prefix: "DKK", length: 3, resetPeriod: "monthly" },
-  storetransfer: { entity: StoreTransfer, prefix: "PCK", length: 3, resetPeriod: "monthly", global: true },
-  order: { entity: Order, prefix: "DH", length: 3, resetPeriod: "monthly" },
-  purchase: { entity: Order, prefix: "MH", length: 3, resetPeriod: "monthly" },
-  sale: { entity: Order, prefix: "DH", length: 3, resetPeriod: "monthly" },
-  purchasereturn: { entity: Order, prefix: "THN", length: 3, resetPeriod: "monthly" },
-  salereturn: { entity: Order, prefix: "THK", length: 3, resetPeriod: "monthly" },
-  debtadjustment: { entity: DebtAdjustment, prefix: "DCN", length: 3, resetPeriod: "monthly" },
-  vatadjustment: { entity: VatAdjustment, prefix: "DCVAT", length: 3, resetPeriod: "monthly" },
+  user: {
+    entity: User,
+    prefix: "ND",
+    length: 4,
+    resetPeriod: "none",
+    global: true,
+  },
+
+  store: {
+    entity: Store,
+    prefix: "CH",
+    length: 3,
+    resetPeriod: "none",
+    global: true,
+  },
+
+  partner: {
+    entity: Partner,
+    prefix: "DT",
+    length: 5,
+    resetPeriod: "none",
+    global: true,
+  },
+  customer: {
+    entity: Partner,
+    prefix: "KH",
+    length: 6,
+    resetPeriod: "none",
+    global: true,
+  },
+  supplier: {
+    entity: Partner,
+    prefix: "NCC",
+    length: 3,
+    resetPeriod: "none",
+    global: true,
+  },
+  shipper: {
+    entity: Partner,
+    prefix: "ĐVVC",
+    length: 3,
+    resetPeriod: "none",
+    global: true,
+  },
+
+  product: {
+    entity: Product,
+    prefix: "SP",
+    length: 5,
+    resetPeriod: "none",
+    global: true,
+  },
+  pricehistory: {
+    entity: ProductPriceHistory,
+    prefix: "GVC",
+    length: 4,
+    resetPeriod: "monthly",
+  },
+  fund: {
+    entity: Fund,
+    prefix: "QTK",
+    length: 2,
+    resetPeriod: "none",
+    global: true,
+  },
+  fundadjustment: {
+    entity: FundAdjustment,
+    prefix: "DCQ",
+    length: 3,
+    resetPeriod: "monthly",
+  },
+  fundtransfer: {
+    entity: FundTransfer,
+    prefix: "CQ",
+    length: 3,
+    resetPeriod: "monthly",
+  },
+
+  incomeexpense: {
+    entity: IncomeExpense,
+    prefix: "PTC",
+    length: 3,
+    resetPeriod: "monthly",
+  },
+  income: {
+    entity: IncomeExpense,
+    prefix: "PT",
+    length: 3,
+    resetPeriod: "monthly",
+  },
+  expense: {
+    entity: IncomeExpense,
+    prefix: "PC",
+    length: 3,
+    resetPeriod: "monthly",
+  },
+  inventoryadjustment: {
+    entity: InventoryAdjustment,
+    prefix: "DKK",
+    length: 3,
+    resetPeriod: "monthly",
+  },
+  storetransfer: {
+    entity: StoreTransfer,
+    prefix: "PCK",
+    length: 3,
+    resetPeriod: "monthly",
+    global: true,
+  },
+  order: { entity: Order, prefix: "DH", length: 4, resetPeriod: "monthly" },
+  sale: { entity: Order, prefix: "HĐ", length: 4, resetPeriod: "monthly" },
+  salereturn: {
+    entity: Order,
+    prefix: "HĐT",
+    length: 4,
+    resetPeriod: "monthly",
+  },
+  purchase: { entity: Order, prefix: "MH", length: 4, resetPeriod: "monthly" },
+  purchasereturn: {
+    entity: Order,
+    prefix: "THN",
+    length: 4,
+    resetPeriod: "monthly",
+  },
+  debtadjustment: {
+    entity: DebtAdjustment,
+    prefix: "DCN",
+    length: 3,
+    resetPeriod: "monthly",
+  },
+  vatadjustment: {
+    entity: VatAdjustment,
+    prefix: "DCVAT",
+    length: 3,
+    resetPeriod: "monthly",
+  },
 };
 
-export function getEntityByType(type: string): EntityTarget<ObjectLiteral> | undefined {
+export function getEntityByType(
+  type: string,
+): EntityTarget<ObjectLiteral> | undefined {
   return codeConfig[type.trim().toLowerCase()]?.entity;
 }
 
 function getConfig(type: string): CodeConfig {
   const config = codeConfig[type.trim().toLowerCase()];
-  if (!config) throw new ValidationError(`Không tìm thấy cấu hình mã cho loại "${type}"`);
+  if (!config)
+    throw new ValidationError(`Không tìm thấy cấu hình mã cho loại "${type}"`);
   return config;
 }
 
@@ -77,23 +194,35 @@ function getPeriodInfo(period: ResetPeriod) {
   const yy = now.format("YY");
   const mm = now.format("MM");
   if (period === "yearly") return { periodKey: yy, codePrefix: yy };
-  if (period === "monthly") return { periodKey: `${yy}${mm}`, codePrefix: `${yy}${mm}` };
+  if (period === "monthly")
+    return { periodKey: `${yy}${mm}`, codePrefix: `${yy}${mm}` };
   return { periodKey: "global", codePrefix: "" };
 }
 
-async function getNextSequence(key: string, periodKey: string): Promise<number> {
+async function getNextSequence(
+  key: string,
+  periodKey: string,
+): Promise<number> {
   const seqName = `code_seq_${key}_${periodKey}`.replace(/[^a-zA-Z0-9_]/g, "_");
-  await DatabaseConfig.query(`CREATE SEQUENCE IF NOT EXISTS "${seqName}" START 1;`);
-  const result = await DatabaseConfig.query(`SELECT nextval('"${seqName}"') as value;`);
+  await DatabaseConfig.query(
+    `CREATE SEQUENCE IF NOT EXISTS "${seqName}" START 1;`,
+  );
+  const result = await DatabaseConfig.query(
+    `SELECT nextval('"${seqName}"') as value;`,
+  );
   return Number(result[0].value);
 }
 
-export async function generateCode(type: string, storeId?: string): Promise<string> {
+export async function generateCode(
+  type: string,
+  storeId?: string,
+): Promise<string> {
   try {
     const config = getConfig(type);
     const { periodKey, codePrefix } = getPeriodInfo(config.resetPeriod);
     const normalized = type.trim().toLowerCase();
-    const key = !config.global && storeId ? `${normalized}_${storeId}` : normalized;
+    const key =
+      !config.global && storeId ? `${normalized}_${storeId}` : normalized;
     const sequence = await getNextSequence(key, periodKey);
     const running = String(sequence).padStart(config.length, "0");
     return config.resetPeriod === "none"
@@ -110,18 +239,33 @@ export async function getCode(req: Request, res: Response) {
     const type = req.query.type as string;
     const storeId = req.query.storeId as string | undefined;
     if (!type) {
-      return res.status(400).json({ message: "type.required", errors: [{ field: "type", code: ErrorsMessages.required }] });
+      return res.status(400).json({
+        message: "type.required",
+        errors: [{ field: "type", code: ErrorsMessages.required }],
+      });
     }
     const code = await generateCode(type, storeId);
-    return res.json({ statusCode: 200, data: { code }, success: true, message: "code.generated" });
+    return res.json({
+      statusCode: 200,
+      data: { code },
+      success: true,
+      message: "code.generated",
+    });
   } catch (error) {
     logger.error("Get code error:", error);
-    return res.status(500).json({ message: (error as any).message || "server.error", errors: (error as any).errors || [] });
+    return res.status(500).json({
+      message: (error as any).message || "server.error",
+      errors: (error as any).errors || [],
+    });
   }
 }
 
 export function alphaNumericToNumber(code: string): string {
-  return code.toUpperCase().split("").map((c) => /[A-Z]/.test(c) ? (c.charCodeAt(0) - 64).toString() : c).join("");
+  return code
+    .toUpperCase()
+    .split("")
+    .map((c) => (/[A-Z]/.test(c) ? (c.charCodeAt(0) - 64).toString() : c))
+    .join("");
 }
 
 export { OrderType };

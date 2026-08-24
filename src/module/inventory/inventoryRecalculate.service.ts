@@ -8,10 +8,23 @@ import { InventoryAdjustment } from "@/database/models/store/InventoryAdjustment
 import { InventoryTransaction, InventoryRefType } from "@/database/models/store/InventoryTransaction";
 import { ProductPriceHistory } from "@/database/models/store/ProductPriceHistory";
 import { StoreTransfer } from "@/database/models/StoreTransfer";
-import { Product } from "@/database/models/Product";
-import { StoreProduct } from "@/database/models/store/StoreProduct";
 import { INVENTORY_TYPES } from "./inventory.types";
 import { StockMetadataHelper } from "./stockMetadata.helper";
+import { PRODUCT_PRICE_HISTORY_TYPES } from "../productPriceHistory/productPriceHistory.types";
+import { ProductPriceHistoryRepository } from "../productPriceHistory/productPriceHistory.repository";
+import { STORE_PRODUCT_TYPES } from "../storeProduct/storeProduct.types";
+import { StoreProductRepository } from "../storeProduct/storeProduct.repository";
+import { ORDER_TYPES } from "../order/order.types";
+import { OrderRepository } from "../order/order.repository";
+import { OrderLineRepository } from "../order/orderLine.repository";
+import { INVENTORY_ADJUSTMENT_TYPES } from "../inventoryAdjustment/inventoryAdjustment.types";
+import { InventoryAdjustmentRepository } from "../inventoryAdjustment/inventoryAdjustment.repository";
+import { STORE_TRANSFER_TYPES } from "../storeTransfer/storeTransfer.types";
+import { StoreTransferRepository } from "../storeTransfer/storeTransfer.repository";
+import { INVENTORY_TRANSACTION_TYPES } from "../inventoryTransaction/inventoryTransaction.types";
+import { InventoryTransactionRepository } from "../inventoryTransaction/inventoryTransaction.repository";
+import { PRODUCT_TYPES } from "../product/product.types";
+import { ProductRepository } from "../product/product.repository";
 
 export interface InventoryRecalculateNode {
   productId: string;
@@ -44,6 +57,14 @@ export class InventoryRecalculateService extends TransactionService {
   constructor(
     @inject(INVENTORY_TYPES.StockMetadataHelper)
     private readonly stockMetadata: StockMetadataHelper,
+    @inject(PRODUCT_PRICE_HISTORY_TYPES.Repository) private priceRepository: ProductPriceHistoryRepository,
+    @inject(STORE_PRODUCT_TYPES.Repository) private storeProductRepository: StoreProductRepository,
+    @inject(ORDER_TYPES.OrderRepository) private orderRepository: OrderRepository,
+    @inject(ORDER_TYPES.OrderLineRepository) private orderLineRepository: OrderLineRepository,
+    @inject(INVENTORY_ADJUSTMENT_TYPES.Repository) private adjustmentRepository: InventoryAdjustmentRepository,
+    @inject(STORE_TRANSFER_TYPES.Repository) private transferRepository: StoreTransferRepository,
+    @inject(INVENTORY_TRANSACTION_TYPES.Repository) private transactionRepository: InventoryTransactionRepository,
+    @inject(PRODUCT_TYPES.ProductRepository) private productRepository: ProductRepository,
   ) {
     super();
   }
@@ -61,21 +82,21 @@ export class InventoryRecalculateService extends TransactionService {
   }
 
   private async costAt(productId: string, storeId: string, at: Date, manager: EntityManager): Promise<number> {
-    const history = await manager.getRepository(ProductPriceHistory).findOne({
+    const history = await this.priceRepository.getRepository(manager).findOne({
       where: { productId, storeId, createdAt: LessThan(at), deletedAt: IsNull() } as any,
       order: { createdAt: "DESC", id: "DESC" } as any,
     });
     if (history) return Number(history.costPrice) || 0;
-    const storeProduct = await manager.getRepository(StoreProduct).findOne({ where: { productId, storeId } as any });
+    const storeProduct = await this.storeProductRepository.getRepository(manager).findOne({ where: { productId, storeId } as any });
     return Number(storeProduct?.costPrice) || 0;
   }
 
   private async loadEvents(productId: string, storeId: string, fromDate: Date, manager: EntityManager): Promise<SourceEvent[]> {
     const [orders, adjustments, transfers, prices] = await Promise.all([
-      manager.getRepository(Order).find({ where: { storeId, status: OrderStatus.COMPLETED, deletedAt: IsNull() } as any, relations: { lines: true, returnLines: true } }),
-      manager.getRepository(InventoryAdjustment).find({ where: { storeId, deletedAt: IsNull() } as any, relations: { lines: true } }),
-      manager.getRepository(StoreTransfer).find({ where: { deletedAt: IsNull() } as any, relations: { lines: true } }),
-      manager.getRepository(ProductPriceHistory).find({ where: { storeId, productId, deletedAt: IsNull() } as any }),
+      this.orderRepository.getRepository(manager).find({ where: { storeId, status: OrderStatus.COMPLETED, deletedAt: IsNull() } as any, relations: { lines: true, returnLines: true } }),
+      this.adjustmentRepository.getRepository(manager).find({ where: { storeId, deletedAt: IsNull() } as any, relations: { lines: true } }),
+      this.transferRepository.getRepository(manager).find({ where: { deletedAt: IsNull() } as any, relations: { lines: true } }),
+      this.priceRepository.getRepository(manager).find({ where: { storeId, productId, deletedAt: IsNull() } as any }),
     ]);
     const events: SourceEvent[] = [];
 
@@ -131,7 +152,7 @@ export class InventoryRecalculateService extends TransactionService {
   }
 
   private async previousState(productId: string, storeId: string, fromDate: Date, manager: EntityManager): Promise<State> {
-    const previous = await manager.getRepository(InventoryTransaction).findOne({
+    const previous = await this.transactionRepository.getRepository(manager).findOne({
       where: { productId, storeId, occurredAt: LessThan(fromDate), deletedAt: IsNull() } as any,
       order: { occurredAt: "DESC", createdAt: "DESC", id: "DESC" } as any,
     });
@@ -141,24 +162,24 @@ export class InventoryRecalculateService extends TransactionService {
 
   private async syncOrderCosts(orderIds: string[], manager: EntityManager): Promise<void> {
     for (const orderId of [...new Set(orderIds)]) {
-      const order = await manager.getRepository(Order).findOne({ where: { id: orderId }, relations: { lines: true, returnLines: true } });
+      const order = await this.orderRepository.getRepository(manager).findOne({ where: { id: orderId }, relations: { lines: true, returnLines: true } });
       if (!order) continue;
       for (const line of [...(order.lines || []), ...(order.returnLines || [])]) {
         if (!line.productId) continue;
-        const tx = await manager.getRepository(InventoryTransaction).findOne({ where: { refId: order.id, productId: line.productId, storeId: order.storeId } as any, order: { occurredAt: "DESC", createdAt: "DESC" } as any });
+        const tx = await this.transactionRepository.getRepository(manager).findOne({ where: { refId: order.id, productId: line.productId, storeId: order.storeId } as any, order: { occurredAt: "DESC", createdAt: "DESC" } as any });
         if (!tx) continue;
         const quantity = Math.abs(Number(line.quantity) || 0) * (Number(line.conversionRateAtTime) || 1);
-        await manager.getRepository(OrderLine).update(line.id, { costPriceAtTime: Number(tx.costPriceAfter) || 0, totalCost: quantity * (Number(tx.costPriceAfter) || 0) } as any);
+        await this.orderLineRepository.getRepository(manager).update(line.id, { costPriceAtTime: Number(tx.costPriceAfter) || 0, totalCost: quantity * (Number(tx.costPriceAfter) || 0) } as any);
       }
-      const lines = await manager.getRepository(OrderLine).find({ where: [{ orderId: order.id }, { returnOrderId: order.id }] as any });
+      const lines = await this.orderLineRepository.getRepository(manager).find({ where: [{ orderId: order.id }, { returnOrderId: order.id }] as any });
       const totalCost = lines.reduce((sum, line) => sum + (Number(line.totalCost) || 0), 0);
-      await manager.getRepository(Order).update(order.id, this.isReturn(order.type) ? { returnTotalCost: totalCost } : { totalCost } as any);
+      await this.orderRepository.getRepository(manager).update(order.id, this.isReturn(order.type) ? { returnTotalCost: totalCost } : { totalCost } as any);
     }
   }
 
   async recalculateProductStoreFromDate(productId: string, storeId: string, fromDate: Date, manager?: EntityManager): Promise<void> {
     const em = await this.managerOf(manager);
-    await em.getRepository(InventoryTransaction).createQueryBuilder().delete().where({ productId, storeId } as any).andWhere('"occurredAt" >= :fromDate', { fromDate }).execute();
+    await this.transactionRepository.getRepository(em).createQueryBuilder().delete().where({ productId, storeId } as any).andWhere('"occurredAt" >= :fromDate', { fromDate }).execute();
     const state = await this.previousState(productId, storeId, fromDate, em);
     const events = await this.loadEvents(productId, storeId, fromDate, em);
     const orderIds: string[] = [];
@@ -174,7 +195,7 @@ export class InventoryRecalculateService extends TransactionService {
         state.value += (event.sign || 1) * amount;
         state.value = state.quantity * state.cost;
       }
-      const tx = em.getRepository(InventoryTransaction).create({
+      const tx = this.transactionRepository.getRepository(em).create({
         occurredAt: event.occurredAt,
         productId,
         storeId,
@@ -188,7 +209,7 @@ export class InventoryRecalculateService extends TransactionService {
         refId: event.refId,
         refCode: event.refCode,
       });
-      await em.getRepository(InventoryTransaction).save(tx);
+      await this.transactionRepository.getRepository(em).save(tx);
       if (event.order) orderIds.push(event.order.id);
     }
     await this.syncOrderCosts(orderIds, em);
@@ -202,7 +223,7 @@ export class InventoryRecalculateService extends TransactionService {
   async recalculateFromDate(nodes: InventoryRecalculateNode[] | Date, manager?: EntityManager): Promise<void> {
     const em = await this.managerOf(manager);
     if (nodes instanceof Date) {
-      const products = await em.getRepository(Product).find({ where: { deletedAt: IsNull() } as any, relations: { storeProducts: true } });
+      const products = await this.productRepository.getRepository(em).find({ where: { deletedAt: IsNull() } as any, relations: { storeProducts: true } });
       for (const product of products) for (const storeProduct of product.storeProducts || []) await this.recalculateProductStoreFromDate(product.id, storeProduct.storeId, nodes, em);
       return;
     }

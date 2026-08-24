@@ -3,12 +3,7 @@ import { Response } from "express";
 import { IsNull } from "typeorm";
 import { AuthUtils } from "@/shared/utils/auth.utils";
 import { AuthTokens } from "@/shared/types/interfaces";
-import {
-  BadRequestError,
-  ForbiddenError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/shared/types/errors";
+import { BadRequestError, NotFoundError } from "@/shared/types/errors";
 import {
   createPermissions,
   MODULES,
@@ -16,10 +11,12 @@ import {
 } from "@/shared/middleware/permission.middleware";
 import { BaseService } from "@/shared/base/BaseService";
 import { User } from "@/database/models/User";
-import { Store } from "@/database/models/Store";
+import { RoleType } from "@/database/models/Role";
 import { AuthRepository } from "./auth.repository";
 import { AUTH_TYPES } from "./auth.types";
 import { LoginDto } from "./auth.validator";
+import { STORE_TYPES } from "../store/store.types";
+import { StoreRepository } from "../store/store.repository";
 
 @injectable()
 export class AuthService extends BaseService<User> {
@@ -27,6 +24,8 @@ export class AuthService extends BaseService<User> {
 
   constructor(
     @inject(AUTH_TYPES.AuthRepository) authRepository: AuthRepository,
+    @inject(STORE_TYPES.StoreRepository)
+    private storeRepository: StoreRepository,
   ) {
     super();
     this.repository = authRepository;
@@ -37,11 +36,10 @@ export class AuthService extends BaseService<User> {
     res: Response,
   ): Promise<{ user: User; tokens: AuthTokens }> {
     const user = await this.repository.findByUsername(loginData.username);
-    if (!user)
-      throw new UnauthorizedError("Tài khoản không tồn tại", "username");
-    if (!user.isActive) throw new UnauthorizedError("Tài khoản đã bị khóa");
+    if (!user) throw new BadRequestError("Tài khoản không tồn tại", "username");
+    if (!user.isActive) throw new BadRequestError("Tài khoản đã bị khóa");
     if (!(await AuthUtils.comparePassword(loginData.password, user.password)))
-      throw new UnauthorizedError("Mật khẩu không chính xác", "password");
+      throw new BadRequestError("Mật khẩu không chính xác", "password");
     const tokens = AuthUtils.generateTokens({
       userId: user.id,
       username: user.username,
@@ -61,27 +59,30 @@ export class AuthService extends BaseService<User> {
     });
     if (!user) throw new NotFoundError("Người dùng không tồn tại", "userId");
     const isAdmin = AuthUtils.isAdmin(user);
+    const hasSystemScope = isAdmin || user.role?.type === RoleType.SYSTEM;
     const memberships = user.storeUsers || [];
-    const stores = isAdmin
-      ? await this.repository
-          .getRepository()
-          .manager.getRepository(Store)
-          .find({ where: { deletedAt: IsNull() } as any })
+    const stores = hasSystemScope
+      ? await this.storeRepository.find({
+          where: { deletedAt: IsNull() } as any,
+        })
       : memberships.map((membership) => membership.store).filter(Boolean);
-    if (!stores.length)
-      throw new ForbiddenError(
+    if (!hasSystemScope && !stores.length)
+      throw new BadRequestError(
         "Tài khoản chưa được cấp quyền cho cửa hàng nào",
       );
     if (
       storeId &&
-      !isAdmin &&
+      !hasSystemScope &&
       !memberships.some((membership) => membership.storeId === storeId)
     )
-      throw new ForbiddenError(
+      throw new BadRequestError(
         "Tài khoản không có quyền truy cập cửa hàng này",
       );
-    const currentStore =
-      stores.find((store) => store.id === storeId) || stores[0];
+    const currentStore = hasSystemScope
+      ? storeId
+        ? stores.find((store) => store.id === storeId) || null
+        : null
+      : stores.find((store) => store.id === storeId) || stores[0];
     const permissions: PermissionStructure = isAdmin
       ? createPermissions()
       : user.role?.permissions || {};

@@ -1,10 +1,13 @@
 import { Router } from "express";
+import { inject, injectable } from "inversify";
 import { permissionMiddleware } from "@/shared/middleware/permission.middleware";
 import { incomeExpenseContextMiddleware } from "./incomeExpense.middleware";
 import { IncomeExpenseController } from "./incomeExpense.controller";
+import { INCOME_EXPENSE_TYPES } from "./incomeExpense.types";
+@injectable()
 export class IncomeExpenseRouter {
   private router = Router();
-  constructor(controller: IncomeExpenseController) {
+  constructor(@inject(INCOME_EXPENSE_TYPES.Controller) controller: IncomeExpenseController) {
     const permission = "incomeExpense" as const;
     const mount = (module: "income" | "expense") => {
       const child = Router();

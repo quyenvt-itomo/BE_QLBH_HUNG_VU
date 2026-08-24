@@ -23,6 +23,12 @@ export class Product extends BaseEntity {
   @JoinColumn({ name: "groupId" })
   group: Attribute | null;
 
+  @Column({ type: "uuid", nullable: true, default: null })
+  brandId: string | null;
+  @ManyToOne(() => Attribute, { onDelete: "SET NULL" })
+  @JoinColumn({ name: "brandId" })
+  brand: Attribute | null;
+
   @Column({ type: "varchar", length: 20 })
   code: string;
   @Column({ type: "varchar", length: 255 })

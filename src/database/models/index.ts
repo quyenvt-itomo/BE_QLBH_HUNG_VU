@@ -1,4 +1,9 @@
-import { Attribute, AttributeType } from "./Attribute";
+import {
+  Attribute,
+  AttributeType,
+  STORE_SCOPED_ATTRIBUTE_TYPES,
+  isStoreScopedAttributeType,
+} from "./Attribute";
 import { DebtAdjustment } from "./DebtAdjustment";
 import { DebtTransaction, DebtRefType } from "./DebtTransaction";
 import { File, EntityType, FileCategory, FileStatus, FileType } from "./File";
@@ -75,6 +80,8 @@ export const entities = [
 export {
   Attribute,
   AttributeType,
+  STORE_SCOPED_ATTRIBUTE_TYPES,
+  isStoreScopedAttributeType,
   DebtAdjustment,
   DebtTransaction,
   DebtRefType,

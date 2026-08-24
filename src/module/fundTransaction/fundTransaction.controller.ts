@@ -1,4 +1,7 @@
+import { inject, injectable } from "inversify";
 import { FundTransaction } from "@/database/models/FundTransaction";
-import { SimpleController } from "../_shared/simple.controller";
+import { BaseController } from "@/shared/base/BaseController";
 import { FundTransactionService } from "./fundTransaction.service";
-export class FundTransactionController extends SimpleController<FundTransaction> { constructor(service: FundTransactionService) { super(service); } }
+import { FUND_TRANSACTION_TYPES } from "./fundTransaction.types";
+@injectable()
+export class FundTransactionController extends BaseController<FundTransaction> { protected service: FundTransactionService; constructor(@inject(FUND_TRANSACTION_TYPES.Service) service: FundTransactionService) { super(); this.service = service; } }

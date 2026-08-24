@@ -5,6 +5,8 @@ import { ProductPriceHistoryService } from "./productPriceHistory.service";
 import { ProductPriceHistoryController } from "./productPriceHistory.controller";
 import { ProductPriceHistoryRouter } from "./productPriceHistory.route";
 import { INVENTORY_TYPES } from "../inventory/inventory.types";
+import { PRODUCT_TYPES } from "../product/product.types";
+import { STORE_PRODUCT_TYPES } from "../storeProduct/storeProduct.types";
 
 export const productPriceHistoryModule = new ContainerModule((bind) => {
   bind(PRODUCT_PRICE_HISTORY_TYPES.Repository)
@@ -14,6 +16,8 @@ export const productPriceHistoryModule = new ContainerModule((bind) => {
     .toDynamicValue((context) => new ProductPriceHistoryService(
       context.container.get(PRODUCT_PRICE_HISTORY_TYPES.Repository),
       context.container.get(INVENTORY_TYPES.InventoryRecalculateService),
+      context.container.get(PRODUCT_TYPES.ProductRepository),
+      context.container.get(STORE_PRODUCT_TYPES.Repository),
     ))
     .inSingletonScope();
   bind(PRODUCT_PRICE_HISTORY_TYPES.Controller)

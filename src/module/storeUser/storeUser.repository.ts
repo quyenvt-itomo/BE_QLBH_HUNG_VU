@@ -1,3 +1,12 @@
+import { injectable } from "inversify";
 import { StoreUser } from "@/database/models/store/StoreUser";
-import { SimpleRepository } from "../_shared/simple.repository";
-export class StoreUserRepository extends SimpleRepository<StoreUser> { constructor() { super(StoreUser, undefined, { store: true, user: true }); } }
+import { BaseRepository } from "@/shared/base/BaseRepository";
+import { StoreUserRelations, StoreUserRelationsList, StoreUserSelectFull, StoreUserSelectList } from "./storeUser.select";
+@injectable()
+export class StoreUserRepository extends BaseRepository<StoreUser> {
+  protected entityClass = StoreUser;
+  protected selectedFields = StoreUserSelectFull;
+  protected selectedFieldsForList = StoreUserSelectList;
+  protected relations = StoreUserRelations;
+  protected relationsForList = StoreUserRelationsList;
+}

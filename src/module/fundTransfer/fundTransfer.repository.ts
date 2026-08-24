@@ -1,3 +1,12 @@
+import { injectable } from "inversify";
 import { FundTransfer } from "@/database/models/FundTransfer";
-import { SimpleRepository } from "../_shared/simple.repository";
-export class FundTransferRepository extends SimpleRepository<FundTransfer> { constructor() { super(FundTransfer); } }
+import { BaseRepository } from "@/shared/base/BaseRepository";
+import { FundTransferRelations, FundTransferRelationsList, FundTransferSelectFull, FundTransferSelectList } from "./fundTransfer.select";
+@injectable()
+export class FundTransferRepository extends BaseRepository<FundTransfer> {
+  protected entityClass = FundTransfer;
+  protected selectedFields = FundTransferSelectFull;
+  protected selectedFieldsForList = FundTransferSelectList;
+  protected relations = FundTransferRelations;
+  protected relationsForList = FundTransferRelationsList;
+}

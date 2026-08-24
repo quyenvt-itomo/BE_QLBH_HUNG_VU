@@ -1,4 +1,10 @@
+import { inject, injectable } from "inversify";
 import { IncomeExpense } from "@/database/models/store/IncomeExpense";
-import { SimpleController } from "../_shared/simple.controller";
+import { BaseController } from "@/shared/base/BaseController";
 import { IncomeExpenseService } from "./incomeExpense.service";
-export class IncomeExpenseController extends SimpleController<IncomeExpense> { constructor(service: IncomeExpenseService) { super(service); } }
+import { INCOME_EXPENSE_TYPES } from "./incomeExpense.types";
+@injectable()
+export class IncomeExpenseController extends BaseController<IncomeExpense> {
+  protected service: IncomeExpenseService;
+  constructor(@inject(INCOME_EXPENSE_TYPES.Service) service: IncomeExpenseService) { super(); this.service = service; }
+}
