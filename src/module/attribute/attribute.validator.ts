@@ -10,11 +10,13 @@ import { AttributeType } from "@/database/models";
 export const CreateAttributeSchema = BaseCreateSchema.extend({
   name: z.string().trim().max(255),
   type: z.enum(AttributeType),
+  parentId: z.uuid().nullish(),
 });
 
 export const UpdateAttributeSchema = BaseUpdateSchema.extend({
   name: z.string().trim().max(255).optional(),
   type: z.enum(AttributeType).optional(),
+  parentId: z.uuid().nullish(),
 });
 
 export const AttributeQuerySchema = BaseQuerySchema;

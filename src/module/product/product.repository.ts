@@ -1,14 +1,57 @@
-import { injectable } from "inversify";
-import { DeepPartial, EntityManager } from "typeorm";
+import { inject, injectable } from "inversify";
+import { DeepPartial, EntityManager, SelectQueryBuilder } from "typeorm";
 import { BaseRepository } from "@/shared/base/BaseRepository";
-import { Product, ProductSnapshot, StoreProduct } from "@/database/models";
+import {
+  AttributeType,
+  Product,
+  ProductSnapshot,
+  StoreProduct,
+} from "@/database/models";
+import { IFindPaginationOptions } from "@/shared/base/BaseRepository";
+import { AttributeRepository } from "../attribute/attribute.repository";
+import { ATTRIBUTE_TYPES } from "../attribute/attribute.types";
 import { ProductRelations, ProductSelectFull } from "./product.select";
+import { ProductQueryDto } from "./product.validator";
 
 @injectable()
 export class ProductRepository extends BaseRepository<Product> {
   protected entityClass = Product;
   protected selectedFields = ProductSelectFull;
   protected relations = ProductRelations;
+
+  constructor(
+    @inject(ATTRIBUTE_TYPES.AttributeRepository)
+    private attributeRepository: AttributeRepository,
+  ) {
+    super();
+  }
+
+  protected async extendQueryBuilder(
+    qb: SelectQueryBuilder<Product>,
+    options: IFindPaginationOptions<Product>,
+  ): Promise<void> {
+    const query = (options.moreQuery || {}) as ProductQueryDto;
+    const productCategoryIds = query.productCategoryIds;
+
+    if (this.checkArrayFilter(productCategoryIds)) {
+      const categoryIds = await this.attributeRepository.getDescendantIds(
+        productCategoryIds!,
+        AttributeType.PRODUCT_GROUP,
+      );
+
+      if (!categoryIds.length) {
+        qb.andWhere("1 = 0");
+      } else {
+        qb.andWhere(`${qb.alias}.groupId IN (:...productCategoryIds)`, {
+          productCategoryIds: categoryIds,
+        });
+      }
+    } else if (query.groupId) {
+      qb.andWhere(`${qb.alias}.groupId = :groupId`, {
+        groupId: query.groupId,
+      });
+    }
+  }
 
   /**
    * Tính tồn cho một variant của product

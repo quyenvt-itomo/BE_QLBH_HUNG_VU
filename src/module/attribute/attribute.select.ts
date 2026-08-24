@@ -6,10 +6,19 @@ export const AttributeSelectBasic: FindOptionsSelect<Attribute> = {
   ...BaseSelect,
   name: true,
   type: true,
+  parentId: true,
 };
 
 export const AttributeSelectFull: FindOptionsSelect<Attribute> = {
   ...AttributeSelectBasic,
+  parent: {
+    id: true,
+    name: true,
+    type: true,
+    parentId: true,
+  },
 };
 
-export const AttributeRelations: FindOptionsRelations<Attribute> = {};
+export const AttributeRelations: FindOptionsRelations<Attribute> = {
+  parent: true,
+};

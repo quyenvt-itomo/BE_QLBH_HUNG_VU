@@ -1,4 +1,9 @@
-import { DeepPartial, EntityManager, SelectQueryBuilder } from "typeorm";
+import {
+  DeepPartial,
+  EntityManager,
+  IsNull,
+  SelectQueryBuilder,
+} from "typeorm";
 import {
   BaseRepository,
   IFindPaginationOptions,
@@ -21,6 +26,56 @@ export class AttributeRepository extends BaseRepository<Attribute> {
     options: IFindPaginationOptions<Attribute>,
   ): Promise<void> {
     super.extendQueryBuilder?.(qb, options);
+
+    const type = (options.moreQuery as { type?: AttributeType } | undefined)
+      ?.type;
+    if (type) {
+      qb.andWhere(`${qb.alias}.type = :attributeType`, {
+        attributeType: type,
+      });
+    }
+  }
+
+  async getHierarchyRows(
+    type: AttributeType,
+    manager?: EntityManager,
+  ): Promise<Pick<Attribute, "id" | "parentId" | "type">[]> {
+    return await this.getRepository(manager).find({
+      select: { id: true, parentId: true, type: true },
+      where: { type, deletedAt: IsNull() } as any,
+    });
+  }
+
+  async getDescendantIds(
+    ids: string[],
+    type: AttributeType,
+    manager?: EntityManager,
+  ): Promise<string[]> {
+    const roots = Array.from(new Set(ids.filter(Boolean)));
+    if (!roots.length) return [];
+
+    const rows = await this.getHierarchyRows(type, manager);
+    const childrenByParent = new Map<string, string[]>();
+
+    for (const row of rows) {
+      if (!row.parentId) continue;
+      const children = childrenByParent.get(row.parentId) || [];
+      children.push(row.id);
+      childrenByParent.set(row.parentId, children);
+    }
+
+    const result = new Set(roots);
+    const queue = [...roots];
+    while (queue.length) {
+      const parentId = queue.shift()!;
+      for (const childId of childrenByParent.get(parentId) || []) {
+        if (result.has(childId)) continue;
+        result.add(childId);
+        queue.push(childId);
+      }
+    }
+
+    return Array.from(result);
   }
 
   async getAttributeByName(

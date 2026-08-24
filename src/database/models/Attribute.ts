@@ -1,5 +1,12 @@
 import { BaseEntity } from "@/shared/base/BaseEntity";
-import { Column, Entity, Index } from "typeorm";
+import {
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+} from "typeorm";
 
 export enum AttributeType {
   UNIT = "unit", // đơn vị tính
@@ -44,4 +51,17 @@ export class Attribute extends BaseEntity {
   @Index()
   @Column({ type: "varchar", length: 20 })
   type: AttributeType;
+
+  @Index()
+  @Column({ type: "uuid", nullable: true })
+  parentId?: string | null;
+
+  @ManyToOne(() => Attribute, (attr) => attr.children, {
+    onDelete: "CASCADE",
+  })
+  @JoinColumn({ name: "parentId" })
+  parent?: Attribute;
+
+  @OneToMany(() => Attribute, (attr) => attr.parent)
+  children?: Attribute[];
 }

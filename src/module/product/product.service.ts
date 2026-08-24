@@ -1,7 +1,7 @@
 import { inject, injectable } from "inversify";
 import { DeepPartial, EntityManager } from "typeorm";
 import { BaseService } from "@/shared/base/BaseService";
-import { Product } from "@/database/models/Product";
+import { AttributeType, Product } from "@/database/models";
 import { ProductPriceHistory } from "@/database/models/store/ProductPriceHistory";
 import { StoreProduct } from "@/database/models/store/StoreProduct";
 import { ProductRepository } from "./product.repository";
@@ -12,6 +12,9 @@ import { generateCode } from "@/shared/utils/code.utils";
 import { InventoryRecalculateService } from "../inventory/inventoryRecalculate.service";
 import { INVENTORY_TYPES } from "../inventory/inventory.types";
 import { withTransaction } from "@/shared/base/TransactionManager";
+import { ValidationError } from "@/shared/types/errors";
+import { AttributeRepository } from "../attribute/attribute.repository";
+import { ATTRIBUTE_TYPES } from "../attribute/attribute.types";
 
 @injectable()
 export class ProductService extends BaseService<Product> {
@@ -20,6 +23,8 @@ export class ProductService extends BaseService<Product> {
   protected searchableFields = ["name", "code", "note"];
   constructor(
     @inject(PRODUCT_TYPES.ProductRepository) repository: ProductRepository,
+    @inject(ATTRIBUTE_TYPES.AttributeRepository)
+    private attributeRepository: AttributeRepository,
     @inject(INVENTORY_TYPES.InventoryRecalculateService)
     private inventory: InventoryRecalculateService,
   ) {
@@ -33,8 +38,28 @@ export class ProductService extends BaseService<Product> {
   ): Promise<void> {
     if (data.salePrice == null) data.salePrice = 0;
     if (!data.code) data.code = await generateCode("product");
+    await this.validateProductGroup(data.groupId, _manager);
   }
-  async validateBeforeUpdate(): Promise<void> {}
+  async validateBeforeUpdate(
+    _id: string,
+    data: DeepPartial<Product>,
+    manager: EntityManager,
+  ): Promise<void> {
+    await this.validateProductGroup(data.groupId, manager);
+  }
+
+  private async validateProductGroup(
+    groupId: string | null | undefined,
+    manager: EntityManager,
+  ): Promise<void> {
+    if (!groupId) return;
+    const group = await this.attributeRepository.getById(groupId, manager);
+    if (group.type !== AttributeType.PRODUCT_GROUP) {
+      throw new ValidationError("product.group_invalid", [
+        { field: "groupId", message: "Nhóm sản phẩm không hợp lệ" },
+      ]);
+    }
+  }
   async updateStoreCost(
     productId: string,
     storeId: string,

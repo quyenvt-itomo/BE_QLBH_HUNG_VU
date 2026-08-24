@@ -9,12 +9,13 @@ export const storeSeeders: DeepPartial<Store>[] = [
     email: null,
     taxCode: null,
     address: {
-      state: "Thành phố Quy Nhơn, Bình Định",
-      ward: "Phường Trần Quang Diệu",
+      state: "Tỉnh Gia Lai",
+      ward: "Phường Quy Nhơn Bắc",
       detail: "25 Lạc Long Quân",
       isPermanent: false,
     },
     isActive: true,
+    sortOrder: 10,
   },
   {
     code: "TV",
@@ -23,11 +24,12 @@ export const storeSeeders: DeepPartial<Store>[] = [
     email: null,
     taxCode: null,
     address: {
-      state: "Thành phố Quy Nhơn, Bình Định",
-      ward: "Phường Trần Hưng Đạo",
+      state: "Tỉnh Gia Lai",
+      ward: "Phường Quy Nhơn",
       detail: "466 Trần Hưng Đạo",
       isPermanent: false,
     },
     isActive: true,
+    sortOrder: 20,
   },
 ];
