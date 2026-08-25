@@ -53,7 +53,8 @@ export const UpdateProductSchema = BaseUpdateSchema.extend({
 export const ProductQuerySchema = BaseQuerySchema.extend({
   storeId: z.uuid().optional(),
   groupId: z.uuid().optional(),
-  productCategoryIds: zArrayable(z.uuid()),
+  brandId: z.uuid().optional(),
+  locationId: z.uuid().optional(),
 });
 export const ProductParamsSchema = BaseParamsSchema;
 export type CreateProductDto = z.infer<typeof CreateProductSchema>;

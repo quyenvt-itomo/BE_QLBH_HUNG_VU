@@ -1,15 +1,16 @@
 import { inject, injectable } from "inversify";
 import { DeepPartial, EntityManager, SelectQueryBuilder } from "typeorm";
 import { BaseRepository } from "@/shared/base/BaseRepository";
-import {
-  AttributeType,
-  Product,
-  ProductSnapshot,
-} from "@/database/models";
+import { AttributeType, Product, ProductSnapshot } from "@/database/models";
 import { IFindPaginationOptions } from "@/shared/base/BaseRepository";
 import { AttributeRepository } from "../attribute/attribute.repository";
 import { ATTRIBUTE_TYPES } from "../attribute/attribute.types";
-import { ProductRelations, ProductRelationsList, ProductSelectFull, ProductSelectList } from "./product.select";
+import {
+  ProductRelations,
+  ProductRelationsList,
+  ProductSelectFull,
+  ProductSelectList,
+} from "./product.select";
 import { ProductQueryDto } from "./product.validator";
 import { STORE_PRODUCT_TYPES } from "../storeProduct/storeProduct.types";
 import { StoreProductRepository } from "../storeProduct/storeProduct.repository";
@@ -35,26 +36,50 @@ export class ProductRepository extends BaseRepository<Product> {
     qb: SelectQueryBuilder<Product>,
     options: IFindPaginationOptions<Product>,
   ): Promise<void> {
-    const query = (options.moreQuery || {}) as ProductQueryDto;
-    const productCategoryIds = query.productCategoryIds;
+    const {
+      productGroupId,
+      productGroupIds,
+      brandId,
+      brandIds,
+      locationId,
+      locationIds,
+    } = (options.moreQuery as ProductQueryDto) || {};
 
-    if (this.checkArrayFilter(productCategoryIds)) {
-      const categoryIds = await this.attributeRepository.getDescendantIds(
-        productCategoryIds!,
+    // TODO: Lọc theo nhóm hàng hóa
+    if (productGroupId) {
+      qb.andWhere(`${qb.alias}.groupId = :productGroupId`, {
+        productGroupId,
+      });
+    } else if (this.checkArrayFilter(productGroupIds)) {
+      const groupIds = await this.attributeRepository.getDescendantIds(
+        productGroupIds!,
         AttributeType.PRODUCT_GROUP,
       );
 
-      if (!categoryIds.length) {
-        qb.andWhere("1 = 0");
-      } else {
-        qb.andWhere(`${qb.alias}.groupId IN (:...productCategoryIds)`, {
-          productCategoryIds: categoryIds,
-        });
-      }
-    } else if (query.groupId) {
-      qb.andWhere(`${qb.alias}.groupId = :groupId`, {
-        groupId: query.groupId,
+      qb.andWhere(`${qb.alias}.groupId IN (:...productGroupIds)`, {
+        productGroupIds: groupIds,
       });
+    }
+
+    // TODO: Lọc theo thương hiệu
+    if (brandId) {
+      qb.andWhere(`${qb.alias}.brandId = :brandId`, { brandId });
+    } else if (this.checkArrayFilter(brandIds)) {
+      qb.andWhere(`${qb.alias}.brandId IN (:...brandIds)`, { brandIds });
+    }
+
+    // TODO: Lọc theo vị trí kho/kệ
+    // Join vào storeProducts, storeProduct.locationIds
+    if (locationId) {
+      qb.innerJoin(`${qb.alias}.storeProducts`, "storeProduct").andWhere(
+        ":locationId = ANY(storeProduct.locationIds)",
+        { locationId },
+      );
+    } else if (this.checkArrayFilter(locationIds)) {
+      qb.innerJoin(`${qb.alias}.storeProducts`, "storeProduct").andWhere(
+        "storeProduct.locationIds && :locationIds",
+        { locationIds },
+      );
     }
   }
 
@@ -144,7 +169,8 @@ export class ProductRepository extends BaseRepository<Product> {
     rawProduct?: Product | null,
   ): Promise<number> {
     if (storeId) {
-      const storeProduct = await this.storeProductRepository.getRepository(manager)
+      const storeProduct = await this.storeProductRepository
+        .getRepository(manager)
         .findOne({ where: { productId, storeId } });
       if (storeProduct) return Number(storeProduct.costPrice) || 0;
     }
