@@ -5,11 +5,7 @@ import {
   ActionValue,
   RequestContext,
 } from "@/shared/types/interfaces";
-import {
-  BadRequestError,
-  ForbiddenError,
-  ValidationError,
-} from "@/shared/types/errors";
+import { BadRequestError, ValidationError } from "@/shared/types/errors";
 import { BaseService } from "@/shared/base/BaseService";
 import {
   Attribute,
@@ -48,7 +44,7 @@ export class AttributeService extends BaseService<Attribute> {
     if (!existing) return;
     this.validateStoreAccess(existing, req);
     const canUpdate = await this.canUpdate(existing, req);
-    if (!canUpdate.can) throw new ForbiddenError(canUpdate.reason);
+    if (!canUpdate.can) throw new BadRequestError(canUpdate.reason);
     this.validateStoreScopeForWrite(data, existing, req);
     await this.validateHierarchy(id, data, manager, existing);
   }
@@ -82,11 +78,9 @@ export class AttributeService extends BaseService<Attribute> {
 
   private validateStoreAccess(entity: Attribute, req?: RequestContext): void {
     if (!entity.storeId) return;
-    if (
-      !req?.storeContext?.storeId ||
-      req.storeContext.storeId !== entity.storeId
-    ) {
-      throw new ForbiddenError("attribute.store_forbidden", [
+    const contextStoreId = req?.storeContext?.storeId;
+    if (contextStoreId && contextStoreId !== entity.storeId) {
+      throw new BadRequestError("attribute.store_forbidden", [
         {
           field: "storeId",
           message: "Không có quyền truy cập thuộc tính của cửa hàng khác",
@@ -269,7 +263,7 @@ export class AttributeService extends BaseService<Attribute> {
   ): Promise<void> {
     this.validateStoreAccess(data, req);
     const canDelete = await this.canDelete(data, req);
-    if (!canDelete.can) throw new ForbiddenError(canDelete.reason);
+    if (!canDelete.can) throw new BadRequestError(canDelete.reason);
   }
   protected async attachActions(
     entity: Attribute & { _actions?: ActionMap },

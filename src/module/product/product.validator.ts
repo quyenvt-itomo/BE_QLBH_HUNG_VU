@@ -13,6 +13,7 @@ export const ExtraUnitSchema = z.object({
   unitId: z.uuid(),
   conversionRate: z.number().positive(),
   salePrice: z.number().min(0),
+  isPurchaseUnit: z.boolean().optional().default(false),
 });
 
 export const StoreProductSchema = z.object({
@@ -20,13 +21,14 @@ export const StoreProductSchema = z.object({
   storeId: z.uuid(),
   costPrice: z.number().min(0).default(0),
   isSelling: z.boolean().default(true),
-  locationId: z.uuid().nullish(),
+  locationIds: z.array(z.uuid()).optional(),
 });
 
 export const CreateProductSchema = BaseCreateSchema.extend({
   groupId: z.uuid().nullish(),
   brandId: z.uuid().nullish(),
   code: BaseCodeSchema.optional(),
+  barcode: z.string().trim().max(50).nullish(),
   name: z.string().trim().min(1),
   description: z.string().nullish(),
   baseUnitId: z.uuid().nullish(),
@@ -39,6 +41,7 @@ export const UpdateProductSchema = BaseUpdateSchema.extend({
   groupId: z.uuid().nullish(),
   brandId: z.uuid().nullish(),
   code: BaseCodeSchema.optional(),
+  barcode: z.string().trim().max(50).nullish(),
   name: z.string().trim().min(1).optional(),
   description: z.string().nullish(),
   baseUnitId: z.uuid().nullish(),

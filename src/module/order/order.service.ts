@@ -4,7 +4,7 @@ import { withTransaction } from "@/shared/base/TransactionManager";
 import { BaseService } from "@/shared/base/BaseService";
 import { RequestContext } from "@/shared/types/interfaces";
 import { generateCode } from "@/shared/utils/code.utils";
-import { Order, OrderLine, OrderStatus } from "@/database/models";
+import { Order, OrderLine, OrderStatus, OrderType, Product } from "@/database/models";
 import { OrderRepository } from "./order.repository";
 import { ORDER_TYPES } from "./order.types";
 import { OrderLineRepository } from "./orderLine.repository";
@@ -52,7 +52,19 @@ export class OrderService extends BaseService<Order> {
 
       for (const line of lines) {
       if (!line.productId) throw new Error("order.line.product_required");
-      await this.productRepository.attachInfo(line, manager);
+      let rawProduct: Product | null = null;
+      if (data.type === OrderType.PURCHASE && !line.unitId) {
+        rawProduct = await this.productRepository.getRepository(manager).findOne({
+          where: { id: line.productId },
+          relations: { extraUnits: true },
+        });
+        if (rawProduct) {
+          line.unitId =
+            rawProduct.extraUnits?.find((unit) => unit.isPurchaseUnit)?.unitId ||
+            rawProduct.baseUnitId;
+        }
+      }
+      await this.productRepository.attachInfo(line, manager, rawProduct);
       if (!line.productSnapshot) throw new Error("product.not_found");
       await this.attributeRepository.attachUnitInfo(line, manager);
       if (line.unitId && !line.unitSnapshot) throw new Error("unit.not_found");

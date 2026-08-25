@@ -26,4 +26,8 @@ export class ProductExtraUnit extends BaseEntity {
 
   @Column(BaseNumericColumnOptions)
   salePrice: number; // Giá bán/ĐVT quy đổi
+
+  // Là đơn vị tính nhập hàng mặc định
+  @Column({ type: "boolean", default: false })
+  isPurchaseUnit: boolean;
 }

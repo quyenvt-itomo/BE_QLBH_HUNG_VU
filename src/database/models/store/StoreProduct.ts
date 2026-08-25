@@ -1,8 +1,8 @@
-import { Column, Entity, JoinColumn, ManyToOne } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from "typeorm";
 import { StoreEntity } from "./StoreEntity";
 import { Product } from "../Product";
 import { BaseNumericColumnOptions } from "@/shared/base/BaseEntity";
-import { Attribute } from "../Attribute";
+import { StoreProductLocation } from "./StoreProductLocation";
 
 @Entity("store_products")
 export class StoreProduct extends StoreEntity {
@@ -18,9 +18,9 @@ export class StoreProduct extends StoreEntity {
   @Column({ type: "boolean", default: false })
   isSelling: boolean; // Đang bán tại cửa hàng
 
-  @Column({ type: "uuid", nullable: true, default: null })
-  locationId: string | null; // Vị trí kho/kệ
-  @ManyToOne(() => Attribute, { onDelete: "SET NULL" })
-  @JoinColumn({ name: "locationId" })
-  location: Attribute | null;
+  /** Một sản phẩm tại một chi nhánh có thể nằm ở nhiều vị trí. */
+  @OneToMany(() => StoreProductLocation, (item) => item.storeProduct, {
+    cascade: ["insert", "update"],
+  })
+  locations: StoreProductLocation[];
 }

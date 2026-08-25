@@ -62,7 +62,7 @@ export function withSortOrder<T>(items?: T[]):
   }));
 }
 
-export const BaseCodeSchema = z.string().trim().nonempty().max(50);
+export const BaseCodeSchema = z.string().trim().max(50);
 
 export const BaseNullableUuidSchema = z.preprocess(
   (val) => (val === "null" ? null : val),

@@ -4,9 +4,11 @@ import { BaseService } from "@/shared/base/BaseService";
 import { AttributeType, Product } from "@/database/models";
 import { ProductPriceHistory } from "@/database/models/store/ProductPriceHistory";
 import { StoreProduct } from "@/database/models/store/StoreProduct";
+import { ProductExtraUnit } from "@/database/models/ProductExtraUnit";
+import { StoreProductLocation } from "@/database/models/store/StoreProductLocation";
 import { ProductRepository } from "./product.repository";
 import { PRODUCT_TYPES } from "./product.types";
-import { ProductQueryDto } from "./product.validator";
+import { CreateProductDto, ProductQueryDto } from "./product.validator";
 import { RequestContext } from "@/shared/types/interfaces";
 import { generateCode } from "@/shared/utils/code.utils";
 import { InventoryRecalculateService } from "../inventory/inventoryRecalculate.service";
@@ -40,24 +42,50 @@ export class ProductService extends BaseService<Product> {
     this.repository = repository;
   }
   async validateBeforeCreate(
-    data: DeepPartial<Product>,
+    data: DeepPartial<Product> & CreateProductDto,
     _manager: EntityManager,
     _req?: RequestContext,
   ): Promise<void> {
-    if (data.salePrice == null) data.salePrice = 0;
-    if (!data.code) data.code = await generateCode("product");
     delete (data as any).storeProducts;
+    await this.validateExtraUnits((data as any).extraUnits, _manager);
     await this.validateProductGroup(data.groupId, _manager);
     await this.validateProductBrand(data.brandId, _manager);
+
+    if (data.salePrice == null) data.salePrice = 0;
+    if (!data.code) data.code = await generateCode("product");
+    this.fillBarcodeIfEmpty(data, data.code);
   }
   async validateBeforeUpdate(
-    _id: string,
+    id: string,
     data: DeepPartial<Product>,
     manager: EntityManager,
   ): Promise<void> {
+    if (
+      Object.prototype.hasOwnProperty.call(data, "barcode") &&
+      !String(data.barcode ?? "").trim()
+    ) {
+      const existing = await this.repository.getById(id, manager);
+      this.fillBarcodeIfEmpty(data, data.code || existing?.code);
+    }
+    if (Array.isArray((data as any).extraUnits)) {
+      await this.validateExtraUnits((data as any).extraUnits, manager);
+      // BaseRepository.update uses UPDATE ... SET and cannot update a OneToMany.
+      // The original array is kept in BaseService.inputData for syncExtraUnits().
+      delete (data as any).extraUnits;
+    }
     delete (data as any).storeProducts;
     await this.validateProductGroup(data.groupId, manager);
     await this.validateProductBrand(data.brandId, manager);
+  }
+
+  private fillBarcodeIfEmpty(
+    data: DeepPartial<Product>,
+    code?: string | null,
+  ): void {
+    if (String(data.barcode ?? "").trim() || !code) return;
+
+    const digits = code.replace(/[^0-9]/g, "");
+    data.barcode = digits.padStart(8, "0");
   }
 
   async actionAfterCreate(
@@ -66,7 +94,12 @@ export class ProductService extends BaseService<Product> {
     req?: RequestContext,
     inputData?: DeepPartial<Product>,
   ): Promise<void> {
-    await this.syncStoreProducts(data.id, (inputData as any)?.storeProducts, manager, req);
+    await this.syncStoreProducts(
+      data.id,
+      (inputData as any)?.storeProducts,
+      manager,
+      req,
+    );
   }
 
   async actionAfterUpdate(
@@ -76,19 +109,78 @@ export class ProductService extends BaseService<Product> {
     inputData?: DeepPartial<Product>,
   ): Promise<void> {
     if (Array.isArray((inputData as any)?.storeProducts)) {
-      await this.syncStoreProducts(data.id, (inputData as any).storeProducts, manager, req);
+      await this.syncStoreProducts(
+        data.id,
+        (inputData as any).storeProducts,
+        manager,
+        req,
+      );
     }
+    if (Array.isArray((inputData as any)?.extraUnits)) {
+      await this.syncExtraUnits(data.id, (inputData as any).extraUnits, manager);
+    }
+  }
+
+  private async validateExtraUnits(rows: any, _manager: EntityManager): Promise<void> {
+    if (!Array.isArray(rows)) return;
+
+    const unitIds = rows.map((row) => row?.unitId).filter(Boolean);
+    if (new Set(unitIds).size !== unitIds.length) {
+      throw new ValidationError("input.invalid", [
+        { field: "extraUnits", message: "Không được chọn trùng đơn vị tính" },
+      ]);
+    }
+
+    const purchaseUnits = rows.filter((row) => row?.isPurchaseUnit === true);
+    if (purchaseUnits.length > 1) {
+      throw new ValidationError("input.invalid", [
+        {
+          field: "extraUnits",
+          message: "Chỉ được chọn một đơn vị tính nhập hàng mặc định",
+        },
+      ]);
+    }
+  }
+
+  private async syncExtraUnits(
+    productId: string,
+    rows: any[],
+    manager: EntityManager,
+  ): Promise<void> {
+    const repo = manager.getRepository(ProductExtraUnit);
+    await repo.delete({ productId } as any);
+
+    if (!rows.length) return;
+
+    await repo.save(
+      rows.map((row) =>
+        repo.create({
+          id: row.id,
+          productId,
+          unitId: row.unitId,
+          conversionRate: Number(row.conversionRate) || 1,
+          salePrice: Number(row.salePrice) || 0,
+          isPurchaseUnit: row.isPurchaseUnit === true,
+        }),
+      ),
+    );
   }
 
   private async syncStoreProducts(
     productId: string,
     rows: any,
     manager: EntityManager,
-    _req?: RequestContext,
+    req?: RequestContext,
   ): Promise<void> {
     if (!Array.isArray(rows)) return;
 
-    const storeIds = rows.map((row) => row?.storeId).filter(Boolean);
+    // In a store context, only the current store row is writable. Other rows
+    // may still be returned to FE, but must never be updated or removed here.
+    const contextStoreId = req?.storeContext?.storeId;
+    const editableRows = contextStoreId
+      ? rows.filter((row) => row?.storeId === contextStoreId)
+      : rows;
+    const storeIds = editableRows.map((row) => row?.storeId).filter(Boolean);
     if (new Set(storeIds).size !== storeIds.length) {
       throw new ValidationError("input.invalid", [
         { field: "storeProducts", message: "Không được chọn trùng chi nhánh" },
@@ -96,31 +188,88 @@ export class ProductService extends BaseService<Product> {
     }
 
     const repo = this.storeProductRepository.getRepository(manager);
+    const locationRepo = manager.getRepository(StoreProductLocation);
     const existing = await repo.find({
       where: { productId } as any,
       withDeleted: true,
     });
+    const editableExisting = contextStoreId
+      ? existing.filter((item) => item.storeId === contextStoreId)
+      : existing;
     const incomingIds = new Set(storeIds);
 
-    for (const row of rows) {
-      const current = existing.find((item) => item.storeId === row.storeId);
-      await repo.save(
+    for (const [rowIndex, row] of editableRows.entries()) {
+      const current = editableExisting.find((item) => item.storeId === row.storeId);
+      const locationIds = Array.from(
+        new Set<string>(
+          (Array.isArray(row.locationIds)
+            ? row.locationIds
+            : row.locationId
+              ? [row.locationId]
+              : []
+          ).filter(Boolean),
+        ),
+      );
+      await this.validateStoreProductLocations(
+        row.storeId,
+        locationIds,
+        manager,
+        rowIndex,
+      );
+
+      const savedStoreProduct = (await repo.save(
         repo.create({
           ...(current || {}),
           productId,
           storeId: row.storeId,
           costPrice: Number(row.costPrice) || 0,
           isSelling: row.isSelling !== false,
-          locationId: row.locationId || null,
           deletedAt: null,
         } as any),
-      );
+      )) as unknown as StoreProduct;
+
+      await locationRepo.delete({ storeProductId: savedStoreProduct.id });
+      if (locationIds.length) {
+        await locationRepo.save(
+          locationIds.map((locationId) =>
+            locationRepo.create({
+              storeProductId: savedStoreProduct.id,
+              locationId,
+            }),
+          ),
+        );
+      }
     }
 
-    const removedIds = existing
+    const removedIds = editableExisting
       .filter((item) => !incomingIds.has(item.storeId) && !item.deletedAt)
       .map((item) => item.id);
     if (removedIds.length) await repo.softDelete(removedIds);
+  }
+
+  private async validateStoreProductLocations(
+    storeId: string,
+    locationIds: string[],
+    manager: EntityManager,
+    rowIndex: number,
+  ): Promise<void> {
+    if (!locationIds.length) return;
+
+    const locations = await this.attributeRepository.getRepository(manager).find({
+      where: { id: In(locationIds) } as any,
+    });
+    const valid = locations.length === locationIds.length && locations.every(
+      (location) =>
+        location.type === AttributeType.LOCATION && location.storeId === storeId,
+    );
+    if (!valid) {
+      throw new ValidationError("input.invalid", [
+        {
+          field: `storeProducts.${rowIndex}.locationIds`,
+          message: "Vị trí phải là vị trí thuộc đúng chi nhánh",
+        },
+      ]);
+    }
   }
 
   private async validateProductGroup(
@@ -209,12 +358,12 @@ export class ProductService extends BaseService<Product> {
     const storeId = (query as any).storeId || req?.storeContext?.storeId;
     if (!storeId || !products.length) return products;
     const histories = await this.priceHistoryRepository.getRepository().find({
-        where: {
-          storeId,
-          productId: (products as any).map((p: Product) => p.id),
-        } as any,
-        order: { createdAt: "DESC" } as any,
-      });
+      where: {
+        storeId,
+        productId: (products as any).map((p: Product) => p.id),
+      } as any,
+      order: { createdAt: "DESC" } as any,
+    });
     const map = new Map<string, ProductPriceHistory[]>();
     for (const history of histories)
       map.set(history.productId || "", [

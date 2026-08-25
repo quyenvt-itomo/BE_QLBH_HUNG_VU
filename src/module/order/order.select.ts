@@ -87,7 +87,7 @@ export const OrderSelectFull: FindOptionsSelect<Order> = {
       name: true,
       baseUnitId: true,
       baseUnit: { id: true, name: true },
-      extraUnits: { id: true, unitId: true, conversionRate: true, unit: { id: true, name: true } },
+      extraUnits: { id: true, unitId: true, conversionRate: true, isPurchaseUnit: true, unit: { id: true, name: true } },
     },
     unit: { id: true, name: true, type: true },
   },

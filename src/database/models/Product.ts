@@ -82,7 +82,7 @@ export class Product extends BaseEntity {
 
   // * Thông tin tại các cửa hàng
   @OneToMany(() => StoreProduct, (sp) => sp.product)
-  storeProducts: StoreProduct[];
+  storeProducts?: StoreProduct[];
 
   // TODO: More fields
   stockQuantity?: number;

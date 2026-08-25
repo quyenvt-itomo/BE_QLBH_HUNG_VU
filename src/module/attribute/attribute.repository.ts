@@ -14,7 +14,12 @@ import {
   AttributeType,
   isStoreScopedAttributeType,
 } from "@/database/models/Attribute";
-import { AttributeRelations, AttributeRelationsList, AttributeSelectFull, AttributeSelectList } from "./attribute.select";
+import {
+  AttributeRelations,
+  AttributeRelationsList,
+  AttributeSelectFull,
+  AttributeSelectList,
+} from "./attribute.select";
 import { AttributeQueryDto } from "./attribute.validator";
 
 export class AttributeRepository extends BaseRepository<Attribute> {
@@ -66,7 +71,6 @@ export class AttributeRepository extends BaseRepository<Attribute> {
     if (!type) return;
 
     const attributeId = `${qb.alias}."id"`;
-    const attributeName = `${qb.alias}."name"`;
 
     if (
       [
@@ -110,7 +114,9 @@ export class AttributeRepository extends BaseRepository<Attribute> {
           ? `
             SELECT COUNT(DISTINCT storeProduct."productId")
             FROM "store_products" storeProduct
-            WHERE storeProduct."location" = ${attributeName}
+            INNER JOIN "store_product_locations" storeProductLocation
+              ON storeProductLocation."storeProductId" = storeProduct."id"
+            WHERE storeProductLocation."locationId" = ${attributeId}
               AND storeProduct."deletedAt" IS NULL
               AND storeProduct."storeId" = :attributeStatsStoreId
           `
@@ -310,11 +316,16 @@ export class AttributeRepository extends BaseRepository<Attribute> {
     }
   }
 
-  async attachInfo<T extends {
-    categoryId?: string | null;
-    categorySnapshot?: DeepPartial<AttributeSnapshot> | null;
-  }>(data: T, manager?: EntityManager): Promise<void> {
-    if (data.categoryId && (!data.categorySnapshot || data.categorySnapshot.id !== data.categoryId)) {
+  async attachInfo<
+    T extends {
+      categoryId?: string | null;
+      categorySnapshot?: DeepPartial<AttributeSnapshot> | null;
+    },
+  >(data: T, manager?: EntityManager): Promise<void> {
+    if (
+      data.categoryId &&
+      (!data.categorySnapshot || data.categorySnapshot.id !== data.categoryId)
+    ) {
       data.categorySnapshot = await this.getSnapshot(data.categoryId, manager);
     }
   }

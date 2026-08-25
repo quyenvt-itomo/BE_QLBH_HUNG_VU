@@ -41,6 +41,7 @@ import {
 import { OrderLine } from "./store/OrderLine";
 import { ProductPriceHistory } from "./store/ProductPriceHistory";
 import { StoreProduct } from "./store/StoreProduct";
+import { StoreProductLocation } from "./store/StoreProductLocation";
 import { StoreUser } from "./store/StoreUser";
 
 /** Single source of truth for TypeORM entities in the store-scoped model. */
@@ -74,6 +75,7 @@ export const entities = [
   OrderLine,
   ProductPriceHistory,
   StoreProduct,
+  StoreProductLocation,
   StoreUser,
 ];
 
@@ -112,6 +114,7 @@ export {
   ProductExtraUnit,
   ProductPriceHistory,
   StoreProduct,
+  StoreProductLocation,
   Role,
   RoleType,
   Store,

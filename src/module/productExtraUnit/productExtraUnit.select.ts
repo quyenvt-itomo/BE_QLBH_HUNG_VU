@@ -3,7 +3,7 @@ import { BaseSelect } from "@/shared/base/BaseSelect";
 import { ProductExtraUnit } from "@/database/models/ProductExtraUnit";
 
 export const ProductExtraUnitSelectList: FindOptionsSelect<ProductExtraUnit> = {
-  ...BaseSelect, productId: true, unitId: true, conversionRate: true, salePrice: true,
+  ...BaseSelect, productId: true, unitId: true, conversionRate: true, salePrice: true, isPurchaseUnit: true,
   unit: { id: true, name: true, type: true },
 };
 export const ProductExtraUnitSelectFull: FindOptionsSelect<ProductExtraUnit> = {

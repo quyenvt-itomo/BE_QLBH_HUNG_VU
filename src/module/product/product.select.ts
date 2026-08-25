@@ -18,6 +18,14 @@ export const ProductSelectBasic: FindOptionsSelect<Product> = {
   group: { id: true, name: true, type: true, parentId: true },
   brand: { id: true, name: true, type: true },
   baseUnit: { id: true, name: true, type: true },
+  extraUnits: {
+    id: true,
+    unitId: true,
+    conversionRate: true,
+    salePrice: true,
+    isPurchaseUnit: true,
+    unit: { id: true, name: true, type: true },
+  },
 };
 export const ProductSelectList = ProductSelectBasic;
 
@@ -32,27 +40,32 @@ export const ProductSelectFull: FindOptionsSelect<Product> = {
     unit: { id: true, name: true, type: true },
     conversionRate: true,
     salePrice: true,
+    isPurchaseUnit: true,
   },
   storeProducts: {
     id: true,
     storeId: true,
     costPrice: true,
     isSelling: true,
-    locationId: true,
     store: { id: true, code: true, name: true },
-    location: { id: true, name: true, type: true },
+    locations: {
+      id: true,
+      locationId: true,
+      location: { id: true, name: true, type: true },
+    },
   },
-} as any;
+};
 
 export const ProductRelations: FindOptionsRelations<Product> = {
   group: true,
   brand: true,
   baseUnit: true,
   extraUnits: { unit: true },
-  storeProducts: { store: true, location: true },
+  storeProducts: { store: true, locations: { location: true } },
 };
 export const ProductRelationsList: FindOptionsRelations<Product> = {
   group: true,
   brand: true,
   baseUnit: true,
+  extraUnits: { unit: true },
 };
