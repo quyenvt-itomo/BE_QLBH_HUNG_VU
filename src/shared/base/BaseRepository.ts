@@ -659,15 +659,37 @@ export abstract class BaseRepository<T extends ObjectLiteral> {
           const fieldName = key.slice(0, -matchedSuffix.length);
 
           // Kiểm tra field có tồn tại trong entity không
-          if (entityColumns.includes(fieldName)) {
+          const column = entityMetadata.findColumnWithPropertyName(fieldName);
+          if (entityColumns.includes(fieldName) && column) {
             const value = rangeFilterSource[key];
 
             if (value != null && value !== "") {
+              const columnType =
+                typeof column.type === "string"
+                  ? column.type.toLowerCase()
+                  : "";
+              const isDateColumn =
+                column.type === Date ||
+                columnType === "date" ||
+                columnType.includes("timestamp");
+
+              // Date ranges chỉ có ý nghĩa với Gte/Lte.
+              if (isDateColumn && !["Gte", "Lte"].includes(matchedSuffix)) {
+                return;
+              }
+
+              let normalizedValue = value;
+              if (isDateColumn && !(value instanceof Date)) {
+                const parsedDate = new Date(value);
+                if (Number.isNaN(parsedDate.getTime())) return;
+                normalizedValue = parsedDate;
+              }
+
               const operator = OPERATOR_MAP[matchedSuffix];
               const paramName = `${fieldName}_${matchedSuffix}`;
 
               qb.andWhere(`entity.${fieldName} ${operator} :${paramName}`, {
-                [paramName]: value,
+                [paramName]: normalizedValue,
               });
             }
           }

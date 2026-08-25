@@ -15,6 +15,7 @@ import { PRODUCT_TYPES } from "@/module/product/product.types";
 import { ProductRouter } from "@/module/product/product.route";
 import { PARTNER_TYPES } from "@/module/partner/partner.types";
 import { PartnerRouter } from "@/module/partner/partner.route";
+import { partnerContextMiddleware } from "@/module/partner/partner.middleware";
 import { PARTNER_CONTACT_TYPES } from "@/module/partnerContact/partnerContact.types";
 import { PartnerContactRouter } from "@/module/partnerContact/partnerContact.route";
 import { ORDER_TYPES } from "@/module/order/order.types";
@@ -98,26 +99,17 @@ const partnerRouter = container
   .getRouter();
 router.use(
   "/customer",
-  (req: any, _res, next) => {
-    req.partnerContext = { module: "customer", type: "customer" };
-    next();
-  },
+  partnerContextMiddleware("customer"),
   partnerRouter,
 );
 router.use(
   "/supplier",
-  (req: any, _res, next) => {
-    req.partnerContext = { module: "supplier", type: "supplier" };
-    next();
-  },
+  partnerContextMiddleware("supplier"),
   partnerRouter,
 );
 router.use(
   "/shipper",
-  (req: any, _res, next) => {
-    req.partnerContext = { module: "shipper", type: "shipper" };
-    next();
-  },
+  partnerContextMiddleware("shipper"),
   partnerRouter,
 );
 router.use(

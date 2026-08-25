@@ -222,7 +222,27 @@ export const BaseQuerySchema = z.object({
   deltaAmountGt: BaseNumberQuerySchema,
   deltaAmountLt: BaseNumberQuerySchema,
   deltaAmountEq: BaseNumberQuerySchema,
-});
+
+  // Date range filters: chỉ hỗ trợ Gte/Lte
+  createdAtGte: DateTransform.optional(),
+  createdAtLte: DateTransform.optional(),
+  updatedAtGte: DateTransform.optional(),
+  updatedAtLte: DateTransform.optional(),
+  orderAtGte: DateTransform.optional(),
+  orderAtLte: DateTransform.optional(),
+  occurredAtGte: DateTransform.optional(),
+  occurredAtLte: DateTransform.optional(),
+  canceledAtGte: DateTransform.optional(),
+  canceledAtLte: DateTransform.optional(),
+  approvedAtGte: DateTransform.optional(),
+  approvedAtLte: DateTransform.optional(),
+  completedAtGte: DateTransform.optional(),
+  completedAtLte: DateTransform.optional(),
+  orderedAtGte: DateTransform.optional(),
+  orderedAtLte: DateTransform.optional(),
+  timeAtGte: DateTransform.optional(),
+  timeAtLte: DateTransform.optional(),
+}).catchall(z.any());
 export type BaseQueryDto = z.infer<typeof BaseQuerySchema>;
 
 export const BaseDeleteManySchema = z.object({

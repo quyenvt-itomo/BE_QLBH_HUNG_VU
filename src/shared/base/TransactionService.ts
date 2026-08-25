@@ -54,11 +54,29 @@ export class TransactionService {
       const field = key.slice(0, -suffix.length);
       if (!fields.includes(field)) return;
 
+      const column = qb.expressionMap.mainAlias?.metadata.findColumnWithPropertyName(field);
+      const columnType =
+        typeof column?.type === "string" ? column.type.toLowerCase() : "";
+      const isDateColumn =
+        column?.type === Date ||
+        columnType === "date" ||
+        columnType.includes("timestamp");
+
+      // Date ranges chỉ có ý nghĩa với Gte/Lte.
+      if (isDateColumn && !["Gte", "Lte"].includes(suffix)) return;
+
+      let normalizedValue = value;
+      if (isDateColumn && !(value instanceof Date)) {
+        const parsedDate = new Date(value);
+        if (Number.isNaN(parsedDate.getTime())) return;
+        normalizedValue = parsedDate;
+      }
+
       const operator = OPERATOR_MAP[suffix];
       const paramName = `${field}_${suffix}`;
 
       qb.andWhere(`${alias}."${field}" ${operator} :${paramName}`, {
-        [paramName]: value,
+        [paramName]: normalizedValue,
       });
     });
   }

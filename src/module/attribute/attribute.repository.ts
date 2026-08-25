@@ -37,22 +37,16 @@ export class AttributeRepository extends BaseRepository<Attribute> {
     const alias = qb.alias;
     const { type, showStatistics } =
       (options.moreQuery as AttributeQueryDto) || {};
+
     const storeId = options.storeId;
+
     if (type) {
       qb.andWhere(`${alias}.type = :attributeType`, {
         attributeType: type,
       });
     }
 
-    if (isStoreScopedAttributeType(type)) {
-      if (!storeId) qb.andWhere("1 = 0");
-      else
-        qb.andWhere(`${alias}.storeId = :attributeStoreId`, {
-          attributeStoreId: storeId,
-        });
-    } else if (type) {
-      qb.andWhere(`${alias}.storeId IS NULL`);
-    } else if (storeId) {
+    if (storeId) {
       qb.andWhere(
         `(${alias}.storeId = :attributeStoreId OR ${alias}.storeId IS NULL)`,
         {
