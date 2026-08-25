@@ -15,15 +15,24 @@ export const ExtraUnitSchema = z.object({
   salePrice: z.number().min(0),
 });
 
+export const StoreProductSchema = z.object({
+  id: z.uuid().optional(),
+  storeId: z.uuid(),
+  costPrice: z.number().min(0).default(0),
+  isSelling: z.boolean().default(true),
+  locationId: z.uuid().nullish(),
+});
+
 export const CreateProductSchema = BaseCreateSchema.extend({
   groupId: z.uuid().nullish(),
   brandId: z.uuid().nullish(),
   code: BaseCodeSchema.optional(),
   name: z.string().trim().min(1),
+  description: z.string().nullish(),
   baseUnitId: z.uuid().nullish(),
   salePrice: z.number().min(0).default(0),
-  isSaling: z.boolean().optional(),
   extraUnits: z.array(ExtraUnitSchema).optional().default([]),
+  storeProducts: z.array(StoreProductSchema).optional().default([]),
 });
 
 export const UpdateProductSchema = BaseUpdateSchema.extend({
@@ -31,10 +40,11 @@ export const UpdateProductSchema = BaseUpdateSchema.extend({
   brandId: z.uuid().nullish(),
   code: BaseCodeSchema.optional(),
   name: z.string().trim().min(1).optional(),
+  description: z.string().nullish(),
   baseUnitId: z.uuid().nullish(),
   salePrice: z.number().min(0).optional(),
-  isSaling: z.boolean().optional(),
   extraUnits: z.array(ExtraUnitSchema).optional(),
+  storeProducts: z.array(StoreProductSchema).optional(),
 });
 
 export const ProductQuerySchema = BaseQuerySchema.extend({

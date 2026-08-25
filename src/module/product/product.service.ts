@@ -46,6 +46,7 @@ export class ProductService extends BaseService<Product> {
   ): Promise<void> {
     if (data.salePrice == null) data.salePrice = 0;
     if (!data.code) data.code = await generateCode("product");
+    delete (data as any).storeProducts;
     await this.validateProductGroup(data.groupId, _manager);
     await this.validateProductBrand(data.brandId, _manager);
   }
@@ -54,8 +55,72 @@ export class ProductService extends BaseService<Product> {
     data: DeepPartial<Product>,
     manager: EntityManager,
   ): Promise<void> {
+    delete (data as any).storeProducts;
     await this.validateProductGroup(data.groupId, manager);
     await this.validateProductBrand(data.brandId, manager);
+  }
+
+  async actionAfterCreate(
+    data: Product,
+    manager: EntityManager,
+    req?: RequestContext,
+    inputData?: DeepPartial<Product>,
+  ): Promise<void> {
+    await this.syncStoreProducts(data.id, (inputData as any)?.storeProducts, manager, req);
+  }
+
+  async actionAfterUpdate(
+    data: Product,
+    manager: EntityManager,
+    req?: RequestContext,
+    inputData?: DeepPartial<Product>,
+  ): Promise<void> {
+    if (Array.isArray((inputData as any)?.storeProducts)) {
+      await this.syncStoreProducts(data.id, (inputData as any).storeProducts, manager, req);
+    }
+  }
+
+  private async syncStoreProducts(
+    productId: string,
+    rows: any,
+    manager: EntityManager,
+    _req?: RequestContext,
+  ): Promise<void> {
+    if (!Array.isArray(rows)) return;
+
+    const storeIds = rows.map((row) => row?.storeId).filter(Boolean);
+    if (new Set(storeIds).size !== storeIds.length) {
+      throw new ValidationError("input.invalid", [
+        { field: "storeProducts", message: "Không được chọn trùng chi nhánh" },
+      ]);
+    }
+
+    const repo = this.storeProductRepository.getRepository(manager);
+    const existing = await repo.find({
+      where: { productId } as any,
+      withDeleted: true,
+    });
+    const incomingIds = new Set(storeIds);
+
+    for (const row of rows) {
+      const current = existing.find((item) => item.storeId === row.storeId);
+      await repo.save(
+        repo.create({
+          ...(current || {}),
+          productId,
+          storeId: row.storeId,
+          costPrice: Number(row.costPrice) || 0,
+          isSelling: row.isSelling !== false,
+          locationId: row.locationId || null,
+          deletedAt: null,
+        } as any),
+      );
+    }
+
+    const removedIds = existing
+      .filter((item) => !incomingIds.has(item.storeId) && !item.deletedAt)
+      .map((item) => item.id);
+    if (removedIds.length) await repo.softDelete(removedIds);
   }
 
   private async validateProductGroup(

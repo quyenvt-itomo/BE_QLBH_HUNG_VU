@@ -2,6 +2,7 @@ import { Column, Entity, JoinColumn, ManyToOne } from "typeorm";
 import { StoreEntity } from "./StoreEntity";
 import { Product } from "../Product";
 import { BaseNumericColumnOptions } from "@/shared/base/BaseEntity";
+import { Attribute } from "../Attribute";
 
 @Entity("store_products")
 export class StoreProduct extends StoreEntity {
@@ -17,6 +18,9 @@ export class StoreProduct extends StoreEntity {
   @Column({ type: "boolean", default: false })
   isSelling: boolean; // Đang bán tại cửa hàng
 
-  @Column({ type: "varchar", length: 255, nullable: true })
-  location: string | null; // Vị trí kho/kệ
+  @Column({ type: "uuid", nullable: true, default: null })
+  locationId: string | null; // Vị trí kho/kệ
+  @ManyToOne(() => Attribute, { onDelete: "SET NULL" })
+  @JoinColumn({ name: "locationId" })
+  location: Attribute | null;
 }

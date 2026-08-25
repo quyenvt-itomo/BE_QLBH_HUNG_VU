@@ -1,5 +1,9 @@
 import { Entity, Column, ManyToOne, OneToMany, JoinColumn } from "typeorm";
-import { BaseEntity, BaseNumericColumnOptions } from "@/shared/base/BaseEntity";
+import {
+  BaseEntity,
+  BaseNullableNumericColumnOptions,
+  BaseNumericColumnOptions,
+} from "@/shared/base/BaseEntity";
 import { Attribute } from "./Attribute";
 import { ProductExtraUnit } from "./ProductExtraUnit";
 import { ProductPriceHistory } from "./store/ProductPriceHistory";
@@ -14,9 +18,23 @@ export interface StockMetadata {
   total: { quantity: number; value: number };
   byStore: Record<string, { quantity: number; value: number }>;
 }
+export enum WeightUnit {
+  g = "g",
+  kg = "kg",
+}
 
 @Entity("products")
 export class Product extends BaseEntity {
+  @Column({ type: "varchar", length: 20 })
+  code: string;
+  @Column({ type: "varchar", length: 50, nullable: true, default: null })
+  barcode: string | null;
+  @Column({ type: "varchar", length: 255 })
+  name: string;
+
+  @Column({ type: "text", nullable: true, default: null })
+  description: string | null;
+
   @Column({ type: "uuid", nullable: true, default: null })
   groupId: string | null;
   @ManyToOne(() => Attribute, { onDelete: "SET NULL" })
@@ -29,28 +47,27 @@ export class Product extends BaseEntity {
   @JoinColumn({ name: "brandId" })
   brand: Attribute | null;
 
-  @Column({ type: "varchar", length: 20 })
-  code: string;
-  @Column({ type: "varchar", length: 255 })
-  name: string;
-
   @Column({ type: "uuid", nullable: true, default: null })
   baseUnitId: string | null;
   @ManyToOne(() => Attribute, { onDelete: "SET NULL" })
   @JoinColumn({ name: "baseUnitId" })
   baseUnit: Attribute | null;
 
-  @Column(BaseNumericColumnOptions)
-  salePrice: number; // Giá bán/ĐVT cơ bản
+  @Column(BaseNullableNumericColumnOptions)
+  salePrice: number | null; // Giá bán/ĐVT cơ bản
+
+  // Trọng lượng
+  @Column(BaseNullableNumericColumnOptions)
+  weight: number | null; // Trọng lượng/ĐVT cơ bản
+  // ĐVT trọng lượng
+  @Column({ type: "varchar", length: 10, default: WeightUnit.g })
+  weightUnit: WeightUnit; // ĐVT trọng lượng/ĐVT cơ bản
 
   @Column({
     type: "jsonb",
     default: () => '\'{"total":{"quantity":0,"value":0},"byStore":{}}\'::jsonb',
   })
   stockMetadata: StockMetadata;
-
-  @Column({ type: "boolean", default: false })
-  isSaling: boolean; // * Đang bán
 
   // * Đơn vị quy đổi
   @OneToMany(() => ProductExtraUnit, (eu) => eu.product, { cascade: true })

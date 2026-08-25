@@ -8,7 +8,12 @@ export const ProductSelectBasic: FindOptionsSelect<Product> = {
   brandId: true,
   code: true,
   name: true,
+  description: true,
+  barcode: true,
   baseUnitId: true,
+  salePrice: true,
+  weight: true,
+  weightUnit: true,
   stockMetadata: true,
   group: { id: true, name: true, type: true, parentId: true },
   brand: { id: true, name: true, type: true },
@@ -28,6 +33,15 @@ export const ProductSelectFull: FindOptionsSelect<Product> = {
     conversionRate: true,
     salePrice: true,
   },
+  storeProducts: {
+    id: true,
+    storeId: true,
+    costPrice: true,
+    isSelling: true,
+    locationId: true,
+    store: { id: true, code: true, name: true },
+    location: { id: true, name: true, type: true },
+  },
 } as any;
 
 export const ProductRelations: FindOptionsRelations<Product> = {
@@ -35,6 +49,7 @@ export const ProductRelations: FindOptionsRelations<Product> = {
   brand: true,
   baseUnit: true,
   extraUnits: { unit: true },
+  storeProducts: { store: true, location: true },
 };
 export const ProductRelationsList: FindOptionsRelations<Product> = {
   group: true,

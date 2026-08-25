@@ -305,6 +305,7 @@ export abstract class BaseService<T extends BaseEntity> {
     data: T,
     manager: EntityManager,
     req?: RequestContext,
+    _inputData?: DeepPartial<T>,
   ): Promise<void> {
     // Override in subclass if needed
   }
@@ -318,6 +319,7 @@ export abstract class BaseService<T extends BaseEntity> {
     req?: RequestContext,
   ): Promise<T> {
     const trashFileIds = this.collectTrashFileIds(data as any);
+    const inputData = { ...data };
 
     const runWithManager = async (manager: EntityManager) => {
       await this.validateBeforeCreate(data, manager, req);
@@ -335,7 +337,7 @@ export abstract class BaseService<T extends BaseEntity> {
       if (refErrs && refErrs.length > 0)
         throw new ValidationError("input.invalid", refErrs);
       const createdEntity = await this.repository.create(data, manager, req);
-      await this.actionAfterCreate(createdEntity, manager, req);
+      await this.actionAfterCreate(createdEntity, manager, req, inputData);
       const fullData = await this.repository.findById(
         createdEntity.id,
         manager,
@@ -432,6 +434,7 @@ export abstract class BaseService<T extends BaseEntity> {
     data: T,
     manager: EntityManager,
     req?: RequestContext,
+    _inputData?: DeepPartial<T>,
   ): Promise<void> {
     // Override in subclass if needed
   }
@@ -444,6 +447,7 @@ export abstract class BaseService<T extends BaseEntity> {
   ): Promise<T | null> {
     const storeId = req?.storeContext?.storeId;
     const trashFileIds = this.collectTrashFileIds(data as any);
+    const inputData = { ...data };
 
     if (data.isDefault && (data as any).name) delete (data as any).name;
 
@@ -495,7 +499,7 @@ export abstract class BaseService<T extends BaseEntity> {
       const updatedEntity = await this.repository.update(id, data, manager);
 
       if (updatedEntity) {
-        await this.actionAfterUpdate(updatedEntity, manager, req);
+        await this.actionAfterUpdate(updatedEntity, manager, req, inputData);
       }
 
       const fullData = await this.repository.findById(
