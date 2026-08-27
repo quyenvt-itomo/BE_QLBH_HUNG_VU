@@ -7,6 +7,8 @@ export const PRODUCT_SHEET_NAMES = {
   GUIDE: "Hướng dẫn",
 } as const;
 
+export const PRODUCT_GROUP_PATH_SEPARATOR = ">>";
+
 export const PRODUCT_COLUMNS: ExportColumnConfig[] = [
   { field: "code", header: "Mã hàng hóa (*)", width: 20, required: true },
   { field: "name", header: "Tên hàng hóa (*)", width: 30, required: true },

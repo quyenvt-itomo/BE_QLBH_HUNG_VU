@@ -1,6 +1,10 @@
 import { inject, injectable } from "inversify";
 import ExcelJS from "exceljs";
+import { IsNull } from "typeorm";
 import { RequestContext } from "@/shared/types/interfaces";
+import { Attribute, AttributeType } from "@/database/models/Attribute";
+import { AttributeRepository } from "@/module/attribute/attribute.repository";
+import { ATTRIBUTE_TYPES } from "@/module/attribute/attribute.types";
 import { ProductService } from "@/module/product/product.service";
 import { PRODUCT_TYPES } from "@/module/product/product.types";
 import { ExportColumnConfig } from "../excel.types";
@@ -9,6 +13,7 @@ import {
   PRODUCT_BUSINESS_STORE_COLUMNS,
   PRODUCT_COLUMNS,
   PRODUCT_EXTRA_UNIT_COLUMNS,
+  PRODUCT_GROUP_PATH_SEPARATOR,
   PRODUCT_SHEET_NAMES,
 } from "./product.excel.types";
 
@@ -17,6 +22,8 @@ export class ProductExcelTemplate {
   constructor(
     @inject(PRODUCT_TYPES.ProductService)
     private productService: ProductService,
+    @inject(ATTRIBUTE_TYPES.AttributeRepository)
+    private attributeRepository: AttributeRepository,
   ) {}
 
   async generateTemplate(): Promise<ExcelJS.Workbook> {
@@ -30,7 +37,10 @@ export class ProductExcelTemplate {
       code: "HH001",
       name: "Sản phẩm mẫu",
       barcode: "893000000001",
-      groupName: "Nhóm hàng mẫu",
+      groupName:
+        "Nhóm hàng mẫu" +
+        PRODUCT_GROUP_PATH_SEPARATOR +
+        "Nhóm con mẫu",
       brandName: "Thương hiệu mẫu",
       baseUnitName: "Cái",
       salePrice: 100000,
@@ -75,7 +85,10 @@ export class ProductExcelTemplate {
       "Cửa hàng kinh doanh: dùng mã hàng hóa và mã cửa hàng để khai báo giá vốn, trạng thái kinh doanh tại từng cửa hàng.",
     ]);
     guide.addRow([
-      "Các cột Nhóm hàng hóa, Thương hiệu, Đơn vị tính sẽ tự tạo danh mục nếu chưa tồn tại.",
+      "Nhóm hàng hóa hỗ trợ đa cấp theo định dạng Nhóm cha>>Nhóm con>>Nhóm cháu; hệ thống sẽ tự tạo từng cấp nếu chưa tồn tại.",
+    ]);
+    guide.addRow([
+      "Các cột Thương hiệu, Đơn vị tính sẽ tự tạo danh mục nếu chưa tồn tại.",
     ]);
     guide.getColumn(1).width = 110;
     guide.getRow(1).font = { bold: true, size: 14 };
@@ -102,6 +115,7 @@ export class ProductExcelTemplate {
       req,
     );
     const products = result.data || [];
+    const groupPathMap = await this.getProductGroupPathMap();
     const sheet = this.createSheet(
       workbook,
       PRODUCT_SHEET_NAMES.MAIN,
@@ -109,7 +123,7 @@ export class ProductExcelTemplate {
     );
     const productRowMap = new Map<string, number>();
     products.forEach((product, index) => {
-      sheet.addRow(this.productRow(product));
+      sheet.addRow(this.productRow(product, groupPathMap));
       productRowMap.set(product.code, index + 2);
     });
     applyColumnFormats(sheet, mainColumns);
@@ -215,12 +229,54 @@ export class ProductExcelTemplate {
     });
   }
 
-  private productRow(product: any): Record<string, any> {
+  private async getProductGroupPathMap(): Promise<Map<string, string>> {
+    const groups = await this.attributeRepository.getRepository().find({
+      select: { id: true, name: true, parentId: true },
+      where: {
+        type: AttributeType.PRODUCT_GROUP,
+        deletedAt: IsNull(),
+      } as any,
+    });
+    const groupsById = new Map<string, Pick<Attribute, "id" | "name" | "parentId">>(
+      groups.map((group) => [group.id, group]),
+    );
+    const paths = new Map<string, string>();
+
+    const buildPath = (id: string, visiting = new Set<string>()): string => {
+      const cached = paths.get(id);
+      if (cached) return cached;
+      const group = groupsById.get(id);
+      if (!group) return "";
+      if (visiting.has(id)) return group.name;
+
+      const nextVisiting = new Set(visiting);
+      nextVisiting.add(id);
+      const parentPath = group.parentId
+        ? buildPath(group.parentId, nextVisiting)
+        : "";
+      const path = parentPath
+        ? parentPath + PRODUCT_GROUP_PATH_SEPARATOR + group.name
+        : group.name;
+      paths.set(id, path);
+      return path;
+    };
+
+    groups.forEach((group) => buildPath(group.id));
+    return paths;
+  }
+
+  private productRow(
+    product: any,
+    groupPathMap: Map<string, string>,
+  ): Record<string, any> {
     return {
       code: product.code,
       name: product.name,
       barcode: product.barcode || "",
-      groupName: product.group?.name || "",
+      groupName:
+        (product.group?.id && groupPathMap.get(product.group.id)) ||
+        product.group?.name ||
+        "",
       brandName: product.brand?.name || "",
       baseUnitName: product.baseUnit?.name || "",
       salePrice: product.salePrice,

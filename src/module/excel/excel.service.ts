@@ -192,7 +192,15 @@ export class ExcelService {
     const clients = this.sseClients.get(jobId) || [];
     clients.push(res);
     this.sseClients.set(jobId, clients);
+    res.on("close", () => {
+      const current = this.sseClients.get(jobId);
+      if (!current) return;
+      const active = current.filter((client) => client !== res);
+      if (active.length) this.sseClients.set(jobId, active);
+      else this.sseClients.delete(jobId);
+    });
     res.write("data: " + JSON.stringify(job) + "\n\n");
+    (res as any).flush?.();
     if (job.status === "completed" || job.status === "failed") res.end();
   }
 
@@ -204,6 +212,7 @@ export class ExcelService {
     for (const client of clients) {
       try {
         client.write("data: " + JSON.stringify(job) + "\n\n");
+        (client as any).flush?.();
         if (job.status !== "completed" && job.status !== "failed") active.push(client);
         else client.end();
       } catch {

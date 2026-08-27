@@ -32,7 +32,13 @@ export const ProductSelectList = ProductSelectBasic;
 
 export const ProductSelectFull: FindOptionsSelect<Product> = {
   ...ProductSelectBasic,
-  group: { id: true, name: true, type: true, parentId: true },
+  group: {
+    id: true,
+    name: true,
+    type: true,
+    parentId: true,
+    parent: { id: true, name: true, parent: { id: true, name: true } },
+  },
   brand: { id: true, name: true, type: true },
   baseUnit: { id: true, name: true, type: true },
   extraUnits: {
@@ -58,7 +64,7 @@ export const ProductSelectFull: FindOptionsSelect<Product> = {
 };
 
 export const ProductRelations: FindOptionsRelations<Product> = {
-  group: true,
+  group: { parent: { parent: true } },
   brand: true,
   baseUnit: true,
   extraUnits: { unit: true },

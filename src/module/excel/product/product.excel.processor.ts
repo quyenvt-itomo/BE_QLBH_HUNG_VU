@@ -1,11 +1,12 @@
 import { inject, injectable } from "inversify";
 import ExcelJS from "exceljs";
-import { DeepPartial } from "typeorm";
+import { DeepPartial, ILike, IsNull } from "typeorm";
 import { Product, WeightUnit } from "@/database/models/Product";
-import { AttributeType } from "@/database/models/Attribute";
+import { Attribute, AttributeType } from "@/database/models/Attribute";
 import { ProductService } from "@/module/product/product.service";
 import { PRODUCT_TYPES } from "@/module/product/product.types";
 import { AttributeService } from "@/module/attribute/attribute.service";
+import { AttributeRepository } from "@/module/attribute/attribute.repository";
 import { ATTRIBUTE_TYPES } from "@/module/attribute/attribute.types";
 import { StoreRepository } from "@/module/store/store.repository";
 import { STORE_TYPES } from "@/module/store/store.types";
@@ -20,6 +21,7 @@ import {
 } from "../excel.types";
 import {
   PRODUCT_SHEET_NAMES,
+  PRODUCT_GROUP_PATH_SEPARATOR,
   RawBusinessStoreRow,
   RawExtraUnitRow,
   RawProductRow,
@@ -32,6 +34,8 @@ export class ProductExcelProcessor {
     private productService: ProductService,
     @inject(ATTRIBUTE_TYPES.AttributeService)
     private attributeService: AttributeService,
+    @inject(ATTRIBUTE_TYPES.AttributeRepository)
+    private attributeRepository: AttributeRepository,
     @inject(STORE_TYPES.StoreRepository)
     private storeRepository: StoreRepository,
   ) {}
@@ -298,8 +302,47 @@ export class ProductExcelProcessor {
     req: RequestContext,
   ): Promise<string | null> {
     if (!name) return null;
+    if (type === AttributeType.PRODUCT_GROUP) {
+      return this.findProductGroupByPath(name, req);
+    }
     const attribute = await this.attributeService.findOrCreate(name, type, req);
     return attribute.id;
+  }
+
+  private async findProductGroupByPath(
+    groupPath: string,
+    req: RequestContext,
+  ): Promise<string | null> {
+    const parts = groupPath
+      .split(PRODUCT_GROUP_PATH_SEPARATOR)
+      .map((part) => part.trim())
+      .filter(Boolean);
+    if (!parts.length) return null;
+
+    let parentId: string | null = null;
+    for (const partName of parts) {
+      const group = await this.attributeRepository.findOne({
+        where: {
+          name: ILike(partName),
+          type: AttributeType.PRODUCT_GROUP,
+          parentId: parentId || IsNull(),
+        } as any,
+      });
+      const resolved: Attribute | null =
+        group ||
+        (await this.attributeService.create(
+          {
+            name: partName,
+            type: AttributeType.PRODUCT_GROUP,
+            parentId,
+          } as any,
+          undefined,
+          req,
+        ));
+      if (!resolved) return null;
+      parentId = resolved.id;
+    }
+    return parentId;
   }
 
   private optionalNumber(
