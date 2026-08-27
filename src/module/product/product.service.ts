@@ -1,5 +1,5 @@
 import { inject, injectable } from "inversify";
-import { DeepPartial, EntityManager, In } from "typeorm";
+import { DeepPartial, EntityManager, In, IsNull } from "typeorm";
 import { BaseService } from "@/shared/base/BaseService";
 import { AttributeType, Product } from "@/database/models";
 import { ProductPriceHistory } from "@/database/models/store/ProductPriceHistory";
@@ -14,7 +14,7 @@ import { generateCode } from "@/shared/utils/code.utils";
 import { InventoryRecalculateService } from "../inventory/inventoryRecalculate.service";
 import { INVENTORY_TYPES } from "../inventory/inventory.types";
 import { withTransaction } from "@/shared/base/TransactionManager";
-import { ValidationError } from "@/shared/types/errors";
+import { BadRequestError, NotFoundError, ValidationError } from "@/shared/types/errors";
 import { AttributeRepository } from "../attribute/attribute.repository";
 import { ATTRIBUTE_TYPES } from "../attribute/attribute.types";
 import { STORE_PRODUCT_TYPES } from "../storeProduct/storeProduct.types";
@@ -278,11 +278,75 @@ export class ProductService extends BaseService<Product> {
   ): Promise<void> {
     if (!groupId) return;
     const group = await this.attributeRepository.getById(groupId, manager);
-    if (group.type !== AttributeType.PRODUCT_GROUP) {
+    if (!group || group.type !== AttributeType.PRODUCT_GROUP) {
       throw new ValidationError("product.group_invalid", [
         { field: "groupId", message: "Nhóm sản phẩm không hợp lệ" },
       ]);
     }
+  }
+
+  async changeGroup(
+    ids: string[],
+    groupId: string | null | undefined,
+    manager?: EntityManager,
+    req?: RequestContext,
+  ): Promise<number> {
+    const uniqueIds = Array.from(new Set(ids));
+    const run = async (em: EntityManager) => {
+      await this.validateProductGroup(groupId, em);
+
+      const products = await this.repository.getRepository(em).find({
+        select: { id: true },
+        where: { id: In(uniqueIds), deletedAt: IsNull() } as any,
+      });
+      if (products.length !== uniqueIds.length) {
+        throw new NotFoundError("Không tìm thấy một hoặc nhiều hàng hóa");
+      }
+
+      const result = await this.repository.getRepository(em).update(
+        { id: In(uniqueIds), deletedAt: IsNull() } as any,
+        { groupId: groupId || null } as any,
+      );
+      return result.affected || 0;
+    };
+
+    return manager ? run(manager) : withTransaction(run);
+  }
+
+  async stopSelling(
+    ids: string[],
+    storeId?: string,
+    manager?: EntityManager,
+    req?: RequestContext,
+  ): Promise<number> {
+    const uniqueIds = Array.from(new Set(ids));
+    const contextStoreId = req?.storeContext?.storeId;
+    if (contextStoreId && storeId && contextStoreId !== storeId) {
+      throw new BadRequestError("Không thể thao tác với cửa hàng khác");
+    }
+
+    const run = async (em: EntityManager) => {
+      const products = await this.repository.getRepository(em).find({
+        select: { id: true },
+        where: { id: In(uniqueIds), deletedAt: IsNull() } as any,
+      });
+      if (products.length !== uniqueIds.length) {
+        throw new NotFoundError("Không tìm thấy một hoặc nhiều hàng hóa");
+      }
+
+      const where: any = {
+        productId: In(uniqueIds),
+        deletedAt: IsNull(),
+      };
+      if (storeId) where.storeId = storeId;
+
+      const result = await this.storeProductRepository
+        .getRepository(em)
+        .update(where, { isSelling: false });
+      return result.affected || 0;
+    };
+
+    return manager ? run(manager) : withTransaction(run);
   }
 
   private async validateProductBrand(

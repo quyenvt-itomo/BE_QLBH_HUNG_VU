@@ -7,7 +7,10 @@ import {
   UpdateProductSchema,
   ProductQuerySchema,
   ProductParamsSchema,
+  ChangeProductGroupSchema,
+  StopSellingProductsSchema,
 } from "./product.validator";
+import { BaseDeleteManySchema } from "@/shared/base/BaseValidator";
 import { PRODUCT_TYPES } from "./product.types";
 import { permissionMiddleware } from "@/shared/middleware/permission.middleware";
 
@@ -42,6 +45,27 @@ export class ProductRouter {
       zodValidate(CreateProductSchema, "body"),
       permissionMiddleware("product", "create"),
       this.controller.create,
+    );
+
+    this.router.post(
+      "/bulk/change-group",
+      zodValidate(ChangeProductGroupSchema, "body"),
+      permissionMiddleware("product", "update"),
+      this.controller.changeGroup,
+    );
+
+    this.router.post(
+      "/bulk/stop-selling",
+      zodValidate(StopSellingProductsSchema, "body"),
+      permissionMiddleware("product", "update"),
+      this.controller.stopSelling,
+    );
+
+    this.router.delete(
+      "/bulk",
+      zodValidate(BaseDeleteManySchema, "body"),
+      permissionMiddleware("product", "delete"),
+      this.controller.deleteMany,
     );
 
     this.router.get(

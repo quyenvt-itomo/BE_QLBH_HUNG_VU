@@ -5,6 +5,7 @@ import {
   BaseParamsSchema,
   BaseQuerySchema,
   BaseUpdateSchema,
+  BaseDeleteManySchema,
   zArrayable,
 } from "@/shared/base/BaseValidator";
 import { WeightUnit } from "@/database/models/Product";
@@ -62,7 +63,17 @@ export const ProductQuerySchema = BaseQuerySchema.extend({
   locationId: z.uuid().optional(),
 });
 export const ProductParamsSchema = BaseParamsSchema;
+export const ChangeProductGroupSchema = BaseDeleteManySchema.extend({
+  groupId: z.uuid().nullable().optional(),
+});
+
+export const StopSellingProductsSchema = BaseDeleteManySchema.extend({
+  storeId: z.uuid().optional(),
+});
+
 export type CreateProductDto = z.infer<typeof CreateProductSchema>;
 export type UpdateProductDto = z.infer<typeof UpdateProductSchema>;
 export type ProductQueryDto = z.infer<typeof ProductQuerySchema>;
 export type ProductParamsDto = z.infer<typeof ProductParamsSchema>;
+export type ChangeProductGroupDto = z.infer<typeof ChangeProductGroupSchema>;
+export type StopSellingProductsDto = z.infer<typeof StopSellingProductsSchema>;

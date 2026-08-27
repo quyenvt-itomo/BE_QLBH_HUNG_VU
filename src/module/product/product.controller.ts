@@ -14,6 +14,46 @@ export class ProductController extends BaseController<Product> {
     this.service = service;
   }
 
+  changeGroup = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { ids, groupId = null } = req.body;
+      const affected = await this.service.changeGroup(
+        ids,
+        groupId,
+        undefined,
+        this.service.getReqContext(req),
+      );
+      return res.json({
+        success: true,
+        data: { ids, groupId, affected },
+        statusCode: 200,
+        message: "product.group_updated",
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  stopSelling = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { ids, storeId } = req.body;
+      const affected = await this.service.stopSelling(
+        ids,
+        storeId,
+        undefined,
+        this.service.getReqContext(req),
+      );
+      return res.json({
+        success: true,
+        data: { ids, storeId: storeId || null, affected },
+        statusCode: 200,
+        message: "product.stopped_selling",
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
   getPriceHistories = async (
     req: Request,
     res: Response,
