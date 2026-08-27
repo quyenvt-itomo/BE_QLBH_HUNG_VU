@@ -26,6 +26,7 @@ export const ProductSelectBasic: FindOptionsSelect<Product> = {
     isPurchaseUnit: true,
     unit: { id: true, name: true, type: true },
   },
+  storeProducts: true,
 };
 export const ProductSelectList = ProductSelectBasic;
 
@@ -68,4 +69,5 @@ export const ProductRelationsList: FindOptionsRelations<Product> = {
   brand: true,
   baseUnit: true,
   extraUnits: { unit: true },
+  storeProducts: true,
 };
