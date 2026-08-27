@@ -8,6 +8,7 @@ export enum EntityType {
   ATTRIBUTE = "attribute",
   PARTNER = "partner",
   PRODUCT = "product",
+  EXCEL_IMPORT = "excelImport",
   STORE = "store",
   ORDER = "order",
   INVENTORY_ADJUSTMENT = "inventoryAdjustment",

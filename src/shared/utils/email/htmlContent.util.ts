@@ -101,12 +101,12 @@ export const htmlOtpContent = (
         border-radius: 5px;
       "
     >
-      <h2 style="color: #006EC4">Xin chào,</h2>
+      <h2 style="color: #16a34a">Xin chào,</h2>
       <p style="color: #666">Mã xác thực Email của bạn là:</p>
       <h3
         style="
-          color: #006EC4;
-          background-color: #006EC40D;
+          color: #16a34a;
+          background-color: #16a34a0D;
           padding: 16px;
           text-align: center;
           border-radius: 5px;

@@ -3,7 +3,12 @@ import { BaseSelect } from "@/shared/base/BaseSelect";
 import { Role } from "@/database/models/Role";
 
 export const RoleSelectList: FindOptionsSelect<Role> = {
-  ...BaseSelect, type: true, name: true, permissions: true,
+  ...BaseSelect,
+  type: true,
+  name: true,
+  permissions: true,
+  importExcel: true,
+  exportExcel: true,
 };
 export const RoleSelectFull: FindOptionsSelect<Role> = {
   ...RoleSelectList,

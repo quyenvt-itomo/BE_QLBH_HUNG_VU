@@ -16,7 +16,14 @@ export const AuthSelectList = AuthSelectBasic;
 export const AuthSelectFull: FindOptionsSelect<User> = {
   ...AuthSelectBasic,
   password: true,
-  role: { id: true, type: true, name: true, permissions: true },
+  role: {
+    id: true,
+    type: true,
+    name: true,
+    permissions: true,
+    importExcel: true,
+    exportExcel: true,
+  },
   storeUsers: {
     id: true,
     storeId: true,

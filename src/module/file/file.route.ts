@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import { injectable, inject } from "inversify";
 import { FileController } from "./file.controller";
 import { authenticate } from "@/shared/middleware/auth.middleware";
@@ -9,6 +9,8 @@ import { FILE_TYPES } from "./file.types";
 import crypto from "crypto";
 import path from "path";
 import fs from "fs";
+import { ForbiddenError } from "@/shared/types/errors";
+import { EntityType } from "@/database/models/File";
 
 // Multer upload config (temp storage with extension preserved)
 const storage = multer.diskStorage({
@@ -36,6 +38,21 @@ const upload = multer({
   limits: { fileSize: 100 * 1024 * 1024 }, // 100MB
 });
 
+const excelUploadPermission = (
+  req: Request,
+  _res: Response,
+  next: NextFunction,
+) => {
+  if (
+    req.body?.entityType === EntityType.EXCEL_IMPORT &&
+    !req.importExcel?.includes("product")
+  ) {
+    next(new ForbiddenError("Bạn không có quyền nhập Excel hàng hóa"));
+    return;
+  }
+  next();
+};
+
 /**
  * File Routes - 3 endpoints tinh gọn
  * POST /       - Upload multiple files
@@ -62,6 +79,7 @@ export class FileRouter {
       "/",
       upload.array("files", 10), // Max 10 files
       zodValidate(UploadSchema, "body"),
+      excelUploadPermission,
       this.fileController.uploadMultiple,
     );
 

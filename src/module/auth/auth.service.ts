@@ -6,9 +6,9 @@ import { AuthTokens } from "@/shared/types/interfaces";
 import { BadRequestError, NotFoundError } from "@/shared/types/errors";
 import {
   createPermissions,
-  MODULES,
   PermissionStructure,
 } from "@/shared/middleware/permission.middleware";
+import { EXCEL_MODULES } from "@/shared/types/excel";
 import { BaseService } from "@/shared/base/BaseService";
 import { User } from "@/database/models/User";
 import { RoleType } from "@/database/models/Role";
@@ -94,8 +94,12 @@ export class AuthService extends BaseService<User> {
       currentStore,
       role: user.role,
       isAdmin,
-      importExcel: isAdmin ? [...MODULES] : [],
-      exportExcel: isAdmin ? [...MODULES] : [],
+      importExcel: isAdmin
+        ? [...EXCEL_MODULES]
+        : user.role?.importExcel || [],
+      exportExcel: isAdmin
+        ? [...EXCEL_MODULES]
+        : user.role?.exportExcel || [],
     };
   }
 

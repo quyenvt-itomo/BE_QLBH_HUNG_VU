@@ -67,6 +67,8 @@ import { VAT_TRANSACTION_TYPES } from "@/module/vatTransaction/vatTransaction.ty
 import { VatTransactionRouter } from "@/module/vatTransaction/vatTransaction.route";
 import { Product } from "@/database/models/Product";
 import { InventoryTransaction } from "@/database/models/store/InventoryTransaction";
+import { EXCEL_TYPES } from "@/module/excel/excel.types";
+import { ExcelRouter } from "@/module/excel/excel.route";
 
 const router = Router();
 router.use(companyResolver);
@@ -76,6 +78,10 @@ router.use(
   container.get<AuthRouter>(AUTH_TYPES.AuthRouter).getRouter(),
 );
 router.use(authenticate, authorization);
+router.use(
+  "/excel",
+  container.get<ExcelRouter>(EXCEL_TYPES.ExcelRouter).getRouter(),
+);
 
 router.use(
   "/attribute",

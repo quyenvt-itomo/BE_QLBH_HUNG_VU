@@ -7,6 +7,7 @@ import {
   BaseUpdateSchema,
   zArrayable,
 } from "@/shared/base/BaseValidator";
+import { WeightUnit } from "@/database/models/Product";
 
 export const ExtraUnitSchema = z.object({
   id: z.uuid().optional(),
@@ -33,6 +34,8 @@ export const CreateProductSchema = BaseCreateSchema.extend({
   description: z.string().nullish(),
   baseUnitId: z.uuid().nullish(),
   salePrice: z.number().min(0).default(0),
+  weight: z.number().min(0).nullish(),
+  weightUnit: z.enum(WeightUnit).optional(),
   extraUnits: z.array(ExtraUnitSchema).optional().default([]),
   storeProducts: z.array(StoreProductSchema).optional().default([]),
 });
@@ -46,6 +49,8 @@ export const UpdateProductSchema = BaseUpdateSchema.extend({
   description: z.string().nullish(),
   baseUnitId: z.uuid().nullish(),
   salePrice: z.number().min(0).optional(),
+  weight: z.number().min(0).nullish(),
+  weightUnit: z.enum(WeightUnit).optional(),
   extraUnits: z.array(ExtraUnitSchema).optional(),
   storeProducts: z.array(StoreProductSchema).optional(),
 });

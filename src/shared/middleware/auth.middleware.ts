@@ -8,7 +8,8 @@ import DatabaseConfig from "@/config/database";
 import { User } from "@/database/models/User";
 import { RoleType } from "@/database/models/Role";
 import { getUserSnapshot } from "@/shared/utils/utils";
-import { createPermissions, MODULES } from "./permission.middleware";
+import { createPermissions } from "./permission.middleware";
+import { EXCEL_MODULES } from "@/shared/types/excel";
 
 export const authenticate = (
   req: Request,
@@ -84,8 +85,12 @@ export const authorization = async (
     req.permissions = isAdmin
       ? createPermissions()
       : user.role?.permissions || {};
-    req.importExcel = isAdmin ? [...MODULES] : [];
-    req.exportExcel = isAdmin ? [...MODULES] : [];
+    req.importExcel = isAdmin
+      ? [...EXCEL_MODULES]
+      : user.role?.importExcel || [];
+    req.exportExcel = isAdmin
+      ? [...EXCEL_MODULES]
+      : user.role?.exportExcel || [];
     next();
   } catch (error) {
     next(

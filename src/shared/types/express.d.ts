@@ -1,7 +1,5 @@
-import {
-  Module,
-  PermissionStructure,
-} from "../middleware/permission.middleware";
+import { PermissionStructure } from "../middleware/permission.middleware";
+import { ExcelModule } from "./excel";
 import type { JwtPayload, UserContext, StoreContext } from "./interfaces";
 import { PartnerContext } from "./sub-context";
 
@@ -14,8 +12,8 @@ declare module "express-serve-static-core" {
     storeContext?: StoreContext | null;
     permissions?: PermissionStructure;
     partnerContext?: PartnerContext;
-    importExcel?: Module[];
-    exportExcel?: Module[];
+    importExcel?: ExcelModule[];
+    exportExcel?: ExcelModule[];
     storeCode?: string;
     cookies: {
       access_token?: string;
