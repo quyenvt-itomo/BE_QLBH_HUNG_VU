@@ -1,0 +1,19 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Open PowerShell - Yarn Dev",
+      "type": "shell",
+      "command": "cmd",
+      "args": [
+        "/c",
+        "start",
+        "powershell.exe",
+        "-NoExit",
+        "-Command",
+        "Set-Location -LiteralPath '${workspaceFolder}'; yarn dev"
+      ],
+      "problemMatcher": []
+    }
+  ]
+}
