@@ -22,6 +22,8 @@ import {
 } from "./excel.types";
 import { ProductExcelTemplate } from "./product/product.excel.template";
 import { ProductExcelProcessor } from "./product/product.excel.processor";
+import { PartnerExcelTemplate } from "./partner/partner.excel.template";
+import { PartnerExcelProcessor } from "./partner/partner.excel.processor";
 
 @injectable()
 export class ExcelService {
@@ -33,6 +35,10 @@ export class ExcelService {
     private productTemplate: ProductExcelTemplate,
     @inject(EXCEL_TYPES.ProductExcelProcessor)
     private productProcessor: ProductExcelProcessor,
+    @inject(EXCEL_TYPES.PartnerExcelTemplate)
+    private partnerTemplate: PartnerExcelTemplate,
+    @inject(EXCEL_TYPES.PartnerExcelProcessor)
+    private partnerProcessor: PartnerExcelProcessor,
     @inject(FILE_TYPES.FileService)
     private fileService: FileService,
   ) {}
@@ -41,16 +47,25 @@ export class ExcelService {
     req: RequestContext,
     options: ExportOptions,
   ): Promise<Buffer> {
-    if (options.entityType !== ExcelEntityType.PRODUCT) {
-      throw new BadRequestError("Excel hiện chỉ hỗ trợ hàng hóa");
+    let workbook: ExcelJS.Workbook;
+    if (options.entityType === ExcelEntityType.PRODUCT) {
+      workbook = await this.productTemplate.exportData(
+        req,
+        options.columns || [],
+        options.filters || {},
+        options.extraUnitColumns || [],
+        options.businessStoreColumns || [],
+      );
+    } else if (options.entityType === ExcelEntityType.PARTNER) {
+      workbook = await this.partnerTemplate.exportData(
+        req,
+        options.columns || [],
+        options.filters || {},
+        options.sheetColumns || {},
+      );
+    } else {
+      throw new BadRequestError("Excel chưa hỗ trợ loại dữ liệu này");
     }
-    const workbook = await this.productTemplate.exportData(
-      req,
-      options.columns || [],
-      options.filters || {},
-      options.extraUnitColumns || [],
-      options.businessStoreColumns || [],
-    );
     return Buffer.from(await workbook.xlsx.writeBuffer());
   }
 
@@ -72,7 +87,7 @@ export class ExcelService {
     const filename =
       options.filename && options.filename.trim()
         ? this.getDownloadFilename(options.filename)
-        : "product_" + uuidv4() + ".xlsx";
+        : options.entityType + "_" + uuidv4() + ".xlsx";
     await fs.writeFile(path.join(exportDir, filename), buffer);
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
     return {
@@ -87,9 +102,6 @@ export class ExcelService {
     options: ImportOptions,
     onProgress?: ImportProgressCallback,
   ): Promise<ImportResult> {
-    if (options.entityType !== ExcelEntityType.PRODUCT) {
-      throw new BadRequestError("Excel hiện chỉ hỗ trợ hàng hóa");
-    }
     const file = await this.fileService.getById(options.fileId);
     if (!file?.path) throw new NotFoundError("Không tìm thấy file import");
     const workbook = new ExcelJS.Workbook();
@@ -98,22 +110,27 @@ export class ExcelService {
         ? file.path
         : path.join(config.UPLOAD_DIR, file.path),
     );
-    return this.productProcessor.processImport(
-      req,
-      workbook,
-      options,
-      onProgress,
-    );
+    if (options.entityType === ExcelEntityType.PRODUCT) {
+      return this.productProcessor.processImport(req, workbook, options, onProgress);
+    }
+    if (options.entityType === ExcelEntityType.PARTNER) {
+      return this.partnerProcessor.processImport(req, workbook, options, onProgress);
+    }
+    throw new BadRequestError("Excel chưa hỗ trợ loại dữ liệu này");
   }
 
   async getTemplate(options: TemplateOptions): Promise<TemplateResult> {
-    if (options.entityType !== ExcelEntityType.PRODUCT) {
-      throw new BadRequestError("Excel hiện chỉ hỗ trợ hàng hóa");
+    let workbook: ExcelJS.Workbook;
+    if (options.entityType === ExcelEntityType.PRODUCT) {
+      workbook = await this.productTemplate.generateTemplate();
+    } else if (options.entityType === ExcelEntityType.PARTNER) {
+      workbook = await this.partnerTemplate.generateTemplate();
+    } else {
+      throw new BadRequestError("Excel chưa hỗ trợ loại dữ liệu này");
     }
-    const workbook = await this.productTemplate.generateTemplate();
     const templateDir = path.join(config.UPLOAD_DIR, "temp", "templates");
     await fs.mkdir(templateDir, { recursive: true });
-    const filename = "template_product_" + uuidv4() + ".xlsx";
+    const filename = "template_" + options.entityType + "_" + uuidv4() + ".xlsx";
     await workbook.xlsx.writeFile(path.join(templateDir, filename));
     return {
       url: "/uploads/temp/templates/" + filename,
@@ -192,7 +209,17 @@ export class ExcelService {
     const clients = this.sseClients.get(jobId) || [];
     clients.push(res);
     this.sseClients.set(jobId, clients);
+    res.write("retry: 3000\n\n");
+    const heartbeat = setInterval(() => {
+      try {
+        res.write(": keep-alive\n\n");
+        (res as any).flush?.();
+      } catch {
+        clearInterval(heartbeat);
+      }
+    }, 15000);
     res.on("close", () => {
+      clearInterval(heartbeat);
       const current = this.sseClients.get(jobId);
       if (!current) return;
       const active = current.filter((client) => client !== res);
@@ -201,7 +228,10 @@ export class ExcelService {
     });
     res.write("data: " + JSON.stringify(job) + "\n\n");
     (res as any).flush?.();
-    if (job.status === "completed" || job.status === "failed") res.end();
+    if (job.status === "completed" || job.status === "failed") {
+      clearInterval(heartbeat);
+      res.end();
+    }
   }
 
   private notifyProgress(jobId: string): void {

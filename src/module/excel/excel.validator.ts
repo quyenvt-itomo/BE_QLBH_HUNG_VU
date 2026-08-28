@@ -13,6 +13,7 @@ const ColumnSchema = z.object({
   type: z.enum(["string", "number", "boolean", "date"]).optional(),
   options: z.array(z.string()).optional(),
   numberFormat: z.string().optional(),
+  sheet: z.string().min(1).optional(),
 });
 
 export const ExportOptionsSchema = z.object({
@@ -20,6 +21,7 @@ export const ExportOptionsSchema = z.object({
   columns: z.array(ColumnSchema).optional().default([]),
   extraUnitColumns: z.array(ColumnSchema).optional().default([]),
   businessStoreColumns: z.array(ColumnSchema).optional().default([]),
+  sheetColumns: z.record(z.string(), z.array(ColumnSchema)).optional().default({}),
   filters: z.record(z.string(), z.unknown()).optional().default({}),
   filename: z.string().trim().max(150).optional(),
 });

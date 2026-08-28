@@ -11,7 +11,7 @@ export const excelPermissionMiddleware =
         req.body?.entityType || req.params?.entityType || "",
       );
       const entityType = requestedEntityType || ExcelEntityType.PRODUCT;
-      if (entityType !== ExcelEntityType.PRODUCT) {
+      if (![ExcelEntityType.PRODUCT, ExcelEntityType.PARTNER].includes(entityType as ExcelEntityType)) {
         throw new BadRequestError(
           "Excel hiện chỉ hỗ trợ nhập/xuất dữ liệu hàng hóa",
         );
@@ -19,7 +19,7 @@ export const excelPermissionMiddleware =
 
       const permissions =
         action === "import" ? req.importExcel : req.exportExcel;
-      if (!permissions?.includes(EXCEL_MODULES[0])) {
+      if (!permissions?.includes(entityType as (typeof EXCEL_MODULES)[number])) {
         throw new ForbiddenError(
           action === "import"
             ? "Bạn không có quyền nhập Excel hàng hóa"

@@ -1,4 +1,4 @@
-export const EXCEL_MODULES = ["product"] as const;
+export const EXCEL_MODULES = ["product", "partner"] as const;
 
 export type ExcelModule = (typeof EXCEL_MODULES)[number];
 

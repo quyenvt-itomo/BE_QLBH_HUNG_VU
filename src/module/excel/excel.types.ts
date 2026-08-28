@@ -4,14 +4,18 @@ export const EXCEL_TYPES = {
   ExcelRouter: Symbol.for("ExcelRouter"),
   ProductExcelTemplate: Symbol.for("ProductExcelTemplate"),
   ProductExcelProcessor: Symbol.for("ProductExcelProcessor"),
+  PartnerExcelTemplate: Symbol.for("PartnerExcelTemplate"),
+  PartnerExcelProcessor: Symbol.for("PartnerExcelProcessor"),
 } as const;
 
 export enum ExcelEntityType {
   PRODUCT = "product",
+  PARTNER = "partner",
 }
 
 export const ENTITY_SUPPORTS_IMPORT: Record<ExcelEntityType, boolean> = {
   [ExcelEntityType.PRODUCT]: true,
+  [ExcelEntityType.PARTNER]: true,
 };
 
 export enum ImportErrorHandling {
@@ -40,6 +44,8 @@ export interface ExportOptions {
   columns?: ExportColumnConfig[];
   extraUnitColumns?: ExportColumnConfig[];
   businessStoreColumns?: ExportColumnConfig[];
+  /** Các cột của sheet quan hệ, key là tên worksheet. */
+  sheetColumns?: Record<string, ExportColumnConfig[]>;
   filters?: Record<string, any>;
   filename?: string;
 }

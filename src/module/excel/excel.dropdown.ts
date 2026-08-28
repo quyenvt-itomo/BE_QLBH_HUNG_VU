@@ -8,13 +8,13 @@ export function applyColumnFormats(
   columns.forEach((column, index) => {
     const excelColumn = sheet.getColumn(index + 1);
     if (column.numberFormat) {
-      excelColumn.eachCell((cell) => {
+      excelColumn.eachCell?.((cell) => {
         cell.numFmt = column.numberFormat!;
       });
     }
     if (column.options?.length) {
       const formula = '"' + column.options.join(",") + '"';
-      excelColumn.eachCell((cell, rowNumber) => {
+      excelColumn.eachCell?.((cell, rowNumber) => {
         if (rowNumber > 1) {
           cell.dataValidation = {
             type: "list",
