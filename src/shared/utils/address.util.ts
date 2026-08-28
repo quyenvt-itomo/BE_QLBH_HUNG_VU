@@ -239,6 +239,7 @@ export function formatAddressForExcel(
     | {
         detail?: string | null;
         ward?: string | null;
+        state?: string | null;
         province?: string | null;
       }
     | null
@@ -248,7 +249,9 @@ export function formatAddressForExcel(
 
   const detail = (address.detail || "").trim();
   const ward = (address.ward || "").trim();
-  const province = (address.province || "").trim();
+  // Address in the domain model calls this field `state`; `province` is
+  // accepted for compatibility with older callers of this utility.
+  const province = (address.state || address.province || "").trim();
 
   return [detail, ward, province].filter(Boolean).join(", ");
 }

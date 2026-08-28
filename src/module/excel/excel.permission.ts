@@ -11,19 +11,20 @@ export const excelPermissionMiddleware =
         req.body?.entityType || req.params?.entityType || "",
       );
       const entityType = requestedEntityType || ExcelEntityType.PRODUCT;
-      if (![ExcelEntityType.PRODUCT, ExcelEntityType.PARTNER].includes(entityType as ExcelEntityType)) {
+      const excelModule = entityType as (typeof EXCEL_MODULES)[number];
+      if (!EXCEL_MODULES.includes(excelModule)) {
         throw new BadRequestError(
-          "Excel hiện chỉ hỗ trợ nhập/xuất dữ liệu hàng hóa",
+          "Excel hiện chỉ hỗ trợ nhập/xuất hàng hóa, khách hàng và nhà cung cấp",
         );
       }
 
       const permissions =
         action === "import" ? req.importExcel : req.exportExcel;
-      if (!permissions?.includes(entityType as (typeof EXCEL_MODULES)[number])) {
+      if (!permissions?.includes(excelModule)) {
         throw new ForbiddenError(
           action === "import"
-            ? "Bạn không có quyền nhập Excel hàng hóa"
-            : "Bạn không có quyền xuất Excel hàng hóa",
+            ? "Bạn không có quyền nhập Excel cho dữ liệu này"
+            : "Bạn không có quyền xuất Excel cho dữ liệu này",
         );
       }
       next();

@@ -14,22 +14,22 @@ const PermissionSchema = z.record(
   ),
 );
 
-const ExcelModuleSchema = z.array(z.enum(EXCEL_MODULES)).default([]);
+const ExcelPermissionModulesSchema = z.array(z.enum(EXCEL_MODULES)).default([]);
 
 export const CreateRoleSchema = BaseCreateSchema.extend({
   name: z.string().trim().min(1).max(255),
   type: z.enum(RoleType).optional(),
   permissions: PermissionSchema.optional().default({}),
-  importExcel: ExcelModuleSchema,
-  exportExcel: ExcelModuleSchema,
+  importExcel: ExcelPermissionModulesSchema,
+  exportExcel: ExcelPermissionModulesSchema,
 });
 
 export const UpdateRoleSchema = BaseUpdateSchema.extend({
   name: z.string().trim().min(1).max(255).optional(),
   type: z.enum(RoleType).optional(),
   permissions: PermissionSchema.optional(),
-  importExcel: ExcelModuleSchema.optional(),
-  exportExcel: ExcelModuleSchema.optional(),
+  importExcel: ExcelPermissionModulesSchema.optional(),
+  exportExcel: ExcelPermissionModulesSchema.optional(),
 });
 
 export const RoleQuerySchema = BaseQuerySchema;

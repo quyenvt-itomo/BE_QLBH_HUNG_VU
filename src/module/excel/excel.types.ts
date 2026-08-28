@@ -10,12 +10,14 @@ export const EXCEL_TYPES = {
 
 export enum ExcelEntityType {
   PRODUCT = "product",
-  PARTNER = "partner",
+  CUSTOMER = "customer",
+  SUPPLIER = "supplier",
 }
 
 export const ENTITY_SUPPORTS_IMPORT: Record<ExcelEntityType, boolean> = {
   [ExcelEntityType.PRODUCT]: true,
-  [ExcelEntityType.PARTNER]: true,
+  [ExcelEntityType.CUSTOMER]: true,
+  [ExcelEntityType.SUPPLIER]: true,
 };
 
 export enum ImportErrorHandling {

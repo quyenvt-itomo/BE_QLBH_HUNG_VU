@@ -11,6 +11,7 @@ import path from "path";
 import fs from "fs";
 import { ForbiddenError } from "@/shared/types/errors";
 import { EntityType } from "@/database/models/File";
+import { EXCEL_MODULES } from "@/shared/types/excel";
 
 // Multer upload config (temp storage with extension preserved)
 const storage = multer.diskStorage({
@@ -45,9 +46,9 @@ const excelUploadPermission = (
 ) => {
   if (
     req.body?.entityType === EntityType.EXCEL_IMPORT &&
-    !req.importExcel?.includes("product")
+    !req.importExcel?.some((module) => EXCEL_MODULES.includes(module as (typeof EXCEL_MODULES)[number]))
   ) {
-    next(new ForbiddenError("Bạn không có quyền nhập Excel hàng hóa"));
+    next(new ForbiddenError("Bạn không có quyền nhập Excel"));
     return;
   }
   next();

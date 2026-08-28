@@ -1,8 +1,8 @@
 import { Entity, Column, OneToMany } from "typeorm";
 import { PermissionStructure } from "@/shared/middleware/permission.middleware";
+import type { Module } from "@/shared/middleware/permission.middleware";
 import { BaseEntity } from "@/shared/base/BaseEntity";
 import { User } from "./User";
-import { ExcelModule } from "@/shared/types/excel";
 
 export enum RoleType {
   SYSTEM = "system",
@@ -21,10 +21,10 @@ export class Role extends BaseEntity {
   permissions: PermissionStructure;
 
   @Column({ type: "jsonb", default: () => "'[]'" })
-  importExcel: ExcelModule[];
+  importExcel: Module[];
 
   @Column({ type: "jsonb", default: () => "'[]'" })
-  exportExcel: ExcelModule[];
+  exportExcel: Module[];
 
   // ============================== RELATIONSHIPS ==============================
   @OneToMany(() => User, (user) => user.role)

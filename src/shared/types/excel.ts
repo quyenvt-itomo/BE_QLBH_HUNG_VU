@@ -1,8 +1,9 @@
-export const EXCEL_MODULES = ["product", "partner"] as const;
+import type { Module } from "@/shared/middleware/permission.middleware";
 
-export type ExcelModule = (typeof EXCEL_MODULES)[number];
+/** Excel chỉ dùng một tập con của các module phân quyền chung. */
+export const EXCEL_MODULES = ["product", "customer", "supplier"] as const satisfies readonly Module[];
 
 export interface ExcelRolePermissions {
-  importExcel: ExcelModule[];
-  exportExcel: ExcelModule[];
+  importExcel: Module[];
+  exportExcel: Module[];
 }

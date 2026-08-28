@@ -2,7 +2,7 @@ import { inject, injectable } from "inversify";
 import ExcelJS from "exceljs";
 import { IsNull } from "typeorm";
 import { RequestContext } from "@/shared/types/interfaces";
-import { Partner, PartnerType } from "@/database/models/Partner";
+import { Partner } from "@/database/models/Partner";
 import { DebtSide, TransactionType } from "@/shared/constants/enum";
 import { DebtTransaction } from "@/database/models/DebtTransaction";
 import { PartnerService } from "@/module/partner/partner.service";
@@ -11,10 +11,10 @@ import { PartnerContactRepository } from "@/module/partnerContact/partnerContact
 import { PARTNER_CONTACT_TYPES } from "@/module/partnerContact/partnerContact.types";
 import { DebtAdjustmentRepository } from "@/module/debtAdjustment/debtAdjustment.repository";
 import { DEBT_ADJUSTMENT_TYPES } from "@/module/debtAdjustment/debtAdjustment.types";
-import { ExportColumnConfig } from "../excel.types";
+import { ExcelEntityType, ExportColumnConfig } from "../excel.types";
 import { applyColumnFormats, formatHeader } from "../excel.dropdown";
+import { formatAddressForExcel } from "@/shared/utils/address.util";
 import {
-  PARTNER_ADDRESS_COLUMNS,
   PARTNER_BANK_COLUMNS,
   PARTNER_COLUMNS,
   PARTNER_CONTACT_COLUMNS,
@@ -32,25 +32,21 @@ export class PartnerExcelTemplate {
     private debtAdjustmentRepository: DebtAdjustmentRepository,
   ) {}
 
-  async generateTemplate(): Promise<ExcelJS.Workbook> {
+  async generateTemplate(entityType: ExcelEntityType): Promise<ExcelJS.Workbook> {
     const workbook = new ExcelJS.Workbook();
     const main = this.createSheet(workbook, PARTNER_SHEET_NAMES.MAIN, PARTNER_COLUMNS);
     main.addRow({
-      type: "Khách hàng",
       code: "KH001",
-      name: "Đối tác mẫu",
+      name: entityType === ExcelEntityType.CUSTOMER ? "Khách hàng mẫu" : "Nhà cung cấp mẫu",
       isOrganization: "Tổ chức",
       groupName: "Nhóm mẫu",
       phone: "0900000000",
+      address: "Số nhà mẫu, Phường mẫu, Hà Nội",
       receivableDebtAmount: 0,
       payableDebtAmount: 0,
       note: "Dòng mẫu, có thể xóa trước khi nhập",
     });
     this.applyRowsValidation(main, PARTNER_COLUMNS);
-
-    const address = this.createSheet(workbook, PARTNER_SHEET_NAMES.ADDRESSES, PARTNER_ADDRESS_COLUMNS);
-    address.addRow({ partnerCode: "KH001", state: "Hà Nội", ward: "Phường mẫu", detail: "Số nhà mẫu", isPermanent: "Có" });
-    this.applyRowsValidation(address, PARTNER_ADDRESS_COLUMNS);
 
     const contacts = this.createSheet(workbook, PARTNER_SHEET_NAMES.CONTACTS, PARTNER_CONTACT_COLUMNS);
     contacts.addRow({ partnerCode: "KH001", name: "Người liên hệ mẫu", phone: "0900000001" });
@@ -62,8 +58,9 @@ export class PartnerExcelTemplate {
 
     const guide = workbook.addWorksheet(PARTNER_SHEET_NAMES.GUIDE);
     guide.addRow(["HƯỚNG DẪN NHẬP ĐỐI TÁC"]);
-    guide.addRow(["Sheet Đối tác: mỗi dòng là một khách hàng, nhà cung cấp hoặc đơn vị vận chuyển. Mã có thể để trống để hệ thống tự sinh; tên và loại là bắt buộc."]);
-    guide.addRow(["Sheet Địa chỉ, Người liên hệ, Ngân hàng: dùng Mã đối tác để liên kết về sheet Đối tác. Có thể có nhiều dòng cho cùng một đối tác."]);
+    guide.addRow([`Sheet Đối tác: mỗi dòng là một ${entityType === ExcelEntityType.CUSTOMER ? "khách hàng" : "nhà cung cấp"}. Mã có thể để trống để hệ thống tự sinh; tên là bắt buộc.`]);
+    guide.addRow(["Địa chỉ nhập trong một cột duy nhất theo dạng: Số nhà, Phường/Xã, Tỉnh/Thành phố. Hệ thống sẽ tự phân tích thành Address."]);
+    guide.addRow(["Sheet Người liên hệ, Ngân hàng: dùng Mã đối tác để liên kết về sheet Đối tác. Có thể có nhiều dòng cho cùng một đối tác."]);
     guide.addRow(["Công nợ phải thu/phải trả là số dư theo toàn hệ thống, không theo cửa hàng. Khi import, hệ thống tạo phiếu điều chỉnh để đưa số dư hiện tại về đúng giá trị trong file."]);
     guide.addRow(["Để cập nhật đối tác, ưu tiên giữ nguyên Mã đối tác. Nếu bỏ trống mã, hệ thống dò theo số điện thoại hoặc email."]);
     guide.getColumn(1).width = 120;
@@ -86,9 +83,6 @@ export class PartnerExcelTemplate {
     const partners = result.data || [];
     const balances = await this.getDebtBalances();
     const mainColumns = columns.length ? columns : PARTNER_COLUMNS;
-    const addressColumns = sheetColumns?.[PARTNER_SHEET_NAMES.ADDRESSES]?.length
-      ? sheetColumns[PARTNER_SHEET_NAMES.ADDRESSES]
-      : PARTNER_ADDRESS_COLUMNS;
     const contactColumns = sheetColumns?.[PARTNER_SHEET_NAMES.CONTACTS]?.length
       ? sheetColumns[PARTNER_SHEET_NAMES.CONTACTS]
       : PARTNER_CONTACT_COLUMNS;
@@ -104,15 +98,6 @@ export class PartnerExcelTemplate {
       mainRows.set(partner.code, row.number);
     });
     applyColumnFormats(main, mainColumns);
-
-    const address = this.createSheet(workbook, PARTNER_SHEET_NAMES.ADDRESSES, addressColumns);
-    partners.forEach((partner: Partner) => {
-      (partner.addresses || []).forEach((item) => {
-        const row = address.addRow({ partnerCode: partner.code, ...item, isPermanent: item.isPermanent ? "Có" : "Không" });
-        this.linkToMain(row, partner.code, mainRows, PARTNER_SHEET_NAMES.MAIN);
-      });
-    });
-    applyColumnFormats(address, addressColumns);
 
     const contactRows = await this.partnerContactRepository.getRepository().find({
       where: { deletedAt: IsNull() } as any,
@@ -147,8 +132,8 @@ export class PartnerExcelTemplate {
 
   private partnerRow(partner: Partner, balance: { receivable: number; payable: number }): Record<string, any> {
     const representative = partner.representative || {};
+    const address = (partner.addresses || []).find((item) => item.isPermanent) || partner.addresses?.[0];
     return {
-      type: this.partnerTypeLabel(partner.type),
       code: partner.code,
       name: partner.name,
       isOrganization: partner.isOrganization ? "Tổ chức" : "Cá nhân",
@@ -156,6 +141,7 @@ export class PartnerExcelTemplate {
       taxCode: partner.taxCode || "",
       phone: partner.phone || "",
       email: partner.email || "",
+      address: formatAddressForExcel(address),
       maxDebtAmount: partner.maxDebtAmount,
       receivableDebtAmount: balance.receivable,
       payableDebtAmount: balance.payable,
@@ -196,12 +182,6 @@ export class PartnerExcelTemplate {
       balances.set(row.partnerId, current);
     });
     return balances;
-  }
-
-  private partnerTypeLabel(type: PartnerType): string {
-    if (type === PartnerType.SUPPLIER) return "Nhà cung cấp";
-    if (type === PartnerType.SHIPPER) return "Đơn vị vận chuyển";
-    return "Khách hàng";
   }
 
   private createSheet(workbook: ExcelJS.Workbook, name: string, columns: ExportColumnConfig[]): ExcelJS.Worksheet {

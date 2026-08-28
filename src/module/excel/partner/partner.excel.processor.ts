@@ -18,19 +18,19 @@ import { ATTRIBUTE_TYPES } from "@/module/attribute/attribute.types";
 import { DebtAdjustmentService } from "@/module/debtAdjustment/debtAdjustment.service";
 import { DEBT_ADJUSTMENT_TYPES } from "@/module/debtAdjustment/debtAdjustment.types";
 import {
+  ExcelEntityType,
   ImportDuplicateHandling,
   ImportErrorHandling,
   ImportOptions,
   ImportProgressCallback,
   ImportResult,
 } from "../excel.types";
+import { parseAddressFromExcel } from "@/shared/utils/address.util";
 import {
-  PARTNER_ADDRESS_COLUMNS,
   PARTNER_BANK_COLUMNS,
   PARTNER_COLUMNS,
   PARTNER_CONTACT_COLUMNS,
   PARTNER_SHEET_NAMES,
-  RawPartnerAddressRow,
   RawPartnerBankRow,
   RawPartnerContactRow,
   RawPartnerRow,
@@ -74,17 +74,15 @@ export class PartnerExcelProcessor {
     }
 
     const rows = this.parseRows<RawPartnerRow>(mainSheet, PARTNER_COLUMNS);
-    const addressSheet = workbook.getWorksheet(PARTNER_SHEET_NAMES.ADDRESSES);
     const contactSheet = workbook.getWorksheet(PARTNER_SHEET_NAMES.CONTACTS);
     const bankSheet = workbook.getWorksheet(PARTNER_SHEET_NAMES.BANKS);
-    const addresses = this.groupByCode(this.parseRows<RawPartnerAddressRow>(addressSheet, PARTNER_ADDRESS_COLUMNS));
     const contacts = this.groupByCode(this.parseRows<RawPartnerContactRow>(contactSheet, PARTNER_CONTACT_COLUMNS));
     const banks = this.groupByCode(this.parseRows<RawPartnerBankRow>(bankSheet, PARTNER_BANK_COLUMNS));
     result.totalRows = rows.length;
     this.report(result, onProgress);
 
     const codes = new Set(rows.map((row) => row.code).filter(Boolean));
-    for (const [label, relationMap] of [["Địa chỉ", addresses], ["Người liên hệ", contacts], ["Ngân hàng", banks]] as const) {
+    for (const [label, relationMap] of [["Người liên hệ", contacts], ["Ngân hàng", banks]] as const) {
       for (const [code] of relationMap) {
         if (!codes.has(code)) {
           result.errorRows++;
@@ -98,7 +96,7 @@ export class PartnerExcelProcessor {
       const row = rows[index];
       const rowNumber = index + 2;
       try {
-        const type = this.parsePartnerType(row.type, rowNumber);
+        const type = this.partnerTypeFromEntity(options.entityType);
         if (!row.name) throw new Error("Tên đối tác không được để trống");
         const existing = await this.findExisting(row, type);
         if (existing && options.duplicateHandling === ImportDuplicateHandling.SKIP) {
@@ -111,6 +109,7 @@ export class PartnerExcelProcessor {
         }
         const relationCode = row.code || existing?.code || "";
 
+        const parsedAddress = row.address ? parseAddressFromExcel(row.address) : null;
         const data: DeepPartial<Partner> = {
           type,
           code: row.code || undefined,
@@ -120,9 +119,11 @@ export class PartnerExcelProcessor {
           taxCode: row.taxCode || null,
           phone: row.phone || null,
           email: row.email || null,
+          addresses: parsedAddress
+            ? [{ ...parsedAddress, isPermanent: true }]
+            : undefined,
           maxDebtAmount: this.optionalNumber(row.maxDebtAmount, "Hạn mức công nợ", rowNumber),
           note: row.note || null,
-          addresses: addresses.has(relationCode) ? this.toAddresses(addresses.get(relationCode)!) : undefined,
           banks: banks.has(relationCode) ? this.toBanks(banks.get(relationCode)!) : undefined,
           representative: this.toRepresentative(row),
         };
@@ -137,11 +138,6 @@ export class PartnerExcelProcessor {
         if (!saved) throw new Error("Không thể lưu đối tác");
 
         // Khi sheet quan hệ xuất hiện, nội dung của sheet là trạng thái đầy đủ cần đồng bộ.
-        if (existing && addressSheet) {
-          await this.partnerRepository.getRepository().update(saved.id, {
-            addresses: this.toAddresses(addresses.get(relationCode) || []),
-          } as any);
-        }
         if (existing && bankSheet) {
           await this.partnerRepository.getRepository().update(saved.id, {
             banks: this.toBanks(banks.get(relationCode) || []),
@@ -251,10 +247,6 @@ export class PartnerExcelProcessor {
     return { name: row.name, phone: row.phone || null, email: row.email || null, banks: this.toBanks([row]) };
   }
 
-  private toAddresses(rows: RawPartnerAddressRow[]): any[] {
-    return rows.map((row) => ({ state: row.state || undefined, ward: row.ward || undefined, detail: row.detail || null, isPermanent: row.isPermanent }));
-  }
-
   private toBanks(rows: Array<RawPartnerBankRow | RawPartnerContactRow>): any[] {
     return rows
       .filter((row) => row.bankName || row.accountNumber || row.accountHolder || row.branch)
@@ -277,7 +269,7 @@ export class PartnerExcelProcessor {
     const indexes = new Map<string, number>();
     sheet.getRow(1).eachCell((cell, columnNumber) => {
       const header = this.normalizeHeader(this.text(cell.value));
-      const column = columns.find((item) => this.normalizeHeader(item.header) === header || item.field.toLowerCase() === header);
+      const column = columns.find((item) => this.isColumnHeader(item.field, item.header, header));
       if (column) indexes.set(column.field, columnNumber);
     });
     const rows: T[] = [];
@@ -302,12 +294,10 @@ export class PartnerExcelProcessor {
     return result;
   }
 
-  private parsePartnerType(value: string, rowNumber: number): PartnerType {
-    const normalized = this.normalizeHeader(value);
-    if (["customer", "khach hang"].includes(normalized)) return PartnerType.CUSTOMER;
-    if (["supplier", "nha cung cap"].includes(normalized)) return PartnerType.SUPPLIER;
-    if (["shipper", "don vi van chuyen"].includes(normalized)) return PartnerType.SHIPPER;
-    throw new Error(`Dòng ${rowNumber}: Loại đối tác không hợp lệ`);
+  private partnerTypeFromEntity(entityType: ExcelEntityType): PartnerType {
+    if (entityType === ExcelEntityType.CUSTOMER) return PartnerType.CUSTOMER;
+    if (entityType === ExcelEntityType.SUPPLIER) return PartnerType.SUPPLIER;
+    throw new Error("Loại Excel đối tác không hợp lệ");
   }
 
   private cellValue(value: unknown, field: string): any {
@@ -339,6 +329,22 @@ export class PartnerExcelProcessor {
 
   private normalizeHeader(value: unknown): string {
     return this.text(value).replace(/\(\*\)/g, "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+  }
+
+  private isColumnHeader(field: string, columnHeader: string, header: string): boolean {
+    if (this.normalizeHeader(columnHeader) === header || field.toLowerCase() === header) {
+      return true;
+    }
+
+    // FE labels the same generic partner fields as "Tên khách hàng" or
+    // "Tên nhà cung cấp" depending on the selected Excel entity.
+    if (field === "name") {
+      return ["ten", "ten doi tac", "ten khach hang", "ten nha cung cap"].includes(header);
+    }
+    if (field === "groupName") {
+      return ["nhom", "nhom doi tac", "nhom khach hang", "nhom nha cung cap"].includes(header);
+    }
+    return false;
   }
 
   private report(result: ImportResult, callback?: ImportProgressCallback): void {

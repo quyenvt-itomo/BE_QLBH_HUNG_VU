@@ -56,11 +56,22 @@ export class ExcelService {
         options.extraUnitColumns || [],
         options.businessStoreColumns || [],
       );
-    } else if (options.entityType === ExcelEntityType.PARTNER) {
+    } else if (
+      options.entityType === ExcelEntityType.CUSTOMER ||
+      options.entityType === ExcelEntityType.SUPPLIER
+    ) {
       workbook = await this.partnerTemplate.exportData(
         req,
         options.columns || [],
-        options.filters || {},
+        {
+          ...(options.filters || {}),
+          // entityType is authoritative; callers cannot export the other
+          // partner type by changing filters.type.
+          type:
+            options.entityType === ExcelEntityType.CUSTOMER
+              ? "customer"
+              : "supplier",
+        },
         options.sheetColumns || {},
       );
     } else {
@@ -113,7 +124,10 @@ export class ExcelService {
     if (options.entityType === ExcelEntityType.PRODUCT) {
       return this.productProcessor.processImport(req, workbook, options, onProgress);
     }
-    if (options.entityType === ExcelEntityType.PARTNER) {
+    if (
+      options.entityType === ExcelEntityType.CUSTOMER ||
+      options.entityType === ExcelEntityType.SUPPLIER
+    ) {
       return this.partnerProcessor.processImport(req, workbook, options, onProgress);
     }
     throw new BadRequestError("Excel chưa hỗ trợ loại dữ liệu này");
@@ -123,8 +137,11 @@ export class ExcelService {
     let workbook: ExcelJS.Workbook;
     if (options.entityType === ExcelEntityType.PRODUCT) {
       workbook = await this.productTemplate.generateTemplate();
-    } else if (options.entityType === ExcelEntityType.PARTNER) {
-      workbook = await this.partnerTemplate.generateTemplate();
+    } else if (
+      options.entityType === ExcelEntityType.CUSTOMER ||
+      options.entityType === ExcelEntityType.SUPPLIER
+    ) {
+      workbook = await this.partnerTemplate.generateTemplate(options.entityType);
     } else {
       throw new BadRequestError("Excel chưa hỗ trợ loại dữ liệu này");
     }
