@@ -160,7 +160,7 @@ export class PartnerExcelTemplate {
     config: PartnerExcelConfig,
   ): Record<string, any> {
     const representative = partner.representative || {};
-    const address = (partner.addresses || []).find((item) => item.isPermanent) || partner.addresses?.[0];
+    const address = partner.address;
     return {
       code: partner.code,
       name: partner.name,

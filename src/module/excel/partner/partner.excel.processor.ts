@@ -140,8 +140,8 @@ export class PartnerExcelProcessor {
           email: row.email || null,
           gender: type === PartnerType.CUSTOMER ? (this.gender(row.gender) || null) : null,
           dob: type === PartnerType.CUSTOMER ? (row.dob || null) : null,
-          addresses: parsedAddress
-            ? [{ ...parsedAddress, isPermanent: true }]
+          address: parsedAddress
+            ? { ...parsedAddress, isPermanent: true }
             : undefined,
           maxDebtAmount: this.optionalNumber(row.maxDebtAmount, "Hạn mức công nợ"),
           note: row.note || null,

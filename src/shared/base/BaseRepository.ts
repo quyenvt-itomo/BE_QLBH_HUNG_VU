@@ -46,6 +46,8 @@ export interface MoreQueryOptions<T> {
   creatorIds?: string[]; // Filter by multiple creator IDs
   updaterIds?: string[]; // Filter by multiple updater IDs
   storeId?: string; // Example field for filtering by store ID
+  states?: string[];
+  wards?: string[];
   filterOptions?: (keyof T)[]; // Additional filter options
 
   useFullDetail?: boolean; // Flag to indicate if full detail should be fetched
@@ -87,6 +89,9 @@ export abstract class BaseRepository<T extends ObjectLiteral> {
    * ⚠️ LƯU Ý: Nested entities LUÔN chỉ giữ 1 file/category (bất kể multipleFile của parent)
    */
   protected nestedFileFields?: string[];
+
+  /** JSONB address fields that can be filtered by province and ward. */
+  protected addressFields?: string[];
 
   /**
    * Select fields cho detail query (findById, findOne)
@@ -608,6 +613,48 @@ export abstract class BaseRepository<T extends ObjectLiteral> {
     }
 
     await this.extendQueryBuilder(qb, options);
+
+    // ===== JSONB address filters =====
+    const addressFilterSource = options.moreQuery || options;
+    const normalizeQueryArray = (value: unknown): string[] => {
+      const values = Array.isArray(value) ? value : [value];
+      return values
+        .filter((item): item is string => typeof item === "string")
+        .map((item) => item.trim())
+        .filter(Boolean);
+    };
+
+    const addressColumns = (this.addressFields || [])
+      .map((field) => entityMetadata.findColumnWithPropertyName(field))
+      .filter(Boolean);
+
+    if (
+      addressColumns.length > 0 &&
+      addressFilterSource &&
+      typeof addressFilterSource === "object"
+    ) {
+      const addressFilters = [
+        { key: "state", values: normalizeQueryArray((addressFilterSource as any).states) },
+        { key: "ward", values: normalizeQueryArray((addressFilterSource as any).wards) },
+      ];
+
+      for (const { key, values } of addressFilters) {
+        if (values.length === 0) continue;
+
+        qb.andWhere(
+          new Brackets((addressQb) => {
+            addressColumns.forEach((column, index) => {
+              const addressExpression = `"${qb.alias}"."${column!.databaseName}"`;
+              const condition = `COALESCE(${addressExpression} ->> '${key}', '') IN (:...${key}Filter)`;
+
+              if (index === 0) addressQb.where(condition);
+              else addressQb.orWhere(condition);
+            });
+          }),
+        );
+        qb.setParameter(`${key}Filter`, values);
+      }
+    }
 
     // ===== Filters =====
     // nếu trong options có storeId thì và entity có storeId thì filter theo storeId

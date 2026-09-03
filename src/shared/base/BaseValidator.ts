@@ -138,6 +138,8 @@ export const BaseQuerySchema = z.object({
   unitIds: zArrayable(z.uuid()),
   brandIds: zArrayable(z.uuid()),
   locationIds: zArrayable(z.uuid()),
+  states: zArrayable(z.string().trim().min(1)),
+  wards: zArrayable(z.string().trim().min(1)),
 
   totalQuantityGte: BaseNumberQuerySchema,
   totalQuantityLte: BaseNumberQuerySchema,
@@ -263,6 +265,8 @@ export const AddressSchema = z.object({
   state: z.string().trim().optional(),
   ward: z.string().trim().optional(),
   detail: z.string().trim().nullish(),
+  lng: z.coerce.number().optional(),
+  lat: z.coerce.number().optional(),
   isPermanent: z.boolean().optional().default(false), // Là địa chỉ thường trú
 });
 export type Address = z.infer<typeof AddressSchema>;

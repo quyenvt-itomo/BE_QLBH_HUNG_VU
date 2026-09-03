@@ -9,6 +9,7 @@ import {
   BaseUpdateSchema,
   DateTransform,
   RepresentativeSchema,
+  zArrayable,
   zBooleanLike,
 } from "@/shared/base/BaseValidator";
 import { CreatePartnerContactSchema } from "../partnerContact/partnerContact.validator";
@@ -113,7 +114,7 @@ export const CreatePartnerSchema = BaseCreateSchema.extend({
   gender: z.enum(Gender).nullish(),
   dob: DateTransform.nullish(),
   maxDebtAmount: z.number().nonnegative().nullish(),
-  addresses: z.array(AddressSchema).optional(),
+  address: AddressSchema.nullish(),
   representative: RepresentativeSchema.nullish(),
   banks: z.array(BankAccountSchema).optional(),
 
@@ -134,7 +135,7 @@ export const UpdatePartnerSchema = BaseUpdateSchema.extend({
   gender: z.enum(Gender).nullish(),
   dob: DateTransform.nullish(),
   maxDebtAmount: z.number().nonnegative().nullish(),
-  addresses: z.array(AddressSchema).optional(),
+  address: AddressSchema.nullish(),
   representative: RepresentativeSchema.nullish(),
   banks: z.array(BankAccountSchema).optional(),
 });
@@ -143,6 +144,9 @@ export const UpdatePartnerSchema = BaseUpdateSchema.extend({
 export const PartnerQuerySchema = BaseQuerySchema.extend({
   type: z.enum(PartnerType),
   isOrganization: zBooleanLike(),
+  gender: zArrayable(z.enum(Gender)),
+  states: zArrayable(z.string().trim().min(1)),
+  wards: zArrayable(z.string().trim().min(1)),
   offsetAt: DateTransform.optional(),
   supplierGroupId: z.uuid().optional(),
   customerGroupId: z.uuid().optional(),

@@ -15,7 +15,7 @@ export const PartnerSelectBasic: FindOptionsSelect<Partner> = {
   identityCode: true,
   gender: true,
   dob: true,
-  addresses: true,
+  address: true,
   representative: true,
   banks: true,
   maxDebtAmount: true,

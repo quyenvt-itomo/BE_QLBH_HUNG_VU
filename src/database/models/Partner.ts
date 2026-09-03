@@ -32,7 +32,7 @@ export interface PartnerSnapshot {
   identityCode: string | null;
   gender: Gender | null;
   dob: Date | null;
-  addresses: Address[];
+  address: Address | null;
   representative: Representative | null;
   banks: BankAccount[];
 }
@@ -69,8 +69,8 @@ export class Partner extends BaseEntity {
   @Column({ type: "timestamptz", nullable: true, default: null })
   dob: Date | null;
 
-  @Column({ type: "jsonb", default: [] })
-  addresses: Address[]; // danh sách địa chỉ
+  @Column({ type: "jsonb", nullable: true, default: null })
+  address: Address | null;
   @Column({ type: "jsonb", nullable: true, default: null })
   representative: Representative | null; // người đại diện
   @Column({ type: "jsonb", nullable: true, default: [] })
@@ -90,4 +90,6 @@ export class Partner extends BaseEntity {
   // TODO: More fields
   payableDebtAmount?: number;
   receivableDebtAmount?: number;
+  lastTransactionAt?: Date | null;
+  currentDebtAmount?: number;
 }

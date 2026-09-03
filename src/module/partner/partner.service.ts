@@ -27,6 +27,9 @@ export class PartnerService extends BaseService<Partner> {
     "phone",
     "taxCode",
     "note",
+    "address.state",
+    "address.ward",
+    "address.detail",
     "group.name",
   ];
 
@@ -53,6 +56,10 @@ export class PartnerService extends BaseService<Partner> {
         await this.debtService.getDebtAtDate(entity.id, offsetAt);
       entity.payableDebtAmount = payableDebtAmount;
       entity.receivableDebtAmount = receivableDebtAmount;
+      entity.currentDebtAmount =
+        entity.type === PartnerType.CUSTOMER
+          ? receivableDebtAmount
+          : payableDebtAmount;
     }
   }
 
