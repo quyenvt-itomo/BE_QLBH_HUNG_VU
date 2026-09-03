@@ -12,6 +12,9 @@ export const PartnerSelectBasic: FindOptionsSelect<Partner> = {
   email: true,
   phone: true,
   taxCode: true,
+  identityCode: true,
+  gender: true,
+  dob: true,
   addresses: true,
   representative: true,
   banks: true,
@@ -29,6 +32,7 @@ export const PartnerSelectFull: FindOptionsSelect<Partner> = {
     name: true,
     email: true,
     phone: true,
+    identityCode: true,
     banks: true,
   },
 } as any;

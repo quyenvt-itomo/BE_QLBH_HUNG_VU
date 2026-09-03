@@ -6,18 +6,70 @@ import {
   BaseUpdateSchema,
 } from "@/shared/base/BaseValidator";
 import * as z from "zod";
+import {
+  PARTNER_FIELD_LIMITS,
+  partnerMaxLengthMessage,
+} from "../partner/partner.constants";
+
+export const PartnerContactNameSchema = z
+  .string()
+  .trim()
+  .min(1, "Tên người liên hệ không được để trống")
+  .max(
+    PARTNER_FIELD_LIMITS.contactName,
+    partnerMaxLengthMessage("contactName"),
+  );
+
+export const PartnerContactEmailSchema = z
+  .string()
+  .trim()
+  .max(
+    PARTNER_FIELD_LIMITS.contactEmail,
+    partnerMaxLengthMessage("contactEmail"),
+  )
+  .email("Email người liên hệ không hợp lệ");
+
+export const PartnerContactPhoneSchema = z
+  .string()
+  .trim()
+  .max(
+    PARTNER_FIELD_LIMITS.contactPhone,
+    partnerMaxLengthMessage("contactPhone"),
+  );
+
+export const PartnerContactIdentityCodeSchema = z
+  .string()
+  .trim()
+  .max(
+    PARTNER_FIELD_LIMITS.identityCode,
+    partnerMaxLengthMessage("identityCode"),
+  );
+
+export const PartnerContactImportRowSchema = z.object({
+  partnerCode: z
+    .string()
+    .trim()
+    .min(1, "Mã đối tác không được để trống")
+    .max(PARTNER_FIELD_LIMITS.code, partnerMaxLengthMessage("code")),
+  name: PartnerContactNameSchema,
+  email: PartnerContactEmailSchema.nullish(),
+  phone: PartnerContactPhoneSchema.nullish(),
+  identityCode: PartnerContactIdentityCodeSchema.nullish(),
+});
 
 export const CreatePartnerContactSchema = BaseCreateSchema.extend({
-  name: z.string().nonempty(),
-  email: z.email().nullish(),
-  phone: z.string().nullish(),
+  name: PartnerContactNameSchema,
+  email: PartnerContactEmailSchema.nullish(),
+  phone: PartnerContactPhoneSchema.nullish(),
+  identityCode: PartnerContactIdentityCodeSchema.nullish(),
   banks: z.array(BankAccountSchema).optional(),
 });
 
 export const UpdatePartnerContactSchema = BaseUpdateSchema.extend({
-  name: z.string().nonempty().optional(),
-  email: z.email().nullish(),
-  phone: z.string().nullish(),
+  name: PartnerContactNameSchema.optional(),
+  email: PartnerContactEmailSchema.nullish(),
+  phone: PartnerContactPhoneSchema.nullish(),
+  identityCode: PartnerContactIdentityCodeSchema.nullish(),
   banks: z.array(BankAccountSchema).optional(),
 });
 

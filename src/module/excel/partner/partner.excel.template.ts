@@ -3,7 +3,7 @@ import ExcelJS from "exceljs";
 import { IsNull } from "typeorm";
 import { RequestContext } from "@/shared/types/interfaces";
 import { Partner } from "@/database/models/Partner";
-import { DebtSide, TransactionType } from "@/shared/constants/enum";
+import { DebtSide, Gender, TransactionType } from "@/shared/constants/enum";
 import { DebtTransaction } from "@/database/models/DebtTransaction";
 import { PartnerService } from "@/module/partner/partner.service";
 import { PARTNER_TYPES } from "@/module/partner/partner.types";
@@ -15,11 +15,16 @@ import { ExcelEntityType, ExportColumnConfig } from "../excel.types";
 import { applyColumnFormats, formatHeader } from "../excel.dropdown";
 import { formatAddressForExcel } from "@/shared/utils/address.util";
 import {
-  PARTNER_BANK_COLUMNS,
-  PARTNER_COLUMNS,
-  PARTNER_CONTACT_COLUMNS,
+  PARTNER_EXCEL_CONFIGS,
+  PartnerExcelConfig,
   PARTNER_SHEET_NAMES,
 } from "./partner.excel.types";
+
+const genderLabels: Record<Gender, string> = {
+  [Gender.MALE]: "Nam",
+  [Gender.FEMALE]: "Nữ",
+  [Gender.OTHER]: "Khác",
+};
 
 @injectable()
 export class PartnerExcelTemplate {
@@ -32,36 +37,47 @@ export class PartnerExcelTemplate {
     private debtAdjustmentRepository: DebtAdjustmentRepository,
   ) {}
 
-  async generateTemplate(entityType: ExcelEntityType): Promise<ExcelJS.Workbook> {
+  async generateTemplate(
+    entityType: ExcelEntityType,
+    config: PartnerExcelConfig = PARTNER_EXCEL_CONFIGS[entityType as "customer" | "supplier"],
+  ): Promise<ExcelJS.Workbook> {
     const workbook = new ExcelJS.Workbook();
-    const main = this.createSheet(workbook, PARTNER_SHEET_NAMES.MAIN, PARTNER_COLUMNS);
+    const main = this.createSheet(workbook, config.mainSheetName, config.columns);
     main.addRow({
-      code: "KH001",
+      code: config.partnerType === "customer" ? "KH001" : "NCC001",
       name: entityType === ExcelEntityType.CUSTOMER ? "Khách hàng mẫu" : "Nhà cung cấp mẫu",
       isOrganization: "Tổ chức",
       groupName: "Nhóm mẫu",
       phone: "0900000000",
       address: "Số nhà mẫu, Phường mẫu, Hà Nội",
-      receivableDebtAmount: 0,
-      payableDebtAmount: 0,
+      currentDebtAmount: 0,
       note: "Dòng mẫu, có thể xóa trước khi nhập",
     });
-    this.applyRowsValidation(main, PARTNER_COLUMNS);
+    this.applyRowsValidation(main, config.columns);
 
-    const contacts = this.createSheet(workbook, PARTNER_SHEET_NAMES.CONTACTS, PARTNER_CONTACT_COLUMNS);
-    contacts.addRow({ partnerCode: "KH001", name: "Người liên hệ mẫu", phone: "0900000001" });
-    this.applyRowsValidation(contacts, PARTNER_CONTACT_COLUMNS);
+    const contacts = this.createSheet(workbook, PARTNER_SHEET_NAMES.CONTACTS, config.contactColumns);
+    contacts.addRow({
+      partnerCode: config.partnerType === "customer" ? "KH001" : "NCC001",
+      name: "Người liên hệ mẫu",
+      phone: "0900000001",
+    });
+    this.applyRowsValidation(contacts, config.contactColumns);
 
-    const banks = this.createSheet(workbook, PARTNER_SHEET_NAMES.BANKS, PARTNER_BANK_COLUMNS);
-    banks.addRow({ partnerCode: "KH001", bankName: "Ngân hàng mẫu", accountNumber: "0123456789", accountHolder: "Đối tác mẫu" });
-    this.applyRowsValidation(banks, PARTNER_BANK_COLUMNS);
+    const banks = this.createSheet(workbook, PARTNER_SHEET_NAMES.BANKS, config.bankColumns);
+    banks.addRow({
+      partnerCode: config.partnerType === "customer" ? "KH001" : "NCC001",
+      bankName: "Ngân hàng mẫu",
+      accountNumber: "0123456789",
+      accountHolder: "Đối tác mẫu",
+    });
+    this.applyRowsValidation(banks, config.bankColumns);
 
     const guide = workbook.addWorksheet(PARTNER_SHEET_NAMES.GUIDE);
-    guide.addRow(["HƯỚNG DẪN NHẬP ĐỐI TÁC"]);
-    guide.addRow([`Sheet Đối tác: mỗi dòng là một ${entityType === ExcelEntityType.CUSTOMER ? "khách hàng" : "nhà cung cấp"}. Mã có thể để trống để hệ thống tự sinh; tên là bắt buộc.`]);
+    guide.addRow([`HƯỚNG DẪN NHẬP ${entityType === ExcelEntityType.CUSTOMER ? "KHÁCH HÀNG" : "NHÀ CUNG CẤP"}`]);
+    guide.addRow([`Sheet ${config.mainSheetName}: mỗi dòng là một ${entityType === ExcelEntityType.CUSTOMER ? "khách hàng" : "nhà cung cấp"}. Mã có thể để trống để hệ thống tự sinh; tên là bắt buộc.`]);
     guide.addRow(["Địa chỉ nhập trong một cột duy nhất theo dạng: Số nhà, Phường/Xã, Tỉnh/Thành phố. Hệ thống sẽ tự phân tích thành Address."]);
-    guide.addRow(["Sheet Người liên hệ, Ngân hàng: dùng Mã đối tác để liên kết về sheet Đối tác. Có thể có nhiều dòng cho cùng một đối tác."]);
-    guide.addRow(["Công nợ phải thu/phải trả là số dư theo toàn hệ thống, không theo cửa hàng. Khi import, hệ thống tạo phiếu điều chỉnh để đưa số dư hiện tại về đúng giá trị trong file."]);
+    guide.addRow([`Sheet Người liên hệ, Ngân hàng: dùng mã trong cột đầu tiên để liên kết về sheet ${config.mainSheetName}. Có thể có nhiều dòng cho cùng một đối tác.`]);
+    guide.addRow([`${config.debtSide === DebtSide.RECEIVABLE ? "Nợ phải thu" : "Nợ phải trả"} hiện tại là số dư theo toàn hệ thống, không theo cửa hàng. Khi import, hệ thống tạo phiếu điều chỉnh để đưa số dư hiện tại về đúng giá trị trong file.`]);
     guide.addRow(["Để cập nhật đối tác, ưu tiên giữ nguyên Mã đối tác. Nếu bỏ trống mã, hệ thống dò theo số điện thoại hoặc email."]);
     guide.getColumn(1).width = 120;
     guide.getRow(1).font = { bold: true, size: 14 };
@@ -73,6 +89,7 @@ export class PartnerExcelTemplate {
     columns: ExportColumnConfig[],
     filters?: Record<string, any>,
     sheetColumns?: Record<string, ExportColumnConfig[]>,
+    config: PartnerExcelConfig = PARTNER_EXCEL_CONFIGS[(filters?.type || "customer") as "customer" | "supplier"],
   ): Promise<ExcelJS.Workbook> {
     const workbook = new ExcelJS.Workbook();
     const result = await this.partnerService.findAllWithPagination(
@@ -82,19 +99,19 @@ export class PartnerExcelTemplate {
     );
     const partners = result.data || [];
     const balances = await this.getDebtBalances();
-    const mainColumns = columns.length ? columns : PARTNER_COLUMNS;
+    const mainColumns = columns.length ? columns : config.columns;
     const contactColumns = sheetColumns?.[PARTNER_SHEET_NAMES.CONTACTS]?.length
       ? sheetColumns[PARTNER_SHEET_NAMES.CONTACTS]
-      : PARTNER_CONTACT_COLUMNS;
+      : config.contactColumns;
     const bankColumns = sheetColumns?.[PARTNER_SHEET_NAMES.BANKS]?.length
       ? sheetColumns[PARTNER_SHEET_NAMES.BANKS]
-      : PARTNER_BANK_COLUMNS;
+      : config.bankColumns;
 
-    const main = this.createSheet(workbook, PARTNER_SHEET_NAMES.MAIN, mainColumns);
+    const main = this.createSheet(workbook, config.mainSheetName, mainColumns);
     const mainRows = new Map<string, number>();
     partners.forEach((partner: Partner) => {
       const balance = balances.get(partner.id) || { receivable: 0, payable: 0 };
-      const row = main.addRow(this.partnerRow(partner, balance));
+      const row = main.addRow(this.partnerRow(partner, balance, config));
       mainRows.set(partner.code, row.number);
     });
     applyColumnFormats(main, mainColumns);
@@ -113,8 +130,15 @@ export class PartnerExcelTemplate {
     partners.forEach((partner: Partner) => {
       (contactsByPartner.get(partner.id) || partner.contacts || []).forEach((contact: any) => {
         const bank = contact.banks?.[0] || {};
-        const row = contacts.addRow({ partnerCode: partner.code, name: contact.name, phone: contact.phone || "", email: contact.email || "", ...bank });
-        this.linkToMain(row, partner.code, mainRows, PARTNER_SHEET_NAMES.MAIN);
+        const row = contacts.addRow({
+          partnerCode: partner.code,
+          name: contact.name,
+          phone: contact.phone || "",
+          email: contact.email || "",
+          identityCode: contact.identityCode || "",
+          ...bank,
+        });
+        this.linkToMain(row, partner.code, mainRows, config.mainSheetName);
       });
     });
     applyColumnFormats(contacts, contactColumns);
@@ -123,14 +147,18 @@ export class PartnerExcelTemplate {
     partners.forEach((partner: Partner) => {
       (partner.banks || []).forEach((item) => {
         const row = bank.addRow({ partnerCode: partner.code, ...item });
-        this.linkToMain(row, partner.code, mainRows, PARTNER_SHEET_NAMES.MAIN);
+        this.linkToMain(row, partner.code, mainRows, config.mainSheetName);
       });
     });
     applyColumnFormats(bank, bankColumns);
     return workbook;
   }
 
-  private partnerRow(partner: Partner, balance: { receivable: number; payable: number }): Record<string, any> {
+  private partnerRow(
+    partner: Partner,
+    balance: { receivable: number; payable: number },
+    config: PartnerExcelConfig,
+  ): Record<string, any> {
     const representative = partner.representative || {};
     const address = (partner.addresses || []).find((item) => item.isPermanent) || partner.addresses?.[0];
     return {
@@ -139,14 +167,16 @@ export class PartnerExcelTemplate {
       isOrganization: partner.isOrganization ? "Tổ chức" : "Cá nhân",
       groupName: partner.group?.name || "",
       taxCode: partner.taxCode || "",
+      identityCode: partner.identityCode || "",
       phone: partner.phone || "",
       email: partner.email || "",
       address: formatAddressForExcel(address),
+      gender: partner.gender ? genderLabels[partner.gender] : "",
+      dob: partner.dob || "",
       maxDebtAmount: partner.maxDebtAmount,
-      receivableDebtAmount: balance.receivable,
-      payableDebtAmount: balance.payable,
+      currentDebtAmount:
+        config.debtSide === DebtSide.RECEIVABLE ? balance.receivable : balance.payable,
       representativeName: representative.name || "",
-      representativePosition: representative.position || "",
       representativePhone: representative.phone || "",
       representativeEmail: representative.email || "",
       representativeIdentityCode: representative.identityCode || "",
@@ -190,7 +220,9 @@ export class PartnerExcelTemplate {
       header: column.header,
       key: column.field,
       width: column.width || 15,
-      ...(column.numberFormat ? { style: { numFmt: column.numberFormat } } : {}),
+      ...((column.numberFormat || column.type === "date")
+        ? { style: { numFmt: column.numberFormat || "dd/mm/yyyy" } }
+        : {}),
     }));
     formatHeader(sheet.getRow(1));
     sheet.views = [{ state: "frozen", ySplit: 1 }];

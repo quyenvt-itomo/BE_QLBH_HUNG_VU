@@ -7,6 +7,7 @@ import { INCOME_EXPENSE_TYPES } from "./incomeExpense.types";
 import { FUND_TYPES } from "../fund/fund.types";
 import { PARTNER_TYPES } from "../partner/partner.types";
 import { ATTRIBUTE_TYPES } from "../attribute/attribute.types";
+import { DEBT_TYPES } from "../debt/debt.types";
 
 export const incomeExpenseModule = new ContainerModule((bind) => {
   bind(INCOME_EXPENSE_TYPES.Repository).to(IncomeExpenseRepository).inSingletonScope();
@@ -16,6 +17,7 @@ export const incomeExpenseModule = new ContainerModule((bind) => {
       context.container.get(FUND_TYPES.Repository),
       context.container.get(PARTNER_TYPES.PartnerRepository),
       context.container.get(ATTRIBUTE_TYPES.AttributeRepository),
+      context.container.get(DEBT_TYPES.DebtRecalculateService),
     ))
     .inSingletonScope();
   bind(INCOME_EXPENSE_TYPES.Controller)

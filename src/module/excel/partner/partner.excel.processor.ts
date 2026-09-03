@@ -3,7 +3,7 @@ import ExcelJS from "exceljs";
 import { DeepPartial, IsNull } from "typeorm";
 import { Partner, PartnerType } from "@/database/models/Partner";
 import { DebtAdjustment } from "@/database/models/DebtAdjustment";
-import { DebtSide } from "@/shared/constants/enum";
+import { DebtSide, Gender } from "@/shared/constants/enum";
 import { TransactionType } from "@/shared/constants/enum";
 import { DebtTransaction } from "@/database/models/DebtTransaction";
 import { RequestContext } from "@/shared/types/interfaces";
@@ -13,10 +13,19 @@ import { PARTNER_TYPES } from "@/module/partner/partner.types";
 import { PartnerRepository } from "@/module/partner/partner.repository";
 import { PartnerContactRepository } from "@/module/partnerContact/partnerContact.repository";
 import { PARTNER_CONTACT_TYPES } from "@/module/partnerContact/partnerContact.types";
+import { PartnerContactImportRowSchema } from "@/module/partnerContact/partnerContact.validator";
 import { AttributeService } from "@/module/attribute/attribute.service";
 import { ATTRIBUTE_TYPES } from "@/module/attribute/attribute.types";
 import { DebtAdjustmentService } from "@/module/debtAdjustment/debtAdjustment.service";
 import { DEBT_ADJUSTMENT_TYPES } from "@/module/debtAdjustment/debtAdjustment.types";
+import {
+  PartnerImportRowSchema,
+} from "@/module/partner/partner.validator";
+import {
+  PARTNER_FIELD_LIMITS,
+  PartnerField,
+  partnerMaxLengthMessage,
+} from "@/module/partner/partner.constants";
 import {
   ExcelEntityType,
   ImportDuplicateHandling,
@@ -25,11 +34,10 @@ import {
   ImportProgressCallback,
   ImportResult,
 } from "../excel.types";
-import { parseAddressFromExcel } from "@/shared/utils/address.util";
+import { parseAddressFromExcel, parseDateDMY } from "@/shared/utils/address.util";
 import {
-  PARTNER_BANK_COLUMNS,
-  PARTNER_COLUMNS,
-  PARTNER_CONTACT_COLUMNS,
+  PARTNER_EXCEL_CONFIGS,
+  PartnerExcelConfig,
   PARTNER_SHEET_NAMES,
   RawPartnerBankRow,
   RawPartnerContactRow,
@@ -59,6 +67,7 @@ export class PartnerExcelProcessor {
     workbook: ExcelJS.Workbook,
     options: ImportOptions,
     onProgress?: ImportProgressCallback,
+    config: PartnerExcelConfig = PARTNER_EXCEL_CONFIGS[options.entityType as "customer" | "supplier"],
   ): Promise<ImportResult> {
     const result: ImportResult = {
       totalRows: 0,
@@ -68,16 +77,17 @@ export class PartnerExcelProcessor {
       errors: [],
       data: [],
     };
-    const mainSheet = workbook.getWorksheet(PARTNER_SHEET_NAMES.MAIN);
+    const mainSheet = workbook.getWorksheet(config.mainSheetName)
+      || workbook.getWorksheet(PARTNER_SHEET_NAMES.MAIN);
     if (!mainSheet) {
-      throw new BadRequestError(`Không tìm thấy sheet '${PARTNER_SHEET_NAMES.MAIN}'`);
+      throw new BadRequestError(`Không tìm thấy sheet '${config.mainSheetName}'`);
     }
 
-    const rows = this.parseRows<RawPartnerRow>(mainSheet, PARTNER_COLUMNS);
+    const rows = this.parseRows<RawPartnerRow>(mainSheet, config.columns);
     const contactSheet = workbook.getWorksheet(PARTNER_SHEET_NAMES.CONTACTS);
     const bankSheet = workbook.getWorksheet(PARTNER_SHEET_NAMES.BANKS);
-    const contacts = this.groupByCode(this.parseRows<RawPartnerContactRow>(contactSheet, PARTNER_CONTACT_COLUMNS));
-    const banks = this.groupByCode(this.parseRows<RawPartnerBankRow>(bankSheet, PARTNER_BANK_COLUMNS));
+    const contacts = this.groupByCode(this.parseRows<RawPartnerContactRow>(contactSheet, config.contactColumns));
+    const banks = this.groupByCode(this.parseRows<RawPartnerBankRow>(bankSheet, config.bankColumns));
     result.totalRows = rows.length;
     this.report(result, onProgress);
 
@@ -86,7 +96,7 @@ export class PartnerExcelProcessor {
       for (const [code] of relationMap) {
         if (!codes.has(code)) {
           result.errorRows++;
-          result.errors.push({ row: 0, message: `${label}: không tìm thấy mã đối tác "${code}" trong sheet ${PARTNER_SHEET_NAMES.MAIN}` });
+          result.errors.push({ row: 0, message: `${label}: không tìm thấy mã đối tác "${code}" trong sheet ${config.mainSheetName}` });
           if (options.errorHandling === ImportErrorHandling.STOP_ON_ERROR) return result;
         }
       }
@@ -96,8 +106,9 @@ export class PartnerExcelProcessor {
       const row = rows[index];
       const rowNumber = index + 2;
       try {
-        const type = this.partnerTypeFromEntity(options.entityType);
+        const type = config.partnerType;
         if (!row.name) throw new Error("Tên đối tác không được để trống");
+        this.validatePartnerImportRow(row);
         const existing = await this.findExisting(row, type);
         if (existing && options.duplicateHandling === ImportDuplicateHandling.SKIP) {
           result.skippedRows++;
@@ -109,6 +120,13 @@ export class PartnerExcelProcessor {
         }
         const relationCode = row.code || existing?.code || "";
 
+        if (row.isOrganization === false && contacts.has(relationCode)) {
+          throw new Error("Người liên hệ chỉ được khai báo cho đơn vị tổ chức");
+        }
+        if (row.isOrganization !== false && contacts.has(relationCode)) {
+          this.validateContactImportRows(contacts.get(relationCode)!);
+        }
+
         const parsedAddress = row.address ? parseAddressFromExcel(row.address) : null;
         const data: DeepPartial<Partner> = {
           type,
@@ -117,12 +135,15 @@ export class PartnerExcelProcessor {
           isOrganization: row.isOrganization ?? true,
           groupId: await this.findGroup(row.groupName, type, req),
           taxCode: row.taxCode || null,
+          identityCode: row.identityCode || null,
           phone: row.phone || null,
           email: row.email || null,
+          gender: type === PartnerType.CUSTOMER ? (this.gender(row.gender) || null) : null,
+          dob: type === PartnerType.CUSTOMER ? (row.dob || null) : null,
           addresses: parsedAddress
             ? [{ ...parsedAddress, isPermanent: true }]
             : undefined,
-          maxDebtAmount: this.optionalNumber(row.maxDebtAmount, "Hạn mức công nợ", rowNumber),
+          maxDebtAmount: this.optionalNumber(row.maxDebtAmount, "Hạn mức công nợ"),
           note: row.note || null,
           banks: banks.has(relationCode) ? this.toBanks(banks.get(relationCode)!) : undefined,
           representative: this.toRepresentative(row),
@@ -147,13 +168,17 @@ export class PartnerExcelProcessor {
           await this.replaceContacts(saved.id, contacts.get(relationCode) || []);
         }
 
-        await this.adjustDebtIfProvided(saved.id, row, existing, req);
+        await this.adjustDebtIfProvided(saved.id, row, existing, req, config.debtSide);
         result.successRows++;
         result.data.push(saved);
         this.report(result, onProgress);
       } catch (error: any) {
         result.errorRows++;
-        result.errors.push({ row: rowNumber, message: error?.message || "Dòng dữ liệu không hợp lệ", data: row as any });
+        result.errors.push({
+          row: rowNumber,
+          message: this.getImportErrorMessage(error, row),
+          data: row as any,
+        });
         this.report(result, onProgress);
         if (options.errorHandling === ImportErrorHandling.STOP_ON_ERROR) break;
       }
@@ -163,7 +188,7 @@ export class PartnerExcelProcessor {
 
   private async findExisting(row: RawPartnerRow, type: PartnerType): Promise<Partner | null> {
     if (row.code) {
-      const byCode = await this.partnerRepository.findOne({ where: { code: row.code, deletedAt: IsNull() } as any });
+      const byCode = await this.partnerRepository.findOne({ where: { code: row.code, type, deletedAt: IsNull() } as any });
       if (byCode) return byCode;
     }
     const candidates: any[] = [];
@@ -183,27 +208,28 @@ export class PartnerExcelProcessor {
     return (await this.attributeService.findOrCreate(name, groupType, req)).id;
   }
 
-  private async adjustDebtIfProvided(id: string, row: RawPartnerRow, existing: Partner | null, req: RequestContext): Promise<void> {
-    const adjustments: Array<[DebtSide, number | undefined]> = [
-      [DebtSide.RECEIVABLE, row.receivableDebtAmount],
-      [DebtSide.PAYABLE, row.payableDebtAmount],
-    ];
-    for (const [side, target] of adjustments) {
-      if (target === undefined) continue;
-      if (!Number.isFinite(target)) throw new Error("Số dư công nợ phải là số hợp lệ");
-      const current = await this.getCurrentDebt(id, side);
-      if (Math.abs(current.amount - target) < 0.005) continue;
-      await this.debtAdjustmentService.create({
-        partnerId: id,
-        occurredAt: new Date(),
-        side,
-        expectedAmount: current.amount,
-        countedAmount: target,
-        deltaAmount: target - current.amount,
-        reason: "Điều chỉnh công nợ từ Excel",
-        isInitial: !existing && current.count === 0,
-      } as DeepPartial<DebtAdjustment>, undefined, req);
-    }
+  private async adjustDebtIfProvided(
+    id: string,
+    row: RawPartnerRow,
+    existing: Partner | null,
+    req: RequestContext,
+    side: DebtSide,
+  ): Promise<void> {
+    const target = row.currentDebtAmount;
+    if (target === undefined) return;
+    if (!Number.isFinite(target)) throw new Error("Số dư công nợ phải là số hợp lệ");
+    const current = await this.getCurrentDebt(id, side);
+    if (Math.abs(current.amount - target) < 0.005) return;
+    await this.debtAdjustmentService.create({
+      partnerId: id,
+      occurredAt: new Date(),
+      side,
+      expectedAmount: current.amount,
+      countedAmount: target,
+      deltaAmount: target - current.amount,
+      reason: "Điều chỉnh công nợ từ Excel",
+      isInitial: !existing && current.count === 0,
+    } as DeepPartial<DebtAdjustment>, undefined, req);
   }
 
   private async getCurrentDebt(partnerId: string, side: DebtSide): Promise<{ amount: number; count: number }> {
@@ -238,13 +264,20 @@ export class PartnerExcelProcessor {
       name: row.name,
       phone: row.phone || null,
       email: row.email || null,
+      identityCode: row.identityCode || null,
       banks: this.toBanks([row]),
     } as any) as any);
     await repository.save(entities as any);
   }
 
   private toContact(row: RawPartnerContactRow): any {
-    return { name: row.name, phone: row.phone || null, email: row.email || null, banks: this.toBanks([row]) };
+    return {
+      name: row.name,
+      phone: row.phone || null,
+      email: row.email || null,
+      identityCode: row.identityCode || null,
+      banks: this.toBanks([row]),
+    };
   }
 
   private toBanks(rows: Array<RawPartnerBankRow | RawPartnerContactRow>): any[] {
@@ -256,7 +289,6 @@ export class PartnerExcelProcessor {
   private toRepresentative(row: RawPartnerRow): any {
     const value = {
       name: row.representativeName || null,
-      position: row.representativePosition || null,
       phone: row.representativePhone || null,
       email: row.representativeEmail || null,
       identityCode: row.representativeIdentityCode || null,
@@ -294,22 +326,71 @@ export class PartnerExcelProcessor {
     return result;
   }
 
-  private partnerTypeFromEntity(entityType: ExcelEntityType): PartnerType {
-    if (entityType === ExcelEntityType.CUSTOMER) return PartnerType.CUSTOMER;
-    if (entityType === ExcelEntityType.SUPPLIER) return PartnerType.SUPPLIER;
-    throw new Error("Loại Excel đối tác không hợp lệ");
-  }
-
   private cellValue(value: unknown, field: string): any {
     if (field === "maxDebtAmount" || field.endsWith("DebtAmount")) return this.number(value);
+    if (field === "dob") return parseDateDMY(this.text(value));
+    if (field === "gender") return this.gender(value);
     if (field === "isOrganization" || field === "isPermanent") return this.boolean(value);
     return this.text(value) || undefined;
   }
 
-  private optionalNumber(value: number | undefined, label: string, rowNumber: number): number | null {
+  private optionalNumber(value: number | undefined, label: string): number | null {
     if (value === undefined) return null;
-    if (!Number.isFinite(value) || value < 0) throw new Error(`Dòng ${rowNumber}: ${label} phải là số không âm`);
+    if (!Number.isFinite(value) || value < 0) throw new Error(`${label} phải là số không âm`);
     return value;
+  }
+
+  private validatePartnerImportRow(row: RawPartnerRow): void {
+    const validation = PartnerImportRowSchema.safeParse(row);
+    if (!validation.success) {
+      throw new Error(this.formatValidationIssues(validation.error));
+    }
+  }
+
+  private validateContactImportRows(rows: RawPartnerContactRow[]): void {
+    for (const row of rows) {
+      const validation = PartnerContactImportRowSchema.safeParse(row);
+      if (!validation.success) {
+        throw new Error(`Người liên hệ: ${this.formatValidationIssues(validation.error)}`);
+      }
+    }
+  }
+
+  private formatValidationIssues(error: { issues: Array<{ message: string }> }): string {
+    return [...new Set(error.issues.map((issue) => issue.message))].join("; ");
+  }
+
+  private getImportErrorMessage(error: any, row: RawPartnerRow): string {
+    const message = String(error?.message || "Dòng dữ liệu không hợp lệ");
+    if (!/value too long for type character varying/i.test(message)) return message;
+
+    const exceededField = this.findExceededPartnerField(row);
+    if (exceededField) return partnerMaxLengthMessage(exceededField);
+
+    const maxLength = message.match(/character varying\((\d+)\)/i)?.[1];
+    return maxLength
+      ? `Một trường văn bản có độ dài tối đa là ${maxLength} ký tự`
+      : "Một trường văn bản vượt quá độ dài cho phép";
+  }
+
+  private findExceededPartnerField(row: RawPartnerRow): PartnerField | undefined {
+    const fields: Array<[PartnerField, unknown]> = [
+      ["code", row.code],
+      ["name", row.name],
+      ["email", row.email],
+      ["phone", row.phone],
+      ["taxCode", row.taxCode],
+      ["groupName", row.groupName],
+      ["representativeName", row.representativeName],
+      ["representativeEmail", row.representativeEmail],
+      ["representativePhone", row.representativePhone],
+      ["representativeIdentityCode", row.representativeIdentityCode],
+    ];
+    return fields.find(([field, value]) => this.textLength(value) > PARTNER_FIELD_LIMITS[field])?.[0];
+  }
+
+  private textLength(value: unknown): number {
+    return Array.from(this.text(value)).length;
   }
 
   private text(value: unknown): string {
@@ -323,8 +404,18 @@ export class PartnerExcelProcessor {
     return parsed;
   }
 
-  private boolean(value: unknown): boolean {
-    return ["có", "co", "true", "1", "yes", "x", "tổ chức", "to chuc"].includes(this.normalizeHeader(value));
+  private boolean(value: unknown): boolean | undefined {
+    const normalized = this.normalizeHeader(value);
+    if (!normalized) return undefined;
+    return ["co", "true", "1", "yes", "x", "to chuc"].includes(normalized);
+  }
+
+  private gender(value: unknown): Gender | undefined {
+    const normalized = this.normalizeHeader(value);
+    if (["male", "nam"].includes(normalized)) return Gender.MALE;
+    if (["female", "nu"].includes(normalized)) return Gender.FEMALE;
+    if (["other", "khac"].includes(normalized)) return Gender.OTHER;
+    return undefined;
   }
 
   private normalizeHeader(value: unknown): string {
@@ -343,6 +434,12 @@ export class PartnerExcelProcessor {
     }
     if (field === "groupName") {
       return ["nhom", "nhom doi tac", "nhom khach hang", "nhom nha cung cap"].includes(header);
+    }
+    if (field === "isOrganization") {
+      return ["loai hinh", "phan loai don vi"].includes(header);
+    }
+    if (field === "partnerCode") {
+      return ["ma doi tac", "ma khach hang", "ma nha cung cap"].includes(header);
     }
     return false;
   }

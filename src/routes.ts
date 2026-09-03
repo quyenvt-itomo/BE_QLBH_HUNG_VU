@@ -61,6 +61,10 @@ import { USER_TYPES } from "@/module/user/user.types";
 import { UserRouter } from "@/module/user/user.route";
 import { DEBT_ADJUSTMENT_TYPES } from "@/module/debtAdjustment/debtAdjustment.types";
 import { DebtAdjustmentRouter } from "@/module/debtAdjustment/debtAdjustment.route";
+import { DEBT_TYPES } from "@/module/debt/debt.types";
+import { DebtRouter } from "@/module/debt/debt.route";
+import { DEBT_TRANSACTION_TYPES } from "@/module/debtTransaction/debtTransaction.types";
+import { DebtTransactionRouter } from "@/module/debtTransaction/debtTransaction.route";
 import { VAT_ADJUSTMENT_TYPES } from "@/module/vatDebtAdjustment/vatAdjustment.types";
 import { VatAdjustmentRouter } from "@/module/vatDebtAdjustment/vatAdjustment.route";
 import { VAT_TRANSACTION_TYPES } from "@/module/vatTransaction/vatTransaction.types";
@@ -211,6 +215,17 @@ router.use("/user", container.get<UserRouter>(USER_TYPES.Router).getRouter());
 router.use(
   "/debt-adjustment",
   container.get<DebtAdjustmentRouter>(DEBT_ADJUSTMENT_TYPES.Router).getRouter(),
+);
+const debtRouter = container
+  .get<DebtRouter>(DEBT_TYPES.DebtRouter)
+  .getRouter();
+router.use("/debt", debtRouter);
+router.use("/partner-debt", debtRouter);
+router.use(
+  "/debt-transaction",
+  container
+    .get<DebtTransactionRouter>(DEBT_TRANSACTION_TYPES.Router)
+    .getRouter(),
 );
 router.use(
   "/vat-adjustment",

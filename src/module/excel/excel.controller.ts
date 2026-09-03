@@ -2,7 +2,7 @@ import { inject, injectable } from "inversify";
 import { Request, Response } from "express";
 import { asyncHandler, sendResponse } from "@/shared/utils/controller.utils";
 import { BadRequestError } from "@/shared/types/errors";
-import { EXCEL_TYPES } from "./excel.types";
+import { EXCEL_TYPES, ExcelEntityType } from "./excel.types";
 import { ExcelService } from "./excel.service";
 
 @injectable()
@@ -19,7 +19,10 @@ export class ExcelController {
 
   download = asyncHandler(async (req: Request, res: Response) => {
     const buffer = await this.excelService.exportData(req as any, req.body);
-    const filename = this.excelService.getDownloadFilename(req.body.filename);
+    const filename = this.excelService.getDownloadFilename(
+      req.body.filename,
+      req.body.entityType as ExcelEntityType,
+    );
     res.setHeader(
       "Content-Type",
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

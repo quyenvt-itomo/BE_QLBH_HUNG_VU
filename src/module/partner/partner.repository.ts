@@ -90,6 +90,9 @@ export class PartnerRepository extends BaseRepository<Partner> {
           groupId: partner.groupId,
           isOrganization: partner.isOrganization,
           taxCode: partner.taxCode,
+          identityCode: partner.identityCode,
+          gender: partner.gender,
+          dob: partner.dob,
         }
       : null;
   }

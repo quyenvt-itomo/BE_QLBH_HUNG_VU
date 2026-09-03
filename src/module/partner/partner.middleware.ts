@@ -33,7 +33,7 @@ export const partnerContextMiddleware =
 
     if (req.method === "GET") {
       const newQuery = Object.assign({}, req.query as any);
-      if (!newQuery.type) newQuery.type = mappedType;
+      newQuery.type = mappedType;
       Object.defineProperty(req, "query", {
         value: newQuery,
         writable: true,
@@ -42,7 +42,7 @@ export const partnerContextMiddleware =
       });
     } else {
       const newBody = Object.assign({}, req.body as any);
-      if (!newBody.type) newBody.type = mappedType;
+      newBody.type = mappedType;
       Object.defineProperty(req, "body", {
         value: newBody,
         writable: true,

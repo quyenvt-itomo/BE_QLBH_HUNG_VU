@@ -6,6 +6,10 @@ export const EXCEL_TYPES = {
   ProductExcelProcessor: Symbol.for("ProductExcelProcessor"),
   PartnerExcelTemplate: Symbol.for("PartnerExcelTemplate"),
   PartnerExcelProcessor: Symbol.for("PartnerExcelProcessor"),
+  CustomerExcelTemplate: Symbol.for("CustomerExcelTemplate"),
+  CustomerExcelProcessor: Symbol.for("CustomerExcelProcessor"),
+  SupplierExcelTemplate: Symbol.for("SupplierExcelTemplate"),
+  SupplierExcelProcessor: Symbol.for("SupplierExcelProcessor"),
 } as const;
 
 export enum ExcelEntityType {
@@ -13,6 +17,24 @@ export enum ExcelEntityType {
   CUSTOMER = "customer",
   SUPPLIER = "supplier",
 }
+
+export const EXCEL_FILENAME_PREFIXES: Record<
+  ExcelEntityType,
+  { template: string; export: string }
+> = {
+  [ExcelEntityType.PRODUCT]: {
+    template: "bieu_mau_hang_hoa",
+    export: "danh_sach_hang_hoa",
+  },
+  [ExcelEntityType.CUSTOMER]: {
+    template: "bieu_mau_khach_hang",
+    export: "danh_sach_khach_hang",
+  },
+  [ExcelEntityType.SUPPLIER]: {
+    template: "bieu_mau_nha_cung_cap",
+    export: "danh_sach_nha_cung_cap",
+  },
+};
 
 export const ENTITY_SUPPORTS_IMPORT: Record<ExcelEntityType, boolean> = {
   [ExcelEntityType.PRODUCT]: true,

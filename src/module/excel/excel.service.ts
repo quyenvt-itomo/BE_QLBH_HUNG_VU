@@ -9,7 +9,11 @@ import { FileService } from "../file/file.service";
 import { FILE_TYPES } from "../file/file.types";
 import { BadRequestError, NotFoundError } from "@/shared/types/errors";
 import { RequestContext } from "@/shared/types/interfaces";
-import { EXCEL_TYPES, ExcelEntityType } from "./excel.types";
+import {
+  EXCEL_FILENAME_PREFIXES,
+  EXCEL_TYPES,
+  ExcelEntityType,
+} from "./excel.types";
 import {
   ExportOptions,
   ExportExcelResult,
@@ -22,8 +26,10 @@ import {
 } from "./excel.types";
 import { ProductExcelTemplate } from "./product/product.excel.template";
 import { ProductExcelProcessor } from "./product/product.excel.processor";
-import { PartnerExcelTemplate } from "./partner/partner.excel.template";
-import { PartnerExcelProcessor } from "./partner/partner.excel.processor";
+import { CustomerExcelTemplate } from "./customer/customer.excel.template";
+import { CustomerExcelProcessor } from "./customer/customer.excel.processor";
+import { SupplierExcelTemplate } from "./supplier/supplier.excel.template";
+import { SupplierExcelProcessor } from "./supplier/supplier.excel.processor";
 
 @injectable()
 export class ExcelService {
@@ -35,10 +41,14 @@ export class ExcelService {
     private productTemplate: ProductExcelTemplate,
     @inject(EXCEL_TYPES.ProductExcelProcessor)
     private productProcessor: ProductExcelProcessor,
-    @inject(EXCEL_TYPES.PartnerExcelTemplate)
-    private partnerTemplate: PartnerExcelTemplate,
-    @inject(EXCEL_TYPES.PartnerExcelProcessor)
-    private partnerProcessor: PartnerExcelProcessor,
+    @inject(EXCEL_TYPES.CustomerExcelTemplate)
+    private customerTemplate: CustomerExcelTemplate,
+    @inject(EXCEL_TYPES.CustomerExcelProcessor)
+    private customerProcessor: CustomerExcelProcessor,
+    @inject(EXCEL_TYPES.SupplierExcelTemplate)
+    private supplierTemplate: SupplierExcelTemplate,
+    @inject(EXCEL_TYPES.SupplierExcelProcessor)
+    private supplierProcessor: SupplierExcelProcessor,
     @inject(FILE_TYPES.FileService)
     private fileService: FileService,
   ) {}
@@ -56,22 +66,18 @@ export class ExcelService {
         options.extraUnitColumns || [],
         options.businessStoreColumns || [],
       );
-    } else if (
-      options.entityType === ExcelEntityType.CUSTOMER ||
-      options.entityType === ExcelEntityType.SUPPLIER
-    ) {
-      workbook = await this.partnerTemplate.exportData(
+    } else if (options.entityType === ExcelEntityType.CUSTOMER) {
+      workbook = await this.customerTemplate.exportData(
         req,
         options.columns || [],
-        {
-          ...(options.filters || {}),
-          // entityType is authoritative; callers cannot export the other
-          // partner type by changing filters.type.
-          type:
-            options.entityType === ExcelEntityType.CUSTOMER
-              ? "customer"
-              : "supplier",
-        },
+        options.filters || {},
+        options.sheetColumns || {},
+      );
+    } else if (options.entityType === ExcelEntityType.SUPPLIER) {
+      workbook = await this.supplierTemplate.exportData(
+        req,
+        options.columns || [],
+        options.filters || {},
         options.sheetColumns || {},
       );
     } else {
@@ -80,10 +86,13 @@ export class ExcelService {
     return Buffer.from(await workbook.xlsx.writeBuffer());
   }
 
-  getDownloadFilename(filename?: string): string {
+  getDownloadFilename(
+    filename?: string,
+    entityType: ExcelEntityType = ExcelEntityType.PRODUCT,
+  ): string {
     const clean = path.basename(String(filename || ""));
     if (!clean || clean === "." || clean === path.sep) {
-      return "product.xlsx";
+      return `${EXCEL_FILENAME_PREFIXES[entityType].export}.xlsx`;
     }
     return clean.toLowerCase().endsWith(".xlsx") ? clean : clean + ".xlsx";
   }
@@ -97,8 +106,8 @@ export class ExcelService {
     await fs.mkdir(exportDir, { recursive: true });
     const filename =
       options.filename && options.filename.trim()
-        ? this.getDownloadFilename(options.filename)
-        : options.entityType + "_" + uuidv4() + ".xlsx";
+        ? this.getDownloadFilename(options.filename, options.entityType)
+        : `${EXCEL_FILENAME_PREFIXES[options.entityType].export}_${uuidv4()}.xlsx`;
     await fs.writeFile(path.join(exportDir, filename), buffer);
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
     return {
@@ -124,11 +133,11 @@ export class ExcelService {
     if (options.entityType === ExcelEntityType.PRODUCT) {
       return this.productProcessor.processImport(req, workbook, options, onProgress);
     }
-    if (
-      options.entityType === ExcelEntityType.CUSTOMER ||
-      options.entityType === ExcelEntityType.SUPPLIER
-    ) {
-      return this.partnerProcessor.processImport(req, workbook, options, onProgress);
+    if (options.entityType === ExcelEntityType.CUSTOMER) {
+      return this.customerProcessor.processImport(req, workbook, options, onProgress);
+    }
+    if (options.entityType === ExcelEntityType.SUPPLIER) {
+      return this.supplierProcessor.processImport(req, workbook, options, onProgress);
     }
     throw new BadRequestError("Excel chưa hỗ trợ loại dữ liệu này");
   }
@@ -137,17 +146,17 @@ export class ExcelService {
     let workbook: ExcelJS.Workbook;
     if (options.entityType === ExcelEntityType.PRODUCT) {
       workbook = await this.productTemplate.generateTemplate();
-    } else if (
-      options.entityType === ExcelEntityType.CUSTOMER ||
-      options.entityType === ExcelEntityType.SUPPLIER
-    ) {
-      workbook = await this.partnerTemplate.generateTemplate(options.entityType);
+    } else if (options.entityType === ExcelEntityType.CUSTOMER) {
+      workbook = await this.customerTemplate.generateTemplate();
+    } else if (options.entityType === ExcelEntityType.SUPPLIER) {
+      workbook = await this.supplierTemplate.generateTemplate();
     } else {
       throw new BadRequestError("Excel chưa hỗ trợ loại dữ liệu này");
     }
     const templateDir = path.join(config.UPLOAD_DIR, "temp", "templates");
     await fs.mkdir(templateDir, { recursive: true });
-    const filename = "template_" + options.entityType + "_" + uuidv4() + ".xlsx";
+    const filename =
+      `${EXCEL_FILENAME_PREFIXES[options.entityType].template}_${uuidv4()}.xlsx`;
     await workbook.xlsx.writeFile(path.join(templateDir, filename));
     return {
       url: "/uploads/temp/templates/" + filename,

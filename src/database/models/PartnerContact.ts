@@ -11,6 +11,8 @@ export class PartnerContact extends BaseEntity {
   phone: string | null;
   @Column({ type: "varchar", length: 255, nullable: true, default: null })
   email: string | null;
+  @Column({ type: "varchar", length: 20, nullable: true, default: null })
+  identityCode: string | null;
 
   @Column({ type: "jsonb", nullable: true, default: [] })
   banks: BankAccount[];

@@ -4,7 +4,7 @@ import { withTransaction } from "@/shared/base/TransactionManager";
 import { BaseService } from "@/shared/base/BaseService";
 import { RequestContext } from "@/shared/types/interfaces";
 import { generateCode } from "@/shared/utils/code.utils";
-import { Order, OrderLine, OrderStatus, OrderType, Product } from "@/database/models";
+import { Order, OrderLine, OrderStatus, OrderType, PartnerType, Product } from "@/database/models";
 import { OrderRepository } from "./order.repository";
 import { ORDER_TYPES } from "./order.types";
 import { OrderLineRepository } from "./orderLine.repository";
@@ -17,6 +17,8 @@ import { ProductRepository } from "../product/product.repository";
 import { ATTRIBUTE_TYPES } from "../attribute/attribute.types";
 import { AttributeRepository } from "../attribute/attribute.repository";
 import { RateType } from "@/shared/constants/enum";
+import { DEBT_TYPES } from "@/module/debt/debt.types";
+import { DebtRecalculateService } from "@/module/debt/debt.recalculate.service";
 
 const calculateRateAmount = (
   baseAmount: number,
@@ -42,10 +44,59 @@ export class OrderService extends BaseService<Order> {
     @inject(ATTRIBUTE_TYPES.AttributeRepository) private attributeRepository: AttributeRepository,
     @inject(ORDER_TYPES.OrderLineRepository) private orderLineRepository: OrderLineRepository,
     @inject(INVENTORY_TYPES.InventoryRecalculateService) private inventory: InventoryRecalculateService,
+    @inject(DEBT_TYPES.DebtRecalculateService)
+    private debtService: DebtRecalculateService,
   ) { super(); this.repository = repository; }
+
+  private isPurchaseOrderType(type?: OrderType): boolean {
+    return type === OrderType.PURCHASE || type === OrderType.PURCHASE_RETURN;
+  }
+
+  private isReturnOrderType(type?: OrderType): boolean {
+    return type === OrderType.PURCHASE_RETURN || type === OrderType.SALE_RETURN;
+  }
+
+  private async validateShippingInfo(
+    data: DeepPartial<Order>,
+    manager: EntityManager,
+  ): Promise<number> {
+    const shippingFee = Number(data.shippingFee || 0);
+    if (!Number.isFinite(shippingFee) || shippingFee < 0) {
+      throw new Error("order.shipping_fee.invalid");
+    }
+
+    data.shippingFee = shippingFee > 0 ? shippingFee : null;
+    data.isFreeShipping = data.isFreeShipping ?? true;
+
+    const isPurchase = this.isPurchaseOrderType(data.type);
+    if (isPurchase && data.isFreeShipping && shippingFee > 0 && !data.shipperId) {
+      throw new Error("order.shipping.shipper_required");
+    }
+    if (isPurchase && !data.isFreeShipping && data.shipperId) {
+      throw new Error("order.shipping.shipper_not_allowed");
+    }
+
+    if (!data.shipperId) {
+      data.shipperSnapshot = null;
+      return shippingFee;
+    }
+
+    const shipper = await this.partnerRepository.getRepository(manager).findOne({
+      where: { id: data.shipperId, deletedAt: null } as any,
+    });
+    if (!shipper) throw new Error("order.shipping.shipper_not_found");
+    if (shipper.type !== PartnerType.SHIPPER) {
+      throw new Error("order.shipping.shipper_invalid");
+    }
+    if (!data.shipperSnapshot || data.shipperSnapshot.id !== data.shipperId) {
+      data.shipperSnapshot = await this.partnerRepository.getSnapshot(data.shipperId, manager);
+    }
+    return shippingFee;
+  }
 
   private async attachInfo(data: DeepPartial<Order>, manager: EntityManager): Promise<void> {
     await this.partnerRepository.attachInfo(data as any, manager);
+    const shippingFee = await this.validateShippingInfo(data, manager);
     const prepareLines = async (lines: DeepPartial<OrderLine>[]) => {
       let grossAmount = 0;
       let totalCost = 0;
@@ -106,13 +157,21 @@ export class OrderService extends BaseService<Order> {
     data.discountAmount = discountAmount;
     data.netAmount = netAmount;
     data.taxAmount = taxAmount;
-    data.totalAmount = netAmount + taxAmount;
+    const shippingIncluded = shippingFee > 0 && data.isFreeShipping === false;
+    const totalAmount = netAmount + taxAmount + (shippingIncluded ? shippingFee : 0);
+    const returnTotalAmount =
+      returnNetAmount + returnTaxAmount + (shippingIncluded ? shippingFee : 0);
+    data.totalAmount = this.isReturnOrderType(data.type)
+      ? netAmount + taxAmount
+      : totalAmount;
     data.totalCost = sale.totalCost;
     data.returnGrossAmount = returned.grossAmount;
     data.returnDiscountAmount = returnDiscountAmount;
     data.returnNetAmount = returnNetAmount;
     data.returnTaxAmount = returnTaxAmount;
-    data.returnTotalAmount = returnNetAmount + returnTaxAmount;
+    data.returnTotalAmount = this.isReturnOrderType(data.type)
+      ? returnTotalAmount
+      : returnNetAmount + returnTaxAmount;
     data.returnTotalCost = returned.totalCost;
     data.settlementAmount = Number(data.totalAmount) - Number(data.returnTotalAmount);
   }
@@ -136,8 +195,11 @@ export class OrderService extends BaseService<Order> {
       storeId: current.storeId,
       lines: merged.lines,
       returnLines: merged.returnLines,
+      shipperId: merged.shipperId,
       partnerSnapshot: merged.partnerSnapshot,
       shipperSnapshot: merged.shipperSnapshot,
+      shippingFee: merged.shippingFee,
+      isFreeShipping: merged.isFreeShipping,
       grossAmount: merged.grossAmount,
       discountAmount: merged.discountAmount,
       netAmount: merged.netAmount,
@@ -160,8 +222,18 @@ export class OrderService extends BaseService<Order> {
     for (const productId of new Set(lines.map((line) => line.productId).filter((id): id is string => Boolean(id)))) await this.inventory.recalculateProductStoreFromDate(productId, data.storeId, data.occurredAt, manager);
   }
 
-  async actionAfterCreate(data: Order, manager: EntityManager): Promise<void> { await this.recalculate(data, manager); }
-  async actionAfterUpdate(data: Order, manager: EntityManager): Promise<void> { await this.recalculate(data, manager); }
+  async actionAfterCreate(data: Order, manager: EntityManager): Promise<void> {
+    await this.debtService.syncForOrder(data, manager);
+    await this.recalculate(data, manager);
+  }
+  async actionAfterUpdate(data: Order, manager: EntityManager): Promise<void> {
+    await this.debtService.syncForOrder(data, manager);
+    await this.recalculate(data, manager);
+  }
+
+  async actionAfterDelete(data: Order, manager: EntityManager): Promise<void> {
+    await this.debtService.removeForOrder(data, manager);
+  }
 
   async update(id: string, data: DeepPartial<Order>, manager?: EntityManager, req?: RequestContext): Promise<Order | null> {
     const hasLines = data.lines !== undefined || data.returnLines !== undefined;

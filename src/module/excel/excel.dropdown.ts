@@ -7,9 +7,9 @@ export function applyColumnFormats(
 ): void {
   columns.forEach((column, index) => {
     const excelColumn = sheet.getColumn(index + 1);
-    if (column.numberFormat) {
+    if (column.numberFormat || column.type === "date") {
       excelColumn.eachCell?.((cell) => {
-        cell.numFmt = column.numberFormat!;
+        cell.numFmt = column.numberFormat || "dd/mm/yyyy";
       });
     }
     if (column.options?.length) {

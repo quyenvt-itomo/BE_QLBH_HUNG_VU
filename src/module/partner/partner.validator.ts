@@ -12,18 +12,106 @@ import {
   zBooleanLike,
 } from "@/shared/base/BaseValidator";
 import { CreatePartnerContactSchema } from "../partnerContact/partnerContact.validator";
+import { Gender } from "@/shared/constants/enum";
+import {
+  PARTNER_FIELD_LIMITS,
+  partnerMaxLengthMessage,
+} from "./partner.constants";
+
+export const PartnerNameSchema = z
+  .string()
+  .trim()
+  .min(1, "Tên không được để trống")
+  .max(PARTNER_FIELD_LIMITS.name, partnerMaxLengthMessage("name"));
+
+export const PartnerCodeSchema = z
+  .string()
+  .trim()
+  .max(PARTNER_FIELD_LIMITS.code, partnerMaxLengthMessage("code"));
+
+export const PartnerEmailSchema = z
+  .email("Email không hợp lệ")
+  .trim()
+  .max(PARTNER_FIELD_LIMITS.email, partnerMaxLengthMessage("email"));
+
+export const PartnerPhoneSchema = z
+  .string()
+  .trim()
+  .max(PARTNER_FIELD_LIMITS.phone, partnerMaxLengthMessage("phone"));
+
+export const PartnerTaxCodeSchema = z
+  .string()
+  .trim()
+  .max(PARTNER_FIELD_LIMITS.taxCode, partnerMaxLengthMessage("taxCode"));
+
+export const PartnerIdentityCodeSchema = z
+  .string()
+  .trim()
+  .max(
+    PARTNER_FIELD_LIMITS.identityCode,
+    partnerMaxLengthMessage("identityCode"),
+  );
+
+export const PartnerImportRowSchema = z.object({
+  name: PartnerNameSchema,
+  code: PartnerCodeSchema.optional(),
+  email: PartnerEmailSchema.nullish(),
+  phone: PartnerPhoneSchema.nullish(),
+  taxCode: PartnerTaxCodeSchema.nullish(),
+  identityCode: PartnerIdentityCodeSchema.nullish(),
+  groupName: z
+    .string()
+    .trim()
+    .max(PARTNER_FIELD_LIMITS.groupName, partnerMaxLengthMessage("groupName"))
+    .nullish(),
+  representativeName: z
+    .string()
+    .trim()
+    .max(
+      PARTNER_FIELD_LIMITS.representativeName,
+      partnerMaxLengthMessage("representativeName"),
+    )
+    .nullish(),
+  representativePhone: z
+    .string()
+    .trim()
+    .max(
+      PARTNER_FIELD_LIMITS.representativePhone,
+      partnerMaxLengthMessage("representativePhone"),
+    )
+    .nullish(),
+  representativeEmail: z
+    .string()
+    .trim()
+    .max(
+      PARTNER_FIELD_LIMITS.representativeEmail,
+      partnerMaxLengthMessage("representativeEmail"),
+    )
+    .nullish(),
+  representativeIdentityCode: z
+    .string()
+    .trim()
+    .max(
+      PARTNER_FIELD_LIMITS.representativeIdentityCode,
+      partnerMaxLengthMessage("representativeIdentityCode"),
+    )
+    .nullish(),
+});
 
 export const CreatePartnerSchema = BaseCreateSchema.extend({
   type: z.enum(PartnerType),
-  groupId: z.uuid(),
+  groupId: z.uuid().nullish(),
 
   isOrganization: z.boolean().default(true),
 
-  name: z.string().nonempty(),
-  code: z.string().optional(),
-  email: z.email().nullish(),
-  phone: z.string().nullish(),
-  taxCode: z.string().nullish(),
+  name: PartnerNameSchema,
+  code: PartnerCodeSchema.optional(),
+  email: PartnerEmailSchema.nullish(),
+  phone: PartnerPhoneSchema.nullish(),
+  taxCode: PartnerTaxCodeSchema.nullish(),
+  identityCode: PartnerIdentityCodeSchema.nullish(),
+  gender: z.enum(Gender).nullish(),
+  dob: DateTransform.nullish(),
   maxDebtAmount: z.number().nonnegative().nullish(),
   addresses: z.array(AddressSchema).optional(),
   representative: RepresentativeSchema.nullish(),
@@ -33,15 +121,18 @@ export const CreatePartnerSchema = BaseCreateSchema.extend({
 });
 
 export const UpdatePartnerSchema = BaseUpdateSchema.extend({
-  groupId: z.uuid().optional(),
+  groupId: z.uuid().nullish(),
 
   isOrganization: z.boolean().optional(),
 
-  name: z.string().nonempty().optional(),
-  code: z.string().optional(),
-  email: z.email().nullish(),
-  phone: z.string().nullish(),
-  taxCode: z.string().nullish(),
+  name: PartnerNameSchema.optional(),
+  code: PartnerCodeSchema.optional(),
+  email: PartnerEmailSchema.nullish(),
+  phone: PartnerPhoneSchema.nullish(),
+  taxCode: PartnerTaxCodeSchema.nullish(),
+  identityCode: PartnerIdentityCodeSchema.nullish(),
+  gender: z.enum(Gender).nullish(),
+  dob: DateTransform.nullish(),
   maxDebtAmount: z.number().nonnegative().nullish(),
   addresses: z.array(AddressSchema).optional(),
   representative: RepresentativeSchema.nullish(),

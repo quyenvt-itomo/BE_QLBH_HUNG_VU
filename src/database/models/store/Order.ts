@@ -106,7 +106,7 @@ export class Order extends StoreEntity {
   @Column(BaseNullableNumericColumnOptions)
   shippingFee: number | null; // phí vận chuyển
   @Column({ type: "boolean", default: true })
-  isFreeShipping: boolean; // miễn phí vận chuyển
+  isFreeShipping: boolean; // mua: DN tự thanh toán; bán: miễn phí cho khách
 
   // TODO ===== Financial summary =====
   @Column(BaseNumericColumnOptions)

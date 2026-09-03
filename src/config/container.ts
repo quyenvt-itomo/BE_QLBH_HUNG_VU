@@ -4,6 +4,8 @@ import { TYPES } from "@/shared/types/container.types";
 import { attributeModule } from "@/module/attribute";
 import { authModule } from "@/module/auth";
 import { debtAdjustmentModule } from "@/module/debtAdjustment";
+import { debtModule } from "@/module/debt";
+import { debtTransactionModule } from "@/module/debtTransaction";
 import { fileModule } from "@/module/file";
 import { fundModule } from "@/module/fund";
 import { fundAdjustmentModule } from "@/module/fundAdjustment";
@@ -60,6 +62,8 @@ container.load(
   fundTransactionModule,
   fundTransferModule,
   incomeExpenseModule,
+  debtTransactionModule,
+  debtModule,
   debtAdjustmentModule,
   vatAdjustmentModule,
   vatTransactionModule,

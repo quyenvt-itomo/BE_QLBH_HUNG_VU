@@ -7,6 +7,7 @@ export const PartnerContactSelectBasic: FindOptionsSelect<PartnerContact> = {
   name: true,
   email: true,
   phone: true,
+  identityCode: true,
   banks: true,
   partnerId: true,
   partner: { id: true, type: true, name: true, code: true, phone: true },

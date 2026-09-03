@@ -44,7 +44,7 @@ export const CreateOrderSchema = BaseCreateSchema.extend({
 
   shipperId: z.uuid().nullish(),
   shippingFee: z.number().min(0).nullish(),
-  isFreeShipping: z.boolean().optional().default(false),
+  isFreeShipping: z.boolean().optional().default(true),
 
   lines: z.array(OrderLineSchema).optional().default([]),
   returnLines: z.array(OrderLineSchema).optional().default([]),
@@ -68,7 +68,27 @@ export const CreateOrderSchema = BaseCreateSchema.extend({
     message: "Đơn hoàn trả phải có đơn gốc",
     path: ["refOrderId"],
   },
-);
+).superRefine((data, context) => {
+  const shippingFee = Number(data.shippingFee || 0);
+  if (shippingFee <= 0) return;
+
+  const isPurchase =
+    data.type === OrderType.PURCHASE || data.type === OrderType.PURCHASE_RETURN;
+  if (isPurchase && data.isFreeShipping && !data.shipperId) {
+    context.addIssue({
+      code: "custom",
+      path: ["shipperId"],
+      message: "Đơn mua tự thanh toán phí vận chuyển phải chọn đơn vị vận chuyển",
+    });
+  }
+  if (isPurchase && !data.isFreeShipping && data.shipperId) {
+    context.addIssue({
+      code: "custom",
+      path: ["shipperId"],
+      message: "Chỉ chọn đơn vị vận chuyển khi đơn mua tự thanh toán phí",
+    });
+  }
+});
 
 export const UpdateOrderSchema = BaseUpdateSchema.extend({
   code: z.string().optional(),

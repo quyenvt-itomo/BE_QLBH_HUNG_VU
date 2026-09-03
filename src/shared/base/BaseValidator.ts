@@ -349,7 +349,6 @@ export type CitizenIdentification = z.infer<typeof CitizenIdentificationSchema>;
 
 export const RepresentativeSchema = z.object({
   name: z.string().trim().nullish(),
-  position: z.string().trim().nullish(),
   relativetionship: z.string().trim().nullish(),
   phone: z.string().trim().nullish(),
   email: z.string().trim().nullish(),

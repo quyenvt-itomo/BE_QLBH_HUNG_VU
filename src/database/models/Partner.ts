@@ -2,7 +2,6 @@ import { Entity, Column, ManyToOne, OneToMany, JoinColumn } from "typeorm";
 import {
   BaseEntity,
   BaseNullableNumericColumnOptions,
-  BaseNumericColumnOptions,
 } from "@/shared/base/BaseEntity";
 import { Attribute } from "./Attribute";
 import {
@@ -12,6 +11,7 @@ import {
 } from "@/shared/base/BaseValidator";
 import { PartnerContact } from "./PartnerContact";
 import { DebtAdjustment } from "./DebtAdjustment";
+import { Gender } from "@/shared/constants/enum";
 
 export enum PartnerType {
   CUSTOMER = "customer", // khách hàng
@@ -29,6 +29,9 @@ export interface PartnerSnapshot {
   email: string | null;
   phone: string | null;
   taxCode: string | null;
+  identityCode: string | null;
+  gender: Gender | null;
+  dob: Date | null;
   addresses: Address[];
   representative: Representative | null;
   banks: BankAccount[];
@@ -50,7 +53,7 @@ export class Partner extends BaseEntity {
 
   @Column({ type: "varchar", length: 255 })
   name: string;
-  @Column({ type: "varchar", length: 20 })
+  @Column({ type: "varchar", length: 50 })
   code: string;
   @Column({ type: "varchar", length: 255, nullable: true })
   email: string | null;
@@ -58,6 +61,14 @@ export class Partner extends BaseEntity {
   phone: string | null;
   @Column({ type: "varchar", length: 20, nullable: true })
   taxCode: string | null; // mã số thuế
+  @Column({ type: "varchar", length: 20, nullable: true, default: null })
+  identityCode: string | null;
+
+  @Column({ type: "varchar", length: 20, nullable: true, default: null })
+  gender: Gender | null;
+  @Column({ type: "timestamptz", nullable: true, default: null })
+  dob: Date | null;
+
   @Column({ type: "jsonb", default: [] })
   addresses: Address[]; // danh sách địa chỉ
   @Column({ type: "jsonb", nullable: true, default: null })
