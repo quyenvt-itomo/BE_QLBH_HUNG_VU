@@ -13,6 +13,7 @@ export interface FundSnapshot {
   code: string;
   name: string;
   type: FundType;
+  storeId?: string | null;
 }
 
 @Entity("funds")
@@ -48,4 +49,8 @@ export class Fund extends BaseEntity {
 
   @OneToMany(() => FundAdjustment, (fa) => fa.fund, { cascade: true })
   fundAdjustments: FundAdjustment[];
+
+  // TODO: More fields
+  currentBalance?: number;
+  initialBalance?: number;
 }

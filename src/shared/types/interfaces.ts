@@ -105,6 +105,7 @@ export interface UserContext {
   userId: string;
   userSnapshot: UserSnapshot;
   isAdmin: boolean;
+  isSystem?: boolean;
   employeeId?: string;
 }
 

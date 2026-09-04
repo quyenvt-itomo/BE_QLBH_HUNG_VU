@@ -1,5 +1,6 @@
 import { DeepPartial } from "typeorm";
 import { Store } from "../models/Store";
+import { FundType } from "../models";
 
 export const storeSeeders: DeepPartial<Store>[] = [
   {
@@ -16,6 +17,16 @@ export const storeSeeders: DeepPartial<Store>[] = [
     },
     isActive: true,
     sortOrder: 10,
+
+    funds: [
+      {
+        code: "TM-PT",
+        name: "Tiền mặt",
+        type: FundType.CASH,
+        isDefault: true,
+        isActive: true,
+      },
+    ],
   },
   {
     code: "TV",
@@ -31,5 +42,15 @@ export const storeSeeders: DeepPartial<Store>[] = [
     },
     isActive: true,
     sortOrder: 20,
+
+    funds: [
+      {
+        code: "TM-TV",
+        name: "Tiền mặt",
+        type: FundType.CASH,
+        isDefault: true,
+        isActive: true,
+      },
+    ],
   },
 ];

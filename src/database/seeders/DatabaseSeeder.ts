@@ -1,16 +1,18 @@
-import { EntityManager } from "typeorm";
+import { DeepPartial, EntityManager } from "typeorm";
 import DatabaseConfig from "@/config/database";
 import { AuthUtils } from "@/shared/utils/auth.utils";
 import { createPermissions } from "@/shared/middleware/permission.middleware";
 import { Attribute, AttributeType } from "../models/Attribute";
 import { Role } from "../models/Role";
 import { Store } from "../models/Store";
+import { Fund } from "../models/Fund";
 import { StoreUser } from "../models/store/StoreUser";
 import { User } from "../models/User";
 import { adminSeeder } from "./user";
 import { roleSeeders } from "./role";
 import { attributeSeeders } from "./attribute/seedData";
 import { storeSeeders } from "./store";
+import { ensureDefaultCashFund } from "@/module/fund/fund.service";
 
 async function upsertRoles(manager: EntityManager): Promise<Map<string, Role>> {
   const repository = manager.getRepository(Role);
@@ -31,14 +33,33 @@ async function upsertRoles(manager: EntityManager): Promise<Map<string, Role>> {
 
 async function upsertStores(manager: EntityManager): Promise<Store[]> {
   const repository = manager.getRepository(Store);
+  const fundRepository = manager.getRepository(Fund);
   const stores: Store[] = [];
   for (const seed of storeSeeders) {
+    const { funds, ...storeSeed } = seed as DeepPartial<Store> & {
+      funds?: DeepPartial<Fund>[];
+    };
     const existing = await repository.findOne({ where: { code: seed.code } });
-    stores.push(
-      await repository.save(
-        existing ? repository.merge(existing, seed) : repository.create(seed),
-      ),
-    );
+    const store = existing
+      ? repository.merge(existing, storeSeed)
+      : repository.create(storeSeed);
+    const savedStore = await repository.save(store);
+    stores.push(savedStore);
+
+    // Upsert các quỹ trong seed theo mã để chạy seeder nhiều lần không tạo trùng.
+    for (const fundSeed of funds || []) {
+      const existingFund = await fundRepository.findOne({
+        where: {
+          code: fundSeed.code,
+          storeId: savedStore.id,
+          deletedAt: null,
+        } as any,
+      });
+      const fund = existingFund
+        ? fundRepository.merge(existingFund, { ...fundSeed, storeId: savedStore.id })
+        : fundRepository.create({ ...fundSeed, storeId: savedStore.id });
+      await fundRepository.save(fund);
+    }
   }
   return stores;
 }
@@ -106,6 +127,9 @@ export class DatabaseSeeder {
       await DatabaseConfig.transaction(async (manager) => {
         const roles = await upsertRoles(manager);
         const stores = await upsertStores(manager);
+        await Promise.all(
+          stores.map((store) => ensureDefaultCashFund(store.id, store.code, manager)),
+        );
         const admin = await upsertAdmin(manager);
         await attachAdminToStores(manager, admin, stores);
         await seedAttributes(manager);

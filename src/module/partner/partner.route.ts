@@ -9,6 +9,7 @@ import {
   PartnerQuerySchema,
   PartnerParamsSchema,
 } from "./partner.validator";
+import { BaseDeleteManySchema } from "@/shared/base/BaseValidator";
 import { PARTNER_TYPES } from "./partner.types";
 import { permissionMiddleware } from "@/shared/middleware/permission.middleware";
 
@@ -56,6 +57,13 @@ export class PartnerRouter {
       zodValidate(UpdatePartnerSchema, "body"),
       permissionMiddleware((req) => req.partnerContext!.module, "update"),
       this.partnerController.update,
+    );
+
+    this.router.delete(
+      "/bulk",
+      zodValidate(BaseDeleteManySchema, "body"),
+      permissionMiddleware((req) => req.partnerContext!.module, "delete"),
+      this.partnerController.deleteMany,
     );
 
     // DELETE /:type/:id - Delete partner

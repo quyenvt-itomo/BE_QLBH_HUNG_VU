@@ -80,7 +80,12 @@ export const authorization = async (
 
     const snapshot = getUserSnapshot(user);
     req.userContext = snapshot
-      ? { userId: user.id, userSnapshot: snapshot, isAdmin }
+      ? {
+          userId: user.id,
+          userSnapshot: snapshot,
+          isAdmin,
+          isSystem: hasSystemScope,
+        }
       : null;
     req.permissions = isAdmin
       ? createPermissions()

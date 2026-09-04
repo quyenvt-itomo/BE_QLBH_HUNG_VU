@@ -5,6 +5,7 @@ import { RequestContext } from "@/shared/types/interfaces";
 import { Store } from "@/database/models/Store";
 import { STORE_TYPES } from "./store.types";
 import { StoreRepository } from "./store.repository";
+import { ensureDefaultCashFund } from "../fund/fund.service";
 
 /** Store is a global entity; store-scoped records use StoreEntity.storeId. */
 @injectable()
@@ -19,4 +20,8 @@ export class StoreService extends BaseService<Store> {
   }
 
   async validateBeforeCreate(_data: DeepPartial<Store>, _manager: EntityManager, _req?: RequestContext): Promise<void> {}
+
+  async actionAfterCreate(data: Store, manager: EntityManager): Promise<void> {
+    await ensureDefaultCashFund(data.id, data.code, manager);
+  }
 }

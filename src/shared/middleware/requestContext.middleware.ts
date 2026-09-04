@@ -38,8 +38,14 @@ export const injectRequestContext = (
         }
       }
 
-      // Ưu tiên storeId user STORE; nếu không có thì giữ storeId FE gửi (admin/system)
-      if (companyCtx) {
+      // User STORE luôn bị giới hạn ở cửa hàng đang chọn. Admin/system được
+      // phép gửi storeId = null để chuyển một quỹ ngân hàng về toàn hệ thống.
+      const preserveGlobalScope =
+        scope === "body" &&
+        Object.prototype.hasOwnProperty.call(next, "storeId") &&
+        next.storeId === null &&
+        (userCtx?.isAdmin || userCtx?.isSystem);
+      if (companyCtx && !preserveGlobalScope) {
         next.storeId = next.storeId || companyCtx.storeId;
       }
 

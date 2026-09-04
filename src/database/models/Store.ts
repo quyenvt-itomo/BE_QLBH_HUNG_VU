@@ -2,6 +2,7 @@ import { Entity, Column, OneToMany } from "typeorm";
 import { BaseEntity } from "@/shared/base/BaseEntity";
 import { Address } from "@/shared/base/BaseValidator";
 import { StoreUser } from "./store/StoreUser";
+import { Fund } from "./Fund";
 
 export interface StoreSnapshot {
   id: string;
@@ -29,6 +30,9 @@ export class Store extends BaseEntity {
 
   @Column({ type: "boolean", default: true })
   isActive: boolean;
+
+  @OneToMany(() => Fund, (fund) => fund.store, { cascade: true })
+  funds: Fund[];
 
   @OneToMany(() => StoreUser, (su) => su.store)
   storeUsers: StoreUser[];
