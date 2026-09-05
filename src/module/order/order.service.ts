@@ -156,7 +156,11 @@ export class OrderService extends BaseService<Order> {
         partnerSnapshot: data.partnerSnapshot || null,
         amount,
         description:
-          item.description || `Thanh toán cho đơn hàng ${data.code || ""}`.trim(),
+          item.description ||
+          (data.type === OrderType.PURCHASE
+            ? `Thanh toán phiếu nhập ${data.code || ""}`
+            : `Thanh toán cho đơn hàng ${data.code || ""}`
+          ).trim(),
       });
     }
 
