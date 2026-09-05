@@ -1,4 +1,4 @@
-import { OrderStatus, OrderType, ReturnOrderTypes } from "@/database/models";
+import { IncomeExpenseType, OrderStatus, OrderType, ReturnOrderTypes } from "@/database/models";
 import {
   BaseCreateSchema,
   BaseLineSchema,
@@ -6,6 +6,7 @@ import {
   BaseQuerySchema,
   BaseUpdateSchema,
   DateTransform,
+  zArrayable,
 } from "@/shared/base/BaseValidator";
 import { RateType } from "@/shared/constants/enum";
 import * as z from "zod";
@@ -26,7 +27,10 @@ export const CreateOrderSchema = BaseCreateSchema.extend({
 
   type: z.enum(OrderType),
   code: z.string().optional(),
+  invoiceNumber: z.string().trim().max(100).nullish(),
   orderAt: DateTransform.optional(),
+  occurredAt: DateTransform.nullish(),
+  completeImmediately: z.boolean().optional().default(false),
 
   partnerId: z.uuid().nullish(),
 
@@ -52,8 +56,12 @@ export const CreateOrderSchema = BaseCreateSchema.extend({
   incomeExpenses: z
     .array(
       z.object({
-        fundId: z.uuid().optional(),
+        type: z.enum(IncomeExpenseType).optional(),
+        fundId: z.uuid().nullish(),
         amount: z.number().min(0).optional(),
+        occurredAt: DateTransform.optional(),
+        partnerId: z.uuid().nullish(),
+        description: z.string().trim().nullish(),
       }),
     )
     .optional(),
@@ -92,6 +100,7 @@ export const CreateOrderSchema = BaseCreateSchema.extend({
 
 export const UpdateOrderSchema = BaseUpdateSchema.extend({
   code: z.string().optional(),
+  invoiceNumber: z.string().trim().max(100).nullish(),
   partnerId: z.uuid().optional(),
   type: z.enum(OrderType).optional(),
 
@@ -112,12 +121,26 @@ export const UpdateOrderSchema = BaseUpdateSchema.extend({
   shipperId: z.uuid().nullish(),
   shippingFee: z.number().min(0).nullish(),
   isFreeShipping: z.boolean().optional(),
+  incomeExpenses: z
+    .array(
+      z.object({
+        type: z.enum(IncomeExpenseType).optional(),
+        fundId: z.uuid().nullish(),
+        amount: z.number().min(0).optional(),
+        occurredAt: DateTransform.optional(),
+        partnerId: z.uuid().nullish(),
+        description: z.string().trim().nullish(),
+      }),
+    )
+    .optional(),
   lines: z.array(OrderLineSchema).optional(),
   returnLines: z.array(OrderLineSchema).optional(),
 });
 
 // Extend BaseQuerySchema with Order-specific filters
 export const OrderQuerySchema = BaseQuerySchema.extend({
+  statuses: zArrayable(z.enum(OrderStatus)),
+  completerIds: zArrayable(z.uuid()),
   grossAmountGte: z.coerce.number().min(0).optional(),
   grossAmountLte: z.coerce.number().min(0).optional(),
   grossAmountGt: z.coerce.number().min(0).optional(),

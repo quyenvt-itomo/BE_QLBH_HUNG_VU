@@ -64,7 +64,7 @@ export const ReadOnlyModules: Module[] = [
   "vatReport",
 ];
 export const ApprovalModules: Module[] = [];
-export const CompleteModules: Module[] = ["sale", "saleReturn"];
+export const CompleteModules: Module[] = ["sale", "saleReturn", "purchase", "purchaseReturn"];
 export const readPermissionFallbackMap: Partial<Record<Module, Module[]>> = {
   product: [
     "sale",

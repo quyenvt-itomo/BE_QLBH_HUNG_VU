@@ -8,6 +8,7 @@ export const OrderSelectList: FindOptionsSelect<Order> = {
   type: true,
   status: true,
   code: true,
+  invoiceNumber: true,
   orderAt: true,
   occurredAt: true,
   canceledAt: true,
@@ -84,6 +85,7 @@ export const OrderSelectFull: FindOptionsSelect<Order> = {
     product: {
       id: true,
       code: true,
+      barcode: true,
       name: true,
       baseUnitId: true,
       baseUnit: { id: true, name: true },
@@ -105,7 +107,7 @@ export const OrderSelectFull: FindOptionsSelect<Order> = {
     subTotal: true,
     totalCost: true,
     costPriceAtTime: true,
-    product: { id: true, code: true, name: true },
+    product: { id: true, code: true, barcode: true, name: true },
     unit: { id: true, name: true, type: true },
   },
   incomeExpenses: {

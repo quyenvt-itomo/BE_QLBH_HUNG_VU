@@ -9,6 +9,7 @@ import {
   ProductParamsSchema,
   ChangeProductGroupSchema,
   StopSellingProductsSchema,
+  ProductByCodesSchema,
 } from "./product.validator";
 import { BaseDeleteManySchema } from "@/shared/base/BaseValidator";
 import { PRODUCT_TYPES } from "./product.types";
@@ -27,6 +28,12 @@ export class ProductRouter {
   }
 
   private initializeRoutes(): void {
+    this.router.post(
+      "/by-codes",
+      zodValidate(ProductByCodesSchema, "body"),
+      permissionMiddleware("product", "read"),
+      this.controller.getByCodes,
+    );
     this.router.get(
       "/price-history",
       zodValidate(ProductQuerySchema, "query"),

@@ -70,6 +70,18 @@ export class ProductController extends BaseController<Product> {
     }
   };
 
+  getByCodes = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const data = await this.service.getByCodes(
+        req.body.codes,
+        this.service.getReqContext(req),
+      );
+      return res.json({ success: true, data, statusCode: 200, message: "OK" });
+    } catch (error) {
+      next(error);
+    }
+  };
+
   updateStoreCost = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const storeId = String(

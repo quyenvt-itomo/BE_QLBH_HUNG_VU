@@ -4,7 +4,16 @@ import { withTransaction } from "@/shared/base/TransactionManager";
 import { BaseService } from "@/shared/base/BaseService";
 import { RequestContext } from "@/shared/types/interfaces";
 import { generateCode } from "@/shared/utils/code.utils";
-import { Order, OrderLine, OrderStatus, OrderType, PartnerType, Product } from "@/database/models";
+import {
+  IncomeExpense,
+  IncomeExpenseType,
+  Order,
+  OrderLine,
+  OrderStatus,
+  OrderType,
+  PartnerType,
+  Product,
+} from "@/database/models";
 import { OrderRepository } from "./order.repository";
 import { ORDER_TYPES } from "./order.types";
 import { OrderLineRepository } from "./orderLine.repository";
@@ -19,6 +28,8 @@ import { AttributeRepository } from "../attribute/attribute.repository";
 import { RateType } from "@/shared/constants/enum";
 import { DEBT_TYPES } from "@/module/debt/debt.types";
 import { DebtRecalculateService } from "@/module/debt/debt.recalculate.service";
+import { FUND_TYPES } from "@/module/fund/fund.types";
+import { FundRepository } from "@/module/fund/fund.repository";
 
 const calculateRateAmount = (
   baseAmount: number,
@@ -46,7 +57,21 @@ export class OrderService extends BaseService<Order> {
     @inject(INVENTORY_TYPES.InventoryRecalculateService) private inventory: InventoryRecalculateService,
     @inject(DEBT_TYPES.DebtRecalculateService)
     private debtService: DebtRecalculateService,
+    @inject(FUND_TYPES.Repository)
+    private fundRepository: FundRepository,
   ) { super(); this.repository = repository; }
+
+  protected async attachActions(entity: Order & { _actions?: any }): Promise<void> {
+    const isDraft = entity.status === OrderStatus.DRAFT;
+    entity._actions = {
+      ...(this.getDefaultAction() as any),
+      update: { can: isDraft },
+      delete: { can: isDraft },
+      cancel: { can: isDraft },
+      complete: { can: isDraft },
+      export: { can: true },
+    };
+  }
 
   private isPurchaseOrderType(type?: OrderType): boolean {
     return type === OrderType.PURCHASE || type === OrderType.PURCHASE_RETURN;
@@ -92,6 +117,90 @@ export class OrderService extends BaseService<Order> {
       data.shipperSnapshot = await this.partnerRepository.getSnapshot(data.shipperId, manager);
     }
     return shippingFee;
+  }
+
+  private async prepareIncomeExpenses(
+    data: DeepPartial<Order>,
+    manager: EntityManager,
+  ): Promise<void> {
+    if (data.incomeExpenses === undefined) return;
+
+    const isIncome =
+      data.type === OrderType.SALE || data.type === OrderType.PURCHASE_RETURN;
+    const prepared: DeepPartial<IncomeExpense>[] = [];
+    const orderAmount = Math.max(
+      0,
+      Number(
+        isIncome && data.returnTotalAmount != null
+          ? data.returnTotalAmount
+          : data.totalAmount,
+      ) || 0,
+    );
+
+    for (const item of data.incomeExpenses || []) {
+      const amount = Math.min(orderAmount, Math.max(0, Number(item.amount || 0)));
+      if (amount <= 0) continue;
+      if (!item.fundId) throw new Error("order.payment.fund_required");
+
+      const fundSnapshot = await this.fundRepository.getSnapshot(item.fundId, manager);
+      if (!fundSnapshot) throw new Error("fund.not_found");
+
+      prepared.push({
+        storeId: data.storeId as string,
+        code: item.code || (await generateCode("incomeExpense", data.storeId)),
+        occurredAt: item.occurredAt || data.occurredAt || data.orderAt || new Date(),
+        type: isIncome ? IncomeExpenseType.INCOME : IncomeExpenseType.EXPENSE,
+        fundId: item.fundId,
+        fundSnapshot,
+        partnerId: item.partnerId || data.partnerId || null,
+        partnerSnapshot: data.partnerSnapshot || null,
+        amount,
+        description:
+          item.description || `Thanh toán cho đơn hàng ${data.code || ""}`.trim(),
+      });
+    }
+
+    data.incomeExpenses = prepared;
+  }
+
+  private async syncOrderIncomeExpenses(orderId: string, status: OrderStatus, manager: EntityManager): Promise<void> {
+    const incomeExpenseRepository = manager.getRepository(IncomeExpense);
+    const incomeExpenses = await incomeExpenseRepository.find({
+      where: { orderId, deletedAt: null } as any,
+    });
+
+    for (const incomeExpense of incomeExpenses) {
+      if (status === OrderStatus.COMPLETED) {
+        await this.debtService.syncForIncomeExpense(incomeExpense, manager);
+      } else {
+        await this.debtService.removeIncomeExpenseReferences(incomeExpense.id, manager);
+      }
+    }
+  }
+
+  private async replaceOrderIncomeExpenses(
+    orderId: string,
+    incomeExpenses: DeepPartial<IncomeExpense>[] | undefined,
+    manager: EntityManager,
+  ): Promise<void> {
+    const repository = manager.getRepository(IncomeExpense);
+    const existing = await repository.find({ where: { orderId, deletedAt: null } as any });
+    for (const item of existing) {
+      await this.debtService.removeIncomeExpenseReferences(item.id, manager);
+    }
+
+    await repository.softDelete({ orderId } as any);
+    if (!incomeExpenses?.length) return;
+
+    await repository.save(
+      repository.create(
+        incomeExpenses.map((item) => ({
+          ...item,
+          id: undefined,
+          orderId,
+        })) as DeepPartial<IncomeExpense>[],
+      ),
+    );
   }
 
   private async attachInfo(data: DeepPartial<Order>, manager: EntityManager): Promise<void> {
@@ -180,16 +289,46 @@ export class OrderService extends BaseService<Order> {
     data.storeId = data.storeId || req?.storeContext?.storeId;
     if (!data.storeId) throw new Error("store.required");
     data.code = data.code || await generateCode(String(data.type || "sale"), data.storeId);
-    data.status = data.status || OrderStatus.DRAFT;
+    const completeImmediately = (data as any).completeImmediately === true;
+    data.status = completeImmediately ? OrderStatus.COMPLETED : OrderStatus.DRAFT;
+    if (completeImmediately) {
+      data.occurredAt = data.occurredAt || new Date();
+      data.completerId = data.completerId || req?.userContext?.userId || null;
+      data.completerSnapshot = data.completerSnapshot || req?.userContext?.userSnapshot || null;
+    } else {
+      data.occurredAt = null;
+      data.completerId = null;
+      data.completerSnapshot = null;
+    }
+    delete (data as any).completeImmediately;
     await this.attachInfo(data, manager);
+    await this.prepareIncomeExpenses(data, manager);
   }
 
   async validateBeforeUpdate(id: string, data: DeepPartial<Order>, manager: EntityManager, req?: RequestContext): Promise<void> {
     const current = await this.repository.findById(id, manager);
     if (!current) throw new Error("order.not_found");
     if (req?.storeContext?.storeId && current.storeId !== req.storeContext.storeId) throw new Error("store.scope.mismatch");
+    const targetStatus = (data.status || current.status) as OrderStatus;
+    if (targetStatus === OrderStatus.COMPLETED && current.status === OrderStatus.CANCELED) {
+      throw new Error("order.canceled_locked");
+    }
+    if (targetStatus === OrderStatus.CANCELED && current.status === OrderStatus.COMPLETED) {
+      throw new Error("order.completed_locked");
+    }
+    if (targetStatus === OrderStatus.COMPLETED && current.status !== OrderStatus.COMPLETED) {
+      data.occurredAt = data.occurredAt || new Date();
+      data.completerId = data.completerId || req?.userContext?.userId || current.completerId || null;
+      data.completerSnapshot = data.completerSnapshot || req?.userContext?.userSnapshot || current.completerSnapshot || null;
+    }
+    if (targetStatus === OrderStatus.CANCELED && current.status !== OrderStatus.CANCELED) {
+      data.canceledAt = data.canceledAt || new Date();
+      data.cancelerId = data.cancelerId || req?.userContext?.userId || null;
+      data.cancelerSnapshot = data.cancelerSnapshot || req?.userContext?.userSnapshot || null;
+    }
     const merged = { ...current, ...data } as DeepPartial<Order>;
     await this.attachInfo(merged, manager);
+    await this.prepareIncomeExpenses(merged, manager);
     Object.assign(data, {
       type: current.type,
       storeId: current.storeId,
@@ -214,6 +353,7 @@ export class OrderService extends BaseService<Order> {
       returnTotalCost: merged.returnTotalCost,
       settlementAmount: merged.settlementAmount,
     });
+    if (data.incomeExpenses !== undefined) data.incomeExpenses = merged.incomeExpenses;
   }
 
   private async recalculate(data: Order, manager: EntityManager): Promise<void> {
@@ -224,15 +364,18 @@ export class OrderService extends BaseService<Order> {
 
   async actionAfterCreate(data: Order, manager: EntityManager): Promise<void> {
     await this.debtService.syncForOrder(data, manager);
+    await this.syncOrderIncomeExpenses(data.id, data.status, manager);
     await this.recalculate(data, manager);
   }
   async actionAfterUpdate(data: Order, manager: EntityManager): Promise<void> {
     await this.debtService.syncForOrder(data, manager);
+    await this.syncOrderIncomeExpenses(data.id, data.status, manager);
     await this.recalculate(data, manager);
   }
 
   async actionAfterDelete(data: Order, manager: EntityManager): Promise<void> {
     await this.debtService.removeForOrder(data, manager);
+    await this.syncOrderIncomeExpenses(data.id, OrderStatus.CANCELED, manager);
   }
 
   async update(id: string, data: DeepPartial<Order>, manager?: EntityManager, req?: RequestContext): Promise<Order | null> {
@@ -243,8 +386,11 @@ export class OrderService extends BaseService<Order> {
       const current = await this.repository.findById(id, em);
       if (!current) throw new Error("order.not_found");
       if (current.status === OrderStatus.COMPLETED && hasLines) throw new Error("order.completed_locked");
+      const hasIncomeExpenses = payload.incomeExpenses !== undefined;
       const preparedLines = hasLines ? { lines: (payload.lines || []).map((line: any) => ({ ...line, id: undefined, orderId: id, returnOrderId: null })), returnLines: (payload.returnLines || []).map((line: any) => ({ ...line, id: undefined, orderId: null, returnOrderId: id })) } : undefined;
       delete payload.lines; delete payload.returnLines;
+      const incomeExpenses = hasIncomeExpenses ? payload.incomeExpenses : undefined;
+      delete payload.incomeExpenses;
       const updated = await this.repository.update(id, payload, em);
       if (!updated) return null;
       const lineRepository = this.orderLineRepository.getRepository(em);
@@ -253,6 +399,7 @@ export class OrderService extends BaseService<Order> {
         if (preparedLines.lines.length) await lineRepository.save(lineRepository.create(preparedLines.lines as any));
         if (preparedLines.returnLines.length) await lineRepository.save(lineRepository.create(preparedLines.returnLines as any));
       }
+      if (hasIncomeExpenses) await this.replaceOrderIncomeExpenses(id, incomeExpenses, em);
       const result = await this.repository.findById(id, em);
       if (result) await this.actionAfterUpdate(result, em);
       return result;

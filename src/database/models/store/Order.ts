@@ -49,6 +49,8 @@ export class Order extends StoreEntity {
 
   @Column({ type: "varchar", length: 50 })
   code: string;
+  @Column({ type: "varchar", length: 100, nullable: true, default: null })
+  invoiceNumber: string | null; // số hóa đơn đầu vào
   @Column({ type: "timestamptz", default: () => "CURRENT_TIMESTAMP" })
   orderAt: Date; // ngày thực hiện đơn hàng
   @Column({ type: "timestamptz", nullable: true, default: null })

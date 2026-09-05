@@ -41,6 +41,26 @@ export class ProductService extends BaseService<Product> {
     super();
     this.repository = repository;
   }
+
+  async getByCodes(codes: string[], req?: RequestContext): Promise<Product[]> {
+    const normalizedCodes = Array.from(
+      new Set(codes.map((code) => code.trim()).filter(Boolean)),
+    );
+    if (!normalizedCodes.length) return [];
+
+    const products = await this.repository.find({
+      where: { code: In(normalizedCodes), deletedAt: IsNull() } as any,
+      relations: {
+        group: true,
+        brand: true,
+        baseUnit: true,
+        extraUnits: { unit: true },
+      },
+    });
+    await this.hydrateEntities(products, req);
+    return products;
+  }
+
   async validateBeforeCreate(
     data: DeepPartial<Product> & CreateProductDto,
     _manager: EntityManager,

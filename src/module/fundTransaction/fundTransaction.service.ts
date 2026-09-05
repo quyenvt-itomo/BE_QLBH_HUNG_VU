@@ -4,6 +4,7 @@ import { FundTransaction, FundTransactionRefType } from "@/database/models/FundT
 import { FundAdjustment } from "@/database/models/FundAdjustment";
 import { FundTransfer } from "@/database/models/FundTransfer";
 import { IncomeExpense, IncomeExpenseType } from "@/database/models/store/IncomeExpense";
+import { OrderStatus } from "@/database/models/store/Order";
 import { Fund } from "@/database/models/Fund";
 import DatabaseConfig from "@/config/database";
 import { BaseService } from "@/shared/base/BaseService";
@@ -85,8 +86,13 @@ export class FundTransactionService extends BaseService<FundTransaction> {
       const incomeExpenses = await mainManager
         .getRepository(IncomeExpense)
         .createQueryBuilder("incomeExpense")
+        .leftJoin("orders", "order", "order.id = incomeExpense.orderId")
         .where("incomeExpense.fundId IN (:...fundIds)", { fundIds })
         .andWhere("incomeExpense.occurredAt <= :offsetAt", { offsetAt })
+        .andWhere(
+          "(incomeExpense.orderId IS NULL OR order.status = :completedStatus)",
+          { completedStatus: OrderStatus.COMPLETED },
+        )
         .andWhere("incomeExpense.deletedAt IS NULL")
         .getMany();
 

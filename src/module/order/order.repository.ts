@@ -33,8 +33,17 @@ export class OrderRepository extends BaseRepository<Order> {
       shipperIds,
       productIds,
       fundIds,
+      statuses,
+      completerIds,
     } = (options.moreQuery as OrderQueryDto) || {};
     const partnerId = (options.moreQuery as any)?.partnerId as string | undefined;
+
+    if (this.checkArrayFilter(statuses)) {
+      qb.andWhere(`${alias}.status IN (:...statuses)`, { statuses });
+    }
+    if (this.checkArrayFilter(completerIds)) {
+      qb.andWhere(`${alias}.completerId IN (:...completerIds)`, { completerIds });
+    }
 
     if (partnerId) {
       qb.andWhere(`${alias}.partnerId = :partnerId`, {

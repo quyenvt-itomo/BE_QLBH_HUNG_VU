@@ -62,6 +62,9 @@ export const ProductQuerySchema = BaseQuerySchema.extend({
   brandId: z.uuid().optional(),
   locationId: z.uuid().optional(),
 });
+export const ProductByCodesSchema = z.object({
+  codes: z.array(z.string().trim().min(1)).min(1).max(500),
+});
 export const ProductParamsSchema = BaseParamsSchema;
 export const ChangeProductGroupSchema = BaseDeleteManySchema.extend({
   groupId: z.uuid().nullable().optional(),
@@ -74,6 +77,7 @@ export const StopSellingProductsSchema = BaseDeleteManySchema.extend({
 export type CreateProductDto = z.infer<typeof CreateProductSchema>;
 export type UpdateProductDto = z.infer<typeof UpdateProductSchema>;
 export type ProductQueryDto = z.infer<typeof ProductQuerySchema>;
+export type ProductByCodesDto = z.infer<typeof ProductByCodesSchema>;
 export type ProductParamsDto = z.infer<typeof ProductParamsSchema>;
 export type ChangeProductGroupDto = z.infer<typeof ChangeProductGroupSchema>;
 export type StopSellingProductsDto = z.infer<typeof StopSellingProductsSchema>;
