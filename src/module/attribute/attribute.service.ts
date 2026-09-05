@@ -1,5 +1,5 @@
 import { injectable, inject } from "inversify";
-import { DeepPartial, EntityManager, ILike } from "typeorm";
+import { DeepPartial, EntityManager } from "typeorm";
 import {
   ActionMap,
   ActionValue,
@@ -318,16 +318,9 @@ export class AttributeService extends BaseService<Attribute> {
     type: AttributeType,
     req?: RequestContext,
   ): Promise<{ id: string; name: string }> {
-    const storeId = isStoreScopedAttributeType(type)
-      ? req?.storeContext?.storeId
-      : null;
-    let attr = await this.repository.findOne({
-      where: { name: ILike(name), type, storeId } as any,
-    });
-
-    if (!attr) {
-      attr = await this.create({ name, type, note: null }, undefined, req);
-    }
-    return { id: attr.id, name: attr.name };
+    const id = await this.repository.findOrCreateAttribute({ name, type }, req);
+    const attribute = await this.repository.findById(id);
+    if (!attribute) throw new Error("attribute.not_found");
+    return { id: attribute.id, name: attribute.name };
   }
 }

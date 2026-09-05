@@ -1,11 +1,10 @@
 import { inject, injectable } from "inversify";
 import ExcelJS from "exceljs";
-import { DeepPartial, ILike, IsNull } from "typeorm";
+import { DeepPartial } from "typeorm";
 import { Product, WeightUnit } from "@/database/models/Product";
-import { Attribute, AttributeType } from "@/database/models/Attribute";
+import { AttributeType } from "@/database/models/Attribute";
 import { ProductService } from "@/module/product/product.service";
 import { PRODUCT_TYPES } from "@/module/product/product.types";
-import { AttributeService } from "@/module/attribute/attribute.service";
 import { AttributeRepository } from "@/module/attribute/attribute.repository";
 import { ATTRIBUTE_TYPES } from "@/module/attribute/attribute.types";
 import { StoreRepository } from "@/module/store/store.repository";
@@ -32,8 +31,6 @@ export class ProductExcelProcessor {
   constructor(
     @inject(PRODUCT_TYPES.ProductService)
     private productService: ProductService,
-    @inject(ATTRIBUTE_TYPES.AttributeService)
-    private attributeService: AttributeService,
     @inject(ATTRIBUTE_TYPES.AttributeRepository)
     private attributeRepository: AttributeRepository,
     @inject(STORE_TYPES.StoreRepository)
@@ -192,13 +189,12 @@ export class ProductExcelProcessor {
                 'Hàng hóa "' + row.code + '": giá bán đơn vị phụ không hợp lệ',
               );
             }
-            const unit = await this.attributeService.findOrCreate(
-              extra.unitName,
-              AttributeType.UNIT,
+            const unitId = await this.attributeRepository.findOrCreateAttribute(
+              { name: extra.unitName, type: AttributeType.UNIT },
               req,
             );
             (data as any).extraUnits.push({
-              unitId: unit.id,
+              unitId,
               conversionRate: extra.conversionRate,
               salePrice: extra.salePrice,
               isPurchaseUnit: extra.isPurchaseUnit,
@@ -305,8 +301,7 @@ export class ProductExcelProcessor {
     if (type === AttributeType.PRODUCT_GROUP) {
       return this.findProductGroupByPath(name, req);
     }
-    const attribute = await this.attributeService.findOrCreate(name, type, req);
-    return attribute.id;
+    return this.attributeRepository.findOrCreateAttribute({ name, type }, req);
   }
 
   private async findProductGroupByPath(
@@ -321,26 +316,14 @@ export class ProductExcelProcessor {
 
     let parentId: string | null = null;
     for (const partName of parts) {
-      const group = await this.attributeRepository.findOne({
-        where: {
-          name: ILike(partName),
+      parentId = await this.attributeRepository.findOrCreateAttribute(
+        {
+          name: partName,
           type: AttributeType.PRODUCT_GROUP,
-          parentId: parentId || IsNull(),
-        } as any,
-      });
-      const resolved: Attribute | null =
-        group ||
-        (await this.attributeService.create(
-          {
-            name: partName,
-            type: AttributeType.PRODUCT_GROUP,
-            parentId,
-          } as any,
-          undefined,
-          req,
-        ));
-      if (!resolved) return null;
-      parentId = resolved.id;
+          parentId,
+        },
+        req,
+      );
     }
     return parentId;
   }

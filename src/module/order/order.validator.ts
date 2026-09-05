@@ -60,6 +60,7 @@ export const CreateOrderSchema = BaseCreateSchema.extend({
         fundId: z.uuid().nullish(),
         amount: z.number().min(0).optional(),
         occurredAt: DateTransform.optional(),
+        categoryId: z.uuid().nullish(),
         partnerId: z.uuid().nullish(),
         description: z.string().trim().nullish(),
       }),
@@ -101,7 +102,7 @@ export const CreateOrderSchema = BaseCreateSchema.extend({
 export const UpdateOrderSchema = BaseUpdateSchema.extend({
   code: z.string().optional(),
   invoiceNumber: z.string().trim().max(100).nullish(),
-  partnerId: z.uuid().optional(),
+  partnerId: z.uuid().nullish(),
   type: z.enum(OrderType).optional(),
 
   orderAt: DateTransform.optional(),
@@ -128,6 +129,7 @@ export const UpdateOrderSchema = BaseUpdateSchema.extend({
         fundId: z.uuid().nullish(),
         amount: z.number().min(0).optional(),
         occurredAt: DateTransform.optional(),
+        categoryId: z.uuid().nullish(),
         partnerId: z.uuid().nullish(),
         description: z.string().trim().nullish(),
       }),

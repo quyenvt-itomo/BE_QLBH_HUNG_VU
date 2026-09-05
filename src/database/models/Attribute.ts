@@ -33,24 +33,18 @@ export const STORE_SCOPED_ATTRIBUTE_TYPES: readonly AttributeType[] = [
 
 export const isStoreScopedAttributeType = (
   type?: AttributeType | null,
-): boolean =>
-  type ? STORE_SCOPED_ATTRIBUTE_TYPES.includes(type) : false;
+): boolean => (type ? STORE_SCOPED_ATTRIBUTE_TYPES.includes(type) : false);
 
-export const DEFAULT_WEIGHT_UNIT = "Kg";
-export const DEFAULT_MESH_UNIT = "Tấm";
-export const DEFAULT_AREA_UNIT = "m²";
+/** Names of system income/expense categories used by transaction modules. */
+export const ATTRIBUTE_NAMES = {
+  INCOME_CUSTOMER: "Thu tiền khách hàng",
+  INCOME_SUPPLIER: "NCC hoàn tiền",
+  EXPENSE_SUPPLIER: "Trả tiền NCC",
+  EXPENSE_CUSTOMER: "Hoàn tiền khách hàng",
+  EXPENSE_VAT: "Nộp thuế VAT",
+} as const;
 
-export const INCOME_CUSTOMER = "Thu công nợ khách hàng";
-export const INCOME_DEPOSIT = "Thu lãi khoản gửi";
-export const INCOME_WITHDRAW = "Rút tiền khoản gửi";
-export const INCOME_CAPITAL_CONTRIBUTION = "Góp vốn";
-
-export const EXPENSE_PAYMENT_REQUEST = "Thanh toán theo đề nghị";
-export const EXPENSE_LOAN = "Thanh toán dư nợ khoản vay";
-export const EXPENSE_INTEREST = "Thanh toán lãi vay";
-export const EXPENSE_VAT = "Nộp thuế VAT";
-export const EXPENSE_CAPITAL_WITHDRAWAL = "Rút vốn";
-export const EXPENSE_PROFIT_DISTRIBUTION = "Phân phối lợi nhuận";
+export type AttributeName = (typeof ATTRIBUTE_NAMES)[keyof typeof ATTRIBUTE_NAMES];
 
 export interface AttributeSnapshot {
   id: string;

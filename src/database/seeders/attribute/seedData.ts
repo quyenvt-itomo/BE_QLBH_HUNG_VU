@@ -1,5 +1,9 @@
 import { DeepPartial } from "typeorm";
-import { Attribute, AttributeType } from "@/database/models/Attribute";
+import {
+  ATTRIBUTE_NAMES,
+  Attribute,
+  AttributeType,
+} from "@/database/models/Attribute";
 
 type AttributeSeed = Pick<Attribute, "name" | "type"> & { isDefault?: boolean };
 
@@ -17,8 +21,23 @@ const productGroups = [
 const customerGroups = ["Khách lẻ", "Gara sửa chữa", "Doanh nghiệp vận tải"];
 const supplierGroups = ["Nhà cung cấp phụ tùng chính hãng", "Nhà cung cấp phụ tùng thay thế", "Nhà cung cấp dầu nhớt và vật tư"];
 const shipperGroups = ["Đơn vị vận chuyển", "Nhân viên giao hàng"];
-const incomeCategories = ["Bán phụ tùng", "Thu công nợ khách hàng", "Thu khác"];
-const expenseCategories = ["Nhập phụ tùng", "Chi phí vận chuyển", "Chi phí cửa hàng", "Chi phí sửa chữa và bảo trì", "Chi khác"];
+const incomeCategories = [
+  "Bán phụ tùng",
+  "Thu công nợ khách hàng",
+  "Thu khác",
+  ATTRIBUTE_NAMES.INCOME_CUSTOMER,
+  ATTRIBUTE_NAMES.INCOME_SUPPLIER,
+];
+const expenseCategories = [
+  "Nhập phụ tùng",
+  "Chi phí vận chuyển",
+  "Chi phí cửa hàng",
+  "Chi phí sửa chữa và bảo trì",
+  "Chi khác",
+  ATTRIBUTE_NAMES.EXPENSE_SUPPLIER,
+  ATTRIBUTE_NAMES.EXPENSE_CUSTOMER,
+  ATTRIBUTE_NAMES.EXPENSE_VAT,
+];
 
 const map = (names: string[], type: AttributeType, isDefault = false): AttributeSeed[] =>
   names.map((name) => ({ name, type, ...(isDefault ? { isDefault: true } : {}) }));

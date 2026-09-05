@@ -14,7 +14,7 @@ import { PartnerRepository } from "@/module/partner/partner.repository";
 import { PartnerContactRepository } from "@/module/partnerContact/partnerContact.repository";
 import { PARTNER_CONTACT_TYPES } from "@/module/partnerContact/partnerContact.types";
 import { PartnerContactImportRowSchema } from "@/module/partnerContact/partnerContact.validator";
-import { AttributeService } from "@/module/attribute/attribute.service";
+import { AttributeRepository } from "@/module/attribute/attribute.repository";
 import { ATTRIBUTE_TYPES } from "@/module/attribute/attribute.types";
 import { DebtAdjustmentService } from "@/module/debtAdjustment/debtAdjustment.service";
 import { DEBT_ADJUSTMENT_TYPES } from "@/module/debtAdjustment/debtAdjustment.types";
@@ -54,8 +54,8 @@ export class PartnerExcelProcessor {
     private partnerRepository: PartnerRepository,
     @inject(PARTNER_CONTACT_TYPES.PartnerContactRepository)
     private partnerContactRepository: PartnerContactRepository,
-    @inject(ATTRIBUTE_TYPES.AttributeService)
-    private attributeService: AttributeService,
+    @inject(ATTRIBUTE_TYPES.AttributeRepository)
+    private attributeRepository: AttributeRepository,
     @inject(DEBT_ADJUSTMENT_TYPES.Service)
     private debtAdjustmentService: DebtAdjustmentService,
     @inject(DEBT_ADJUSTMENT_TYPES.Repository)
@@ -205,7 +205,10 @@ export class PartnerExcelProcessor {
       : type === PartnerType.SHIPPER
         ? AttributeType.SHIPPER_GROUP
         : AttributeType.CUSTOMER_GROUP;
-    return (await this.attributeService.findOrCreate(name, groupType, req)).id;
+    return this.attributeRepository.findOrCreateAttribute(
+      { name, type: groupType },
+      req,
+    );
   }
 
   private async adjustDebtIfProvided(

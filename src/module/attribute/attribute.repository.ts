@@ -1,6 +1,7 @@
 import {
   DeepPartial,
   EntityManager,
+  ILike,
   IsNull,
   SelectQueryBuilder,
 } from "typeorm";
@@ -21,6 +22,16 @@ import {
   AttributeSelectList,
 } from "./attribute.select";
 import { AttributeQueryDto } from "./attribute.validator";
+import { RequestContext } from "@/shared/types/interfaces";
+
+export interface FindOrCreateAttributeData {
+  name: string;
+  type: AttributeType;
+  storeId?: string | null;
+  parentId?: string | null;
+  note?: string | null;
+  isDefault?: boolean;
+}
 
 export class AttributeRepository extends BaseRepository<Attribute> {
   protected entityClass = Attribute;
@@ -29,6 +40,58 @@ export class AttributeRepository extends BaseRepository<Attribute> {
   protected relations = AttributeRelations;
   protected relationsForList = AttributeRelationsList;
   protected enableFileAttachment: boolean = false;
+
+  /**
+   * Find an attribute in its scope or create it when it does not exist.
+   * This belongs to the repository because importers and transaction modules
+   * need the same lookup/create behavior, including when they run in a
+   * transaction manager.
+   */
+  async findOrCreateAttribute(
+    data: FindOrCreateAttributeData,
+    req?: RequestContext,
+    manager?: EntityManager,
+  ): Promise<string> {
+    const name = data.name?.trim();
+    if (!name) throw new Error("Tên thuộc tính không được để trống");
+
+    const storeId = isStoreScopedAttributeType(data.type)
+      ? data.storeId !== undefined
+        ? data.storeId
+        : req?.storeContext?.storeId || null
+      : null;
+
+    if (isStoreScopedAttributeType(data.type) && !storeId) {
+      throw new Error("store.required");
+    }
+
+    const repository = this.getRepository(manager);
+    const attribute = await repository.findOne({
+      where: {
+        name: ILike(name),
+        type: data.type,
+        storeId: storeId ?? IsNull(),
+        parentId: data.parentId ?? IsNull(),
+      } as any,
+    });
+
+    if (attribute) return attribute.id;
+
+    const userContext = req?.userContext;
+    const created = repository.create({
+      name,
+      type: data.type,
+      storeId,
+      parentId: data.parentId ?? null,
+      note: data.note ?? null,
+      isDefault: data.isDefault ?? false,
+      creatorId: userContext?.userId || null,
+      creatorSnapshot: userContext?.userSnapshot || null,
+    } as DeepPartial<Attribute>);
+
+    const saved = await repository.save(created);
+    return saved.id;
+  }
 
   protected async extendQueryBuilder(
     qb: SelectQueryBuilder<Attribute>,

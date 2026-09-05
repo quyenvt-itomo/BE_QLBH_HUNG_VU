@@ -14,7 +14,11 @@ import { generateCode } from "@/shared/utils/code.utils";
 import { InventoryRecalculateService } from "../inventory/inventoryRecalculate.service";
 import { INVENTORY_TYPES } from "../inventory/inventory.types";
 import { withTransaction } from "@/shared/base/TransactionManager";
-import { BadRequestError, NotFoundError, ValidationError } from "@/shared/types/errors";
+import {
+  BadRequestError,
+  NotFoundError,
+  ValidationError,
+} from "@/shared/types/errors";
 import { AttributeRepository } from "../attribute/attribute.repository";
 import { ATTRIBUTE_TYPES } from "../attribute/attribute.types";
 import { STORE_PRODUCT_TYPES } from "../storeProduct/storeProduct.types";
@@ -42,23 +46,26 @@ export class ProductService extends BaseService<Product> {
     this.repository = repository;
   }
 
-  async getByCodes(codes: string[], req?: RequestContext): Promise<Product[]> {
-    const normalizedCodes = Array.from(
-      new Set(codes.map((code) => code.trim()).filter(Boolean)),
-    );
-    if (!normalizedCodes.length) return [];
+  protected async attachMoreDataToEntities(
+    entities: Product[],
+    req?: RequestContext,
+  ): Promise<void> {
+    for (const entity of entities) {
+      await this.attachMoreDataToEntity(entity, req);
+    }
+  }
 
-    const products = await this.repository.find({
-      where: { code: In(normalizedCodes), deletedAt: IsNull() } as any,
-      relations: {
-        group: true,
-        brand: true,
-        baseUnit: true,
-        extraUnits: { unit: true },
-      },
-    });
-    await this.hydrateEntities(products, req);
-    return products;
+  protected async attachMoreDataToEntity(
+    entity: Product,
+    req?: RequestContext,
+  ): Promise<void> {
+    const storeId = req?.storeContext?.storeId;
+    const { stockQuantity, stockValue } = await this.repository.calculateStock(
+      entity,
+      storeId,
+    );
+    entity.stockQuantity = stockQuantity;
+    entity.stockValue = stockValue;
   }
 
   async validateBeforeCreate(
@@ -137,11 +144,18 @@ export class ProductService extends BaseService<Product> {
       );
     }
     if (Array.isArray((inputData as any)?.extraUnits)) {
-      await this.syncExtraUnits(data.id, (inputData as any).extraUnits, manager);
+      await this.syncExtraUnits(
+        data.id,
+        (inputData as any).extraUnits,
+        manager,
+      );
     }
   }
 
-  private async validateExtraUnits(rows: any, _manager: EntityManager): Promise<void> {
+  private async validateExtraUnits(
+    rows: any,
+    _manager: EntityManager,
+  ): Promise<void> {
     if (!Array.isArray(rows)) return;
 
     const unitIds = rows.map((row) => row?.unitId).filter(Boolean);
@@ -219,7 +233,9 @@ export class ProductService extends BaseService<Product> {
     const incomingIds = new Set(storeIds);
 
     for (const [rowIndex, row] of editableRows.entries()) {
-      const current = editableExisting.find((item) => item.storeId === row.storeId);
+      const current = editableExisting.find(
+        (item) => item.storeId === row.storeId,
+      );
       const locationIds = Array.from(
         new Set<string>(
           (Array.isArray(row.locationIds)
@@ -275,13 +291,18 @@ export class ProductService extends BaseService<Product> {
   ): Promise<void> {
     if (!locationIds.length) return;
 
-    const locations = await this.attributeRepository.getRepository(manager).find({
-      where: { id: In(locationIds) } as any,
-    });
-    const valid = locations.length === locationIds.length && locations.every(
-      (location) =>
-        location.type === AttributeType.LOCATION && location.storeId === storeId,
-    );
+    const locations = await this.attributeRepository
+      .getRepository(manager)
+      .find({
+        where: { id: In(locationIds) } as any,
+      });
+    const valid =
+      locations.length === locationIds.length &&
+      locations.every(
+        (location) =>
+          location.type === AttributeType.LOCATION &&
+          location.storeId === storeId,
+      );
     if (!valid) {
       throw new ValidationError("input.invalid", [
         {
@@ -323,10 +344,12 @@ export class ProductService extends BaseService<Product> {
         throw new NotFoundError("Không tìm thấy một hoặc nhiều hàng hóa");
       }
 
-      const result = await this.repository.getRepository(em).update(
-        { id: In(uniqueIds), deletedAt: IsNull() } as any,
-        { groupId: groupId || null } as any,
-      );
+      const result = await this.repository
+        .getRepository(em)
+        .update(
+          { id: In(uniqueIds), deletedAt: IsNull() } as any,
+          { groupId: groupId || null } as any,
+        );
       return result.affected || 0;
     };
 
@@ -456,6 +479,25 @@ export class ProductService extends BaseService<Product> {
       ]);
     for (const product of products)
       product.priceHistories = map.get(product.id) || [];
+    return products;
+  }
+
+  async getByCodes(codes: string[], req?: RequestContext): Promise<Product[]> {
+    const normalizedCodes = Array.from(
+      new Set(codes.map((code) => code.trim()).filter(Boolean)),
+    );
+    if (!normalizedCodes.length) return [];
+
+    const products = await this.repository.find({
+      where: { code: In(normalizedCodes), deletedAt: IsNull() } as any,
+      relations: {
+        group: true,
+        brand: true,
+        baseUnit: true,
+        extraUnits: { unit: true },
+      },
+    });
+    await this.hydrateEntities(products, req);
     return products;
   }
 }

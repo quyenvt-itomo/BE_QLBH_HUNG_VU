@@ -1,6 +1,8 @@
 import {
   Attribute,
   AttributeType,
+  ATTRIBUTE_NAMES,
+  AttributeName,
   STORE_SCOPED_ATTRIBUTE_TYPES,
   isStoreScopedAttributeType,
 } from "./Attribute";
@@ -82,6 +84,8 @@ export const entities = [
 export {
   Attribute,
   AttributeType,
+  ATTRIBUTE_NAMES,
+  AttributeName,
   STORE_SCOPED_ATTRIBUTE_TYPES,
   isStoreScopedAttributeType,
   DebtAdjustment,
