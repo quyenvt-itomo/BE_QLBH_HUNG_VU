@@ -171,5 +171,9 @@ export class Order extends StoreEntity {
 
   // TODO: Các trường khác (nếu có) sẽ được lưu trong metadata
   paidAmount?: number; // số tiền đã thanh toán (nếu có)
+  customerPaidAmount?: number; // tổng phiếu thu của đơn hàng
+  refundedAmount?: number; // tổng phiếu chi của đơn hàng
+  amountToRefund?: number; // số tiền cần trả khách
+  amountToCollect?: number; // số tiền cần thu thêm
   actualShippingFee?: number; // phí vận chuyển thực tế (nếu có)
 }

@@ -28,7 +28,7 @@ import { FileRouter } from "@/module/file/file.route";
 import { STORE_TYPES } from "@/module/store/store.types";
 import { StoreRouter } from "@/module/store/store.route";
 import { INVENTORY_TYPES } from "@/module/inventory/inventory.types";
-import { InventoryController } from "@/module/inventory/inventory.controller";
+import { InventoryRouter } from "@/module/inventory/inventory.route";
 import { INVENTORY_ADJUSTMENT_TYPES } from "@/module/inventoryAdjustment/inventoryAdjustment.types";
 import { InventoryAdjustmentRouter } from "@/module/inventoryAdjustment/inventoryAdjustment.route";
 import { INVENTORY_TRANSACTION_TYPES } from "@/module/inventoryTransaction/inventoryTransaction.types";
@@ -107,21 +107,9 @@ router.use(
 const partnerRouter = container
   .get<PartnerRouter>(PARTNER_TYPES.PartnerRouter)
   .getRouter();
-router.use(
-  "/customer",
-  partnerContextMiddleware("customer"),
-  partnerRouter,
-);
-router.use(
-  "/supplier",
-  partnerContextMiddleware("supplier"),
-  partnerRouter,
-);
-router.use(
-  "/shipper",
-  partnerContextMiddleware("shipper"),
-  partnerRouter,
-);
+router.use("/customer", partnerContextMiddleware("customer"), partnerRouter);
+router.use("/supplier", partnerContextMiddleware("supplier"), partnerRouter);
+router.use("/shipper", partnerContextMiddleware("shipper"), partnerRouter);
 router.use(
   "/partner-contact",
   container
@@ -216,9 +204,7 @@ router.use(
   "/debt-adjustment",
   container.get<DebtAdjustmentRouter>(DEBT_ADJUSTMENT_TYPES.Router).getRouter(),
 );
-const debtRouter = container
-  .get<DebtRouter>(DEBT_TYPES.DebtRouter)
-  .getRouter();
+const debtRouter = container.get<DebtRouter>(DEBT_TYPES.DebtRouter).getRouter();
 router.use("/debt", debtRouter);
 router.use("/partner-debt", debtRouter);
 router.use(
@@ -236,17 +222,9 @@ router.use(
   container.get<VatTransactionRouter>(VAT_TRANSACTION_TYPES.Router).getRouter(),
 );
 
-const inventoryController = container.get<InventoryController>(
-  INVENTORY_TYPES.InventoryController,
-);
-router.get("/inventory", asyncHandler(inventoryController.getStockReport));
-router.get(
-  "/inventory/report",
-  asyncHandler(inventoryController.getStockReport),
-);
-router.get(
-  "/inventory/transactions",
-  asyncHandler(inventoryController.getTransactionDetails),
+router.use(
+  "/inventory",
+  container.get<InventoryRouter>(INVENTORY_TYPES.InventoryRouter).getRouter(),
 );
 router.get(
   "/inventory-report/products",

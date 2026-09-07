@@ -5,15 +5,12 @@ import { ValidationError } from "../types/errors";
 import { ErrorsMessages } from "../constants/errors";
 import logger from "./logger";
 import { appDayjs } from "./dayjs.util";
-import { Attribute } from "@/database/models/Attribute";
 import { DebtAdjustment } from "@/database/models/DebtAdjustment";
-import { File } from "@/database/models/File";
 import { Fund } from "@/database/models/Fund";
 import { FundAdjustment } from "@/database/models/FundAdjustment";
 import { FundTransfer } from "@/database/models/FundTransfer";
 import { Partner } from "@/database/models/Partner";
 import { Product } from "@/database/models/Product";
-import { Role } from "@/database/models/Role";
 import { Store } from "@/database/models/Store";
 import { StoreTransfer } from "@/database/models/StoreTransfer";
 import { User } from "@/database/models/User";
@@ -183,7 +180,8 @@ export function getEntityByType(
 }
 
 function getConfig(type: string): CodeConfig {
-  const config = codeConfig[type.trim().toLowerCase()];
+  const formatType = type.trim().toLowerCase().replace(/_/g, "");
+  const config = codeConfig[formatType];
   if (!config)
     throw new ValidationError(`Không tìm thấy cấu hình mã cho loại "${type}"`);
   return config;

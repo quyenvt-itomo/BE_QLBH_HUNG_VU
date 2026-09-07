@@ -4,7 +4,13 @@ import {
   BaseRepository,
   IFindPaginationOptions,
 } from "@/shared/base/BaseRepository";
-import { IncomeExpense, Order, OrderLine, OrderType } from "@/database/models";
+import {
+  IncomeExpense,
+  IncomeExpenseType,
+  Order,
+  OrderLine,
+  OrderType,
+} from "@/database/models";
 import { OrderQueryDto } from "./order.validator";
 import {
   OrderRelations,
@@ -41,9 +47,25 @@ export class OrderRepository extends BaseRepository<Order> {
           ([key]) => key.toLowerCase() === `entity_${field}`.toLowerCase(),
         )?.[1];
       const paidAmount = getValue("paidAmount");
+      const customerPaidAmount = getValue("customerPaidAmount");
+      const refundedAmount = getValue("refundedAmount");
+      const amountToRefund = getValue("amountToRefund");
+      const amountToCollect = getValue("amountToCollect");
       const actualShippingFee = getValue("actualShippingFee");
 
       if (paidAmount !== undefined) entity.paidAmount = Number(paidAmount) || 0;
+      if (customerPaidAmount !== undefined) {
+        entity.customerPaidAmount = Number(customerPaidAmount) || 0;
+      }
+      if (refundedAmount !== undefined) {
+        entity.refundedAmount = Number(refundedAmount) || 0;
+      }
+      if (amountToRefund !== undefined) {
+        entity.amountToRefund = Number(amountToRefund) || 0;
+      }
+      if (amountToCollect !== undefined) {
+        entity.amountToCollect = Number(amountToCollect) || 0;
+      }
       if (actualShippingFee !== undefined) {
         entity.actualShippingFee = Number(actualShippingFee) || 0;
       }
@@ -63,6 +85,34 @@ export class OrderRepository extends BaseRepository<Order> {
           AND "incomeExpense"."deletedAt" IS NULL
           AND "incomeExpense"."status" <> 'canceled')`,
       "entity_paidAmount",
+    );
+    qb.addSelect(
+      `(SELECT COALESCE(SUM(CASE
+          WHEN "incomeExpense"."type" = '${IncomeExpenseType.INCOME}'
+          THEN "incomeExpense"."amount" ELSE 0 END), 0)
+        FROM "income_expenses" "incomeExpense"
+        WHERE "incomeExpense"."orderId" = "${alias}"."id"
+          AND "incomeExpense"."deletedAt" IS NULL
+          AND "incomeExpense"."status" <> 'canceled')`,
+      "entity_customerPaidAmount",
+    );
+    qb.addSelect(
+      `(SELECT COALESCE(SUM(CASE
+          WHEN "incomeExpense"."type" = '${IncomeExpenseType.EXPENSE}'
+          THEN "incomeExpense"."amount" ELSE 0 END), 0)
+        FROM "income_expenses" "incomeExpense"
+        WHERE "incomeExpense"."orderId" = "${alias}"."id"
+          AND "incomeExpense"."deletedAt" IS NULL
+          AND "incomeExpense"."status" <> 'canceled')`,
+      "entity_refundedAmount",
+    );
+    qb.addSelect(
+      `(GREATEST(-"${alias}"."settlementAmount", 0))`,
+      "entity_amountToRefund",
+    );
+    qb.addSelect(
+      `(GREATEST("${alias}"."settlementAmount", 0))`,
+      "entity_amountToCollect",
     );
     qb.addSelect(
       `(CASE WHEN "${alias}"."isFreeShipping" = true

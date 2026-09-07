@@ -74,6 +74,10 @@ export class OrderService extends BaseService<Order> {
     "settlementAmount",
 
     "paidAmount",
+    "customerPaidAmount",
+    "refundedAmount",
+    "amountToRefund",
+    "amountToCollect",
     "actualShippingFee",
   ];
   protected timeField: keyof Order = "orderAt";
@@ -107,9 +111,7 @@ export class OrderService extends BaseService<Order> {
     entity._actions = {
       ...(this.getDefaultAction() as any),
       update: {
-        can:
-          !isCanceled &&
-          !(entity.type === OrderType.SALE_RETURN && !!entity.refOrderId),
+        can: !isCanceled,
       },
       delete: { can: isDraft },
       cancel: { can: !isCanceled },
@@ -562,17 +564,6 @@ export class OrderService extends BaseService<Order> {
     )
       throw new Error("store.scope.mismatch");
     const targetStatus = (data.status || current.status) as OrderStatus;
-    const isAllowedStatusTransition =
-      targetStatus !== current.status &&
-      (targetStatus === OrderStatus.COMPLETED ||
-        targetStatus === OrderStatus.CANCELED);
-    if (
-      current.type === OrderType.SALE_RETURN &&
-      current.refOrderId &&
-      !isAllowedStatusTransition
-    ) {
-      throw new Error("order.return.linked_locked");
-    }
     if (
       targetStatus === OrderStatus.COMPLETED &&
       current.status === OrderStatus.CANCELED
