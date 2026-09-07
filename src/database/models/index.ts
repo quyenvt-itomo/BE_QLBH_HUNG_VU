@@ -26,7 +26,11 @@ import { StoreTransferLine } from "./StoreTransferLine";
 import { User } from "./User";
 import { VatAdjustment } from "./VatDebtAdjustment";
 import { VatTransaction, VatRefType } from "./VatTransaction";
-import { IncomeExpense, IncomeExpenseType } from "./store/IncomeExpense";
+import {
+  IncomeExpense,
+  IncomeExpenseStatus,
+  IncomeExpenseType,
+} from "./store/IncomeExpense";
 import { InventoryAdjustment } from "./store/InventoryAdjustment";
 import { InventoryAdjustmentLine } from "./store/InventoryAdjustmentLine";
 import {
@@ -131,6 +135,7 @@ export {
   VatTransaction,
   VatRefType,
   IncomeExpense,
+  IncomeExpenseStatus,
   IncomeExpenseType,
   InventoryAdjustment,
   InventoryAdjustmentLine,

@@ -4,6 +4,7 @@ import {
   DebtRefType,
   DebtTransaction,
   IncomeExpense,
+  IncomeExpenseStatus,
   IncomeExpenseType,
   Order,
   OrderStatus,
@@ -130,7 +131,13 @@ export class DebtRecalculateService extends TransactionService {
   async syncForIncomeExpense(
     item: Pick<
       IncomeExpense,
-      "id" | "type" | "partnerId" | "amount" | "occurredAt" | "code"
+      | "id"
+      | "type"
+      | "status"
+      | "partnerId"
+      | "amount"
+      | "occurredAt"
+      | "code"
     >,
     manager: EntityManager,
   ): Promise<void> {
@@ -141,6 +148,7 @@ export class DebtRecalculateService extends TransactionService {
 
     await this.removeIncomeExpenseReferences(item.id, manager);
 
+    if (item.status !== IncomeExpenseStatus.COMPLETED) return;
     if (!item.partnerId || Number(item.amount || 0) <= 0) return;
 
     const partner = await this.partnerRepository

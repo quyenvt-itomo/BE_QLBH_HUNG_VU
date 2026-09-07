@@ -47,9 +47,17 @@ export const OrderSelectList: FindOptionsSelect<Order> = {
   lines: true,
   returnLines: true,
   incomeExpenses: true,
-  partner: { id: true, type: true, name: true, code: true, phone: true, taxCode: true },
+  partner: {
+    id: true,
+    type: true,
+    name: true,
+    code: true,
+    phone: true,
+    taxCode: true,
+  },
   shipper: { id: true, type: true, name: true, code: true, phone: true },
-} as any;
+  store: true,
+};
 
 export const OrderSelectFull: FindOptionsSelect<Order> = {
   ...OrderSelectList,
@@ -89,7 +97,13 @@ export const OrderSelectFull: FindOptionsSelect<Order> = {
       name: true,
       baseUnitId: true,
       baseUnit: { id: true, name: true },
-      extraUnits: { id: true, unitId: true, conversionRate: true, isPurchaseUnit: true, unit: { id: true, name: true } },
+      extraUnits: {
+        id: true,
+        unitId: true,
+        conversionRate: true,
+        isPurchaseUnit: true,
+        unit: { id: true, name: true },
+      },
     },
     unit: { id: true, name: true, type: true },
   },
@@ -113,9 +127,11 @@ export const OrderSelectFull: FindOptionsSelect<Order> = {
   incomeExpenses: {
     id: true,
     storeId: true,
+    orderId: true,
     code: true,
     occurredAt: true,
     type: true,
+    status: true,
     fundId: true,
     fundSnapshot: true,
     categoryId: true,
@@ -125,11 +141,13 @@ export const OrderSelectFull: FindOptionsSelect<Order> = {
     description: true,
     amount: true,
   },
-} as any;
+};
 
 export const OrderRelationsList: FindOptionsRelations<Order> = {
   partner: true,
   shipper: true,
+  incomeExpenses: true,
+  store: true,
 };
 
 export const OrderRelations: FindOptionsRelations<Order> = {
@@ -137,10 +155,13 @@ export const OrderRelations: FindOptionsRelations<Order> = {
   completer: true,
   canceler: true,
   refOrder: true,
-  lines: { product: { baseUnit: true, extraUnits: { unit: true } }, unit: true },
+  lines: {
+    product: { baseUnit: true, extraUnits: { unit: true } },
+    unit: true,
+  },
   returnLines: { product: true, unit: true },
   incomeExpenses: { fund: true, category: true, partner: true },
-} as any;
+};
 
 export const OrderRelationSelectsForList: RelationSelectConfig<Order> = {
   partner: ["id", "type", "name", "code", "phone", "taxCode"],

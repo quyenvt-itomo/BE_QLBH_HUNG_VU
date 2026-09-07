@@ -1,6 +1,11 @@
 import { inject, injectable } from "inversify";
 import { DeepPartial, EntityManager } from "typeorm";
-import { IncomeExpense, IncomeExpenseType } from "@/database/models/store/IncomeExpense";
+import {
+  IncomeExpense,
+  IncomeExpenseStatus,
+  IncomeExpenseType,
+} from "@/database/models/store/IncomeExpense";
+import { Order, OrderStatus } from "@/database/models/store/Order";
 import { BaseService } from "@/shared/base/BaseService";
 import { RequestContext } from "@/shared/types/interfaces";
 import { generateCode } from "@/shared/utils/code.utils";
@@ -28,6 +33,16 @@ export class IncomeExpenseService extends BaseService<IncomeExpense> {
     @inject(DEBT_TYPES.DebtRecalculateService)
     private debtService: DebtRecalculateService,
   ) { super(); this.repository = repository; }
+
+  protected async attachActions(
+    entity: IncomeExpense & { _actions?: any },
+  ): Promise<void> {
+    entity._actions = {
+      ...this.getDefaultAction(),
+      delete: { can: !entity.orderId },
+    };
+  }
+
   async validateBeforeCreate(
     data: DeepPartial<IncomeExpense>,
     manager: EntityManager,
@@ -41,12 +56,64 @@ export class IncomeExpenseService extends BaseService<IncomeExpense> {
       ![IncomeExpenseType.INCOME, IncomeExpenseType.EXPENSE].includes(data.type)
     )
       throw new Error("incomeExpense.type.invalid");
+    data.occurredAt = data.occurredAt || new Date();
+    if (data.orderId) {
+      const order = await manager.getRepository(Order).findOne({
+        where: { id: data.orderId, deletedAt: null } as any,
+      });
+      if (!order) throw new Error("order.not_found");
+      data.status = this.getStatusForOrder(order.status);
+    } else {
+      data.status = IncomeExpenseStatus.COMPLETED;
+    }
     await this.fundRepository.attachInfo(data, manager);
     await this.partnerRepository.attachInfo(data, manager);
     if (data.categoryId) {
       await this.attributeRepository.attachInfo(data as any, manager);
       if (!data.categorySnapshot) throw new Error("category.not_found");
     }
+  }
+
+  async validateBeforeUpdate(
+    id: string,
+    data: DeepPartial<IncomeExpense>,
+    manager: EntityManager,
+  ): Promise<void> {
+    const current = await this.repository.findById(id, manager);
+    if (!current) throw new Error("incomeExpense.not_found");
+
+    if (data.orderId !== undefined && data.orderId !== current.orderId) {
+      throw new Error("incomeExpense.order_locked");
+    }
+    if (current.orderId) {
+      this.assertOrderLinkedFieldsUnchanged(current, data);
+      if (data.type !== undefined && data.type !== current.type) {
+        throw new Error("incomeExpense.order_type_locked");
+      }
+      if (data.status !== undefined && data.status !== current.status) {
+        throw new Error("incomeExpense.order_status_locked");
+      }
+    } else if (data.status !== undefined) {
+      throw new Error("incomeExpense.status_managed");
+    }
+
+    if (data.fundId !== undefined) {
+      await this.fundRepository.attachInfo(data, manager);
+    }
+    if (data.partnerId !== undefined) {
+      await this.partnerRepository.attachInfo(data, manager);
+    }
+    if (data.categoryId !== undefined) {
+      data.categorySnapshot = null;
+      if (data.categoryId) {
+        await this.attributeRepository.attachInfo(data as any, manager);
+        if (!data.categorySnapshot) throw new Error("category.not_found");
+      }
+    }
+  }
+
+  async validateBeforeDelete(data: IncomeExpense): Promise<void> {
+    if (data.orderId) throw new Error("incomeExpense.order_delete_forbidden");
   }
 
   async actionAfterCreate(data: IncomeExpense, manager: EntityManager): Promise<void> {
@@ -59,5 +126,42 @@ export class IncomeExpenseService extends BaseService<IncomeExpense> {
 
   async actionAfterDelete(data: IncomeExpense, manager: EntityManager): Promise<void> {
     await this.debtService.removeIncomeExpenseReferences(data.id, manager);
+  }
+
+  private getStatusForOrder(status: OrderStatus): IncomeExpenseStatus {
+    if (status === OrderStatus.COMPLETED) return IncomeExpenseStatus.COMPLETED;
+    if (status === OrderStatus.CANCELED) return IncomeExpenseStatus.CANCELED;
+    return IncomeExpenseStatus.DRAFT;
+  }
+
+  private assertOrderLinkedFieldsUnchanged(
+    current: IncomeExpense,
+    data: DeepPartial<IncomeExpense>,
+  ): void {
+    if (
+      data.partnerId !== undefined &&
+      (data.partnerId || null) !== (current.partnerId || null)
+    ) {
+      throw new Error("incomeExpense.order_partner_locked");
+    }
+    if (
+      data.categoryId !== undefined &&
+      (data.categoryId || null) !== (current.categoryId || null)
+    ) {
+      throw new Error("incomeExpense.order_category_locked");
+    }
+    if (
+      data.description !== undefined &&
+      (data.description || null) !== (current.description || null)
+    ) {
+      throw new Error("incomeExpense.order_description_locked");
+    }
+    if (data.occurredAt !== undefined) {
+      const currentTime = current.occurredAt?.getTime?.() ?? new Date(current.occurredAt).getTime();
+      const nextTime = new Date(data.occurredAt as Date).getTime();
+      if (currentTime !== nextTime) {
+        throw new Error("incomeExpense.order_occurred_at_locked");
+      }
+    }
   }
 }

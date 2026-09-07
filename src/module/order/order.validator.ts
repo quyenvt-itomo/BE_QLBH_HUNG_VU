@@ -1,4 +1,4 @@
-import { IncomeExpenseType, OrderStatus, OrderType, ReturnOrderTypes } from "@/database/models";
+import { IncomeExpenseType, OrderStatus, OrderType } from "@/database/models";
 import {
   BaseCreateSchema,
   BaseLineSchema,
@@ -68,7 +68,7 @@ export const CreateOrderSchema = BaseCreateSchema.extend({
     .optional(),
 }).refine(
   (data) => {
-    if (ReturnOrderTypes.includes(data.type)) {
+    if (data.type === OrderType.PURCHASE_RETURN) {
       return !!data.refOrderId;
     }
     return true;

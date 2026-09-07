@@ -168,4 +168,8 @@ export class Order extends StoreEntity {
 
   @OneToMany(() => OrderLine, (line) => line.returnOrder, { cascade: true })
   returnLines: OrderLine[];
+
+  // TODO: Các trường khác (nếu có) sẽ được lưu trong metadata
+  paidAmount?: number; // số tiền đã thanh toán (nếu có)
+  actualShippingFee?: number; // phí vận chuyển thực tế (nếu có)
 }

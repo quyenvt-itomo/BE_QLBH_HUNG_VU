@@ -3,7 +3,7 @@ import { BaseSelect } from "@/shared/base/BaseSelect";
 import { IncomeExpense } from "@/database/models/store/IncomeExpense";
 
 export const IncomeExpenseSelectList: FindOptionsSelect<IncomeExpense> = {
-  ...BaseSelect, storeId: true, occurredAt: true, code: true, type: true, fundId: true,
+  ...BaseSelect, storeId: true, occurredAt: true, code: true, type: true, status: true, fundId: true,
   fundSnapshot: true, orderId: true, categoryId: true, categorySnapshot: true,
   partnerId: true, partnerSnapshot: true, description: true, amount: true,
   fund: { id: true, code: true, name: true, type: true, storeId: true },

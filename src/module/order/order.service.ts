@@ -6,6 +6,7 @@ import { RequestContext } from "@/shared/types/interfaces";
 import { generateCode } from "@/shared/utils/code.utils";
 import {
   IncomeExpense,
+  IncomeExpenseStatus,
   IncomeExpenseType,
   ATTRIBUTE_NAMES,
   AttributeType,
@@ -43,32 +44,73 @@ const calculateRateAmount = (
   return normalizedValue;
 };
 
+const getIncomeExpenseStatus = (
+  orderStatus?: OrderStatus,
+): IncomeExpenseStatus => {
+  if (orderStatus === OrderStatus.COMPLETED)
+    return IncomeExpenseStatus.COMPLETED;
+  if (orderStatus === OrderStatus.CANCELED) return IncomeExpenseStatus.CANCELED;
+  return IncomeExpenseStatus.DRAFT;
+};
+
 @injectable()
 export class OrderService extends BaseService<Order> {
   protected repository: OrderRepository;
   protected uniqueFields: (keyof Order)[] = ["code"];
   protected searchableFields = ["code", "note"];
+  protected summaryFields?: string[] | undefined = [
+    "grossAmount",
+    "discountAmount",
+    "netAmount",
+    "taxAmount",
+    "totalAmount",
+    "totalCost",
+    "returnGrossAmount",
+    "returnDiscountAmount",
+    "returnNetAmount",
+    "returnTaxAmount",
+    "returnTotalAmount",
+    "returnTotalCost",
+    "settlementAmount",
+
+    "paidAmount",
+    "actualShippingFee",
+  ];
   protected timeField: keyof Order = "orderAt";
 
   constructor(
     @inject(ORDER_TYPES.OrderRepository) repository: OrderRepository,
-    @inject(PARTNER_TYPES.PartnerRepository) private partnerRepository: PartnerRepository,
-    @inject(PRODUCT_TYPES.ProductRepository) private productRepository: ProductRepository,
-    @inject(ATTRIBUTE_TYPES.AttributeRepository) private attributeRepository: AttributeRepository,
-    @inject(ORDER_TYPES.OrderLineRepository) private orderLineRepository: OrderLineRepository,
-    @inject(INVENTORY_TYPES.InventoryRecalculateService) private inventory: InventoryRecalculateService,
+    @inject(PARTNER_TYPES.PartnerRepository)
+    private partnerRepository: PartnerRepository,
+    @inject(PRODUCT_TYPES.ProductRepository)
+    private productRepository: ProductRepository,
+    @inject(ATTRIBUTE_TYPES.AttributeRepository)
+    private attributeRepository: AttributeRepository,
+    @inject(ORDER_TYPES.OrderLineRepository)
+    private orderLineRepository: OrderLineRepository,
+    @inject(INVENTORY_TYPES.InventoryRecalculateService)
+    private inventory: InventoryRecalculateService,
     @inject(DEBT_TYPES.DebtRecalculateService)
     private debtService: DebtRecalculateService,
     @inject(FUND_TYPES.Repository)
     private fundRepository: FundRepository,
-  ) { super(); this.repository = repository; }
+  ) {
+    super();
+    this.repository = repository;
+  }
 
-  protected async attachActions(entity: Order & { _actions?: any }): Promise<void> {
+  protected async attachActions(
+    entity: Order & { _actions?: any },
+  ): Promise<void> {
     const isDraft = entity.status === OrderStatus.DRAFT;
     const isCanceled = entity.status === OrderStatus.CANCELED;
     entity._actions = {
       ...(this.getDefaultAction() as any),
-      update: { can: !isCanceled },
+      update: {
+        can:
+          !isCanceled &&
+          !(entity.type === OrderType.SALE_RETURN && !!entity.refOrderId),
+      },
       delete: { can: isDraft },
       cancel: { can: !isCanceled },
       complete: { can: isDraft },
@@ -84,6 +126,65 @@ export class OrderService extends BaseService<Order> {
     return type === OrderType.PURCHASE_RETURN || type === OrderType.SALE_RETURN;
   }
 
+  private async validateSaleReturn(
+    data: DeepPartial<Order>,
+    manager: EntityManager,
+    currentId?: string,
+  ): Promise<void> {
+    if (data.type !== OrderType.SALE_RETURN || !data.refOrderId) return;
+
+    const source = await this.repository.getRepository(manager).findOne({
+      where: { id: data.refOrderId, deletedAt: null } as any,
+      relations: { lines: true, returnLines: true },
+    });
+    if (!source || source.type !== OrderType.SALE) {
+      throw new Error("order.return.source_invalid");
+    }
+
+    const existingReturns = await this.repository.getRepository(manager).find({
+      where: {
+        refOrderId: data.refOrderId,
+        type: OrderType.SALE_RETURN,
+        deletedAt: null,
+      } as any,
+      relations: { returnLines: true },
+    });
+    if (existingReturns.some((item) => item.id !== currentId)) {
+      throw new Error("order.return.already_exists");
+    }
+
+    const returnedByLine = new Map<string, number>();
+    for (const returnLine of source.returnLines || []) {
+      if (!returnLine.refOrderLineId || returnLine.returnOrderId === currentId)
+        continue;
+      returnedByLine.set(
+        returnLine.refOrderLineId,
+        (returnedByLine.get(returnLine.refOrderLineId) || 0) +
+          Number(returnLine.quantity || 0),
+      );
+    }
+
+    for (const line of (data.returnLines || []) as DeepPartial<OrderLine>[]) {
+      if (!line.refOrderLineId) {
+        throw new Error("order.return.line_source_required");
+      }
+      const sourceLine = (source.lines || []).find(
+        (item) => item.id === line.refOrderLineId,
+      );
+      if (!sourceLine || sourceLine.productId !== line.productId) {
+        throw new Error("order.return.line_not_in_source");
+      }
+      const available = Math.max(
+        0,
+        Number(sourceLine.quantity || 0) -
+          (returnedByLine.get(sourceLine.id) || 0),
+      );
+      if (Number(line.quantity || 0) > available) {
+        throw new Error("order.return.quantity_exceeded");
+      }
+    }
+  }
+
   private async validateShippingInfo(
     data: DeepPartial<Order>,
     manager: EntityManager,
@@ -97,7 +198,12 @@ export class OrderService extends BaseService<Order> {
     data.isFreeShipping = data.isFreeShipping ?? true;
 
     const isPurchase = this.isPurchaseOrderType(data.type);
-    if (isPurchase && data.isFreeShipping && shippingFee > 0 && !data.shipperId) {
+    if (
+      isPurchase &&
+      data.isFreeShipping &&
+      shippingFee > 0 &&
+      !data.shipperId
+    ) {
       throw new Error("order.shipping.shipper_required");
     }
     if (isPurchase && !data.isFreeShipping && data.shipperId) {
@@ -109,15 +215,20 @@ export class OrderService extends BaseService<Order> {
       return shippingFee;
     }
 
-    const shipper = await this.partnerRepository.getRepository(manager).findOne({
-      where: { id: data.shipperId, deletedAt: null } as any,
-    });
+    const shipper = await this.partnerRepository
+      .getRepository(manager)
+      .findOne({
+        where: { id: data.shipperId, deletedAt: null } as any,
+      });
     if (!shipper) throw new Error("order.shipping.shipper_not_found");
     if (shipper.type !== PartnerType.SHIPPER) {
       throw new Error("order.shipping.shipper_invalid");
     }
     if (!data.shipperSnapshot || data.shipperSnapshot.id !== data.shipperId) {
-      data.shipperSnapshot = await this.partnerRepository.getSnapshot(data.shipperId, manager);
+      data.shipperSnapshot = await this.partnerRepository.getSnapshot(
+        data.shipperId,
+        manager,
+      );
     }
     return shippingFee;
   }
@@ -128,20 +239,33 @@ export class OrderService extends BaseService<Order> {
     req?: RequestContext,
   ): Promise<void> {
     if (data.incomeExpenses === undefined) return;
+    const storeId = req?.storeContext?.storeId || data.storeId;
 
     const isIncome =
-      data.type === OrderType.SALE || data.type === OrderType.PURCHASE_RETURN;
+      data.type === OrderType.SALE ||
+      data.type === OrderType.PURCHASE_RETURN ||
+      (data.type === OrderType.SALE_RETURN &&
+        Number(data.totalAmount || 0) > Number(data.returnTotalAmount || 0));
     const prepared: DeepPartial<IncomeExpense>[] = [];
-    const orderAmount = Math.max(
-      0,
-      Number(
-        isIncome && data.returnTotalAmount != null
-          ? data.returnTotalAmount
-          : data.totalAmount,
-      ) || 0,
-    );
+    const orderAmount =
+      data.type === OrderType.SALE_RETURN
+        ? Math.abs(Number(data.settlementAmount || 0))
+        : Math.max(
+            0,
+            Number(
+              isIncome && data.returnTotalAmount != null
+                ? data.returnTotalAmount
+                : data.totalAmount,
+            ) || 0,
+          );
 
-    const defaultCategory = this.getDefaultIncomeExpenseCategory(data.type);
+    const defaultCategory =
+      data.type === OrderType.SALE_RETURN && isIncome
+        ? {
+            name: ATTRIBUTE_NAMES.INCOME_CUSTOMER,
+            type: AttributeType.INCOME_CATEGORY,
+          }
+        : this.getDefaultIncomeExpenseCategory(data.type);
     const defaultCategoryId = defaultCategory
       ? await this.attributeRepository.findOrCreateAttribute(
           { ...defaultCategory, isDefault: true },
@@ -150,25 +274,38 @@ export class OrderService extends BaseService<Order> {
         )
       : null;
 
+    const type = isIncome
+      ? IncomeExpenseType.INCOME
+      : IncomeExpenseType.EXPENSE;
+
     for (const item of data.incomeExpenses || []) {
-      const amount = Math.min(orderAmount, Math.max(0, Number(item.amount || 0)));
+      const amount = Math.min(
+        orderAmount,
+        Math.max(0, Number(item.amount || 0)),
+      );
       if (amount <= 0) continue;
       if (!item.fundId) throw new Error("order.payment.fund_required");
 
-      const fundSnapshot = await this.fundRepository.getSnapshot(item.fundId, manager);
+      const fundSnapshot = await this.fundRepository.getSnapshot(
+        item.fundId,
+        manager,
+      );
       if (!fundSnapshot) throw new Error("fund.not_found");
 
       const categoryId = item.categoryId || defaultCategoryId;
       const categorySnapshot = categoryId
         ? await this.attributeRepository.getSnapshot(categoryId, manager)
         : null;
-      if (categoryId && !categorySnapshot) throw new Error("category.not_found");
+      if (categoryId && !categorySnapshot)
+        throw new Error("category.not_found");
 
       prepared.push({
-        storeId: data.storeId as string,
-        code: item.code || (await generateCode("incomeExpense", data.storeId)),
-        occurredAt: item.occurredAt || data.occurredAt || data.orderAt || new Date(),
-        type: isIncome ? IncomeExpenseType.INCOME : IncomeExpenseType.EXPENSE,
+        storeId,
+        code: item.code || (await generateCode(type, data.storeId)),
+        occurredAt:
+          item.occurredAt || data.occurredAt || data.orderAt || new Date(),
+        type,
+        status: getIncomeExpenseStatus(data.status),
         fundId: item.fundId,
         fundSnapshot,
         categoryId,
@@ -217,17 +354,29 @@ export class OrderService extends BaseService<Order> {
     }
   }
 
-  private async syncOrderIncomeExpenses(orderId: string, status: OrderStatus, manager: EntityManager): Promise<void> {
+  private async syncOrderIncomeExpenses(
+    orderId: string,
+    status: OrderStatus,
+    manager: EntityManager,
+  ): Promise<void> {
     const incomeExpenseRepository = manager.getRepository(IncomeExpense);
     const incomeExpenses = await incomeExpenseRepository.find({
       where: { orderId, deletedAt: null } as any,
     });
 
     for (const incomeExpense of incomeExpenses) {
-      if (status === OrderStatus.COMPLETED) {
+      const incomeExpenseStatus = getIncomeExpenseStatus(status);
+      await incomeExpenseRepository.update(incomeExpense.id, {
+        status: incomeExpenseStatus,
+      });
+      incomeExpense.status = incomeExpenseStatus;
+      if (incomeExpenseStatus === IncomeExpenseStatus.COMPLETED) {
         await this.debtService.syncForIncomeExpense(incomeExpense, manager);
       } else {
-        await this.debtService.removeIncomeExpenseReferences(incomeExpense.id, manager);
+        await this.debtService.removeIncomeExpenseReferences(
+          incomeExpense.id,
+          manager,
+        );
       }
     }
   }
@@ -238,7 +387,9 @@ export class OrderService extends BaseService<Order> {
     manager: EntityManager,
   ): Promise<void> {
     const repository = manager.getRepository(IncomeExpense);
-    const existing = await repository.find({ where: { orderId, deletedAt: null } as any });
+    const existing = await repository.find({
+      where: { orderId, deletedAt: null } as any,
+    });
     for (const item of existing) {
       await this.debtService.removeIncomeExpenseReferences(item.id, manager);
     }
@@ -252,12 +403,16 @@ export class OrderService extends BaseService<Order> {
           ...item,
           id: undefined,
           orderId,
+          status: item.status || IncomeExpenseStatus.DRAFT,
         })) as DeepPartial<IncomeExpense>[],
       ),
     );
   }
 
-  private async attachInfo(data: DeepPartial<Order>, manager: EntityManager): Promise<void> {
+  private async attachInfo(
+    data: DeepPartial<Order>,
+    manager: EntityManager,
+  ): Promise<void> {
     await this.partnerRepository.attachInfo(data as any, manager);
     const shippingFee = await this.validateShippingInfo(data, manager);
     const prepareLines = async (lines: DeepPartial<OrderLine>[]) => {
@@ -265,42 +420,61 @@ export class OrderService extends BaseService<Order> {
       let totalCost = 0;
 
       for (const line of lines) {
-      if (!line.productId) throw new Error("order.line.product_required");
-      let rawProduct: Product | null = null;
-      if (data.type === OrderType.PURCHASE && !line.unitId) {
-        rawProduct = await this.productRepository.getRepository(manager).findOne({
-          where: { id: line.productId },
-          relations: { extraUnits: true },
-        });
-        if (rawProduct) {
-          line.unitId =
-            rawProduct.extraUnits?.find((unit) => unit.isPurchaseUnit)?.unitId ||
-            rawProduct.baseUnitId;
+        if (!line.productId) throw new Error("order.line.product_required");
+        let rawProduct: Product | null = null;
+        if (data.type === OrderType.PURCHASE && !line.unitId) {
+          rawProduct = await this.productRepository
+            .getRepository(manager)
+            .findOne({
+              where: { id: line.productId },
+              relations: { extraUnits: true },
+            });
+          if (rawProduct) {
+            line.unitId =
+              rawProduct.extraUnits?.find((unit) => unit.isPurchaseUnit)
+                ?.unitId || rawProduct.baseUnitId;
+          }
         }
-      }
-      await this.productRepository.attachInfo(line, manager, rawProduct);
-      if (!line.productSnapshot) throw new Error("product.not_found");
-      await this.attributeRepository.attachUnitInfo(line, manager);
-      if (line.unitId && !line.unitSnapshot) throw new Error("unit.not_found");
-      line.conversionRateAtTime = Number(line.conversionRateAtTime) || 1;
-      line.subTotal = (Number(line.quantity) || 0) * (Number(line.unitPrice) || 0);
-      line.totalCost = (Number(line.quantity) || 0) * Number(line.conversionRateAtTime) * (Number(line.costPriceAtTime) || 0);
-      grossAmount += Number(line.subTotal);
-      totalCost += Number(line.totalCost);
+        await this.productRepository.attachInfo(line, manager, rawProduct);
+        if (!line.productSnapshot) throw new Error("product.not_found");
+        await this.attributeRepository.attachUnitInfo(line, manager);
+        if (line.unitId && !line.unitSnapshot)
+          throw new Error("unit.not_found");
+        line.conversionRateAtTime = Number(line.conversionRateAtTime) || 1;
+        line.subTotal =
+          (Number(line.quantity) || 0) * (Number(line.unitPrice) || 0);
+        line.totalCost =
+          (Number(line.quantity) || 0) *
+          Number(line.conversionRateAtTime) *
+          (Number(line.costPriceAtTime) || 0);
+        grossAmount += Number(line.subTotal);
+        totalCost += Number(line.totalCost);
       }
 
       return { grossAmount, totalCost };
     };
 
-    const sale = await prepareLines((data.lines || []) as DeepPartial<OrderLine>[]);
-    const returned = await prepareLines((data.returnLines || []) as DeepPartial<OrderLine>[]);
+    const sale = await prepareLines(
+      (data.lines || []) as DeepPartial<OrderLine>[],
+    );
+    const returned = await prepareLines(
+      (data.returnLines || []) as DeepPartial<OrderLine>[],
+    );
 
     const discountAmount = Math.min(
       sale.grossAmount,
-      calculateRateAmount(sale.grossAmount, data.discountType, data.discountValue),
+      calculateRateAmount(
+        sale.grossAmount,
+        data.discountType,
+        data.discountValue,
+      ),
     );
     const netAmount = Math.max(0, sale.grossAmount - discountAmount);
-    const taxAmount = calculateRateAmount(netAmount, data.taxType, data.taxValue);
+    const taxAmount = calculateRateAmount(
+      netAmount,
+      data.taxType,
+      data.taxValue,
+    );
     const returnDiscountAmount = Math.min(
       returned.grossAmount,
       calculateRateAmount(
@@ -309,7 +483,10 @@ export class OrderService extends BaseService<Order> {
         data.returnDiscountValue,
       ),
     );
-    const returnNetAmount = Math.max(0, returned.grossAmount - returnDiscountAmount);
+    const returnNetAmount = Math.max(
+      0,
+      returned.grossAmount - returnDiscountAmount,
+    );
     const returnTaxAmount = calculateRateAmount(
       returnNetAmount,
       data.returnTaxType,
@@ -321,7 +498,8 @@ export class OrderService extends BaseService<Order> {
     data.netAmount = netAmount;
     data.taxAmount = taxAmount;
     const shippingIncluded = shippingFee > 0 && data.isFreeShipping === false;
-    const totalAmount = netAmount + taxAmount + (shippingIncluded ? shippingFee : 0);
+    const totalAmount =
+      netAmount + taxAmount + (shippingIncluded ? shippingFee : 0);
     const returnTotalAmount =
       returnNetAmount + returnTaxAmount + (shippingIncluded ? shippingFee : 0);
     data.totalAmount = this.isReturnOrderType(data.type)
@@ -336,48 +514,98 @@ export class OrderService extends BaseService<Order> {
       ? returnTotalAmount
       : returnNetAmount + returnTaxAmount;
     data.returnTotalCost = returned.totalCost;
-    data.settlementAmount = Number(data.totalAmount) - Number(data.returnTotalAmount);
+    data.settlementAmount =
+      Number(data.totalAmount) - Number(data.returnTotalAmount);
   }
 
-  async validateBeforeCreate(data: DeepPartial<Order>, manager: EntityManager, req?: RequestContext): Promise<void> {
+  async validateBeforeCreate(
+    data: DeepPartial<Order>,
+    manager: EntityManager,
+    req?: RequestContext,
+  ): Promise<void> {
     data.storeId = data.storeId || req?.storeContext?.storeId;
     if (!data.storeId) throw new Error("store.required");
-    data.code = data.code || await generateCode(String(data.type || "sale"), data.storeId);
+    data.code =
+      data.code ||
+      (await generateCode(String(data.type || "sale"), data.storeId));
     const completeImmediately = (data as any).completeImmediately === true;
-    data.status = completeImmediately ? OrderStatus.COMPLETED : OrderStatus.DRAFT;
+    data.status = completeImmediately
+      ? OrderStatus.COMPLETED
+      : OrderStatus.DRAFT;
     if (completeImmediately) {
       data.occurredAt = data.occurredAt || new Date();
       data.completerId = data.completerId || req?.userContext?.userId || null;
-      data.completerSnapshot = data.completerSnapshot || req?.userContext?.userSnapshot || null;
+      data.completerSnapshot =
+        data.completerSnapshot || req?.userContext?.userSnapshot || null;
     } else {
       data.occurredAt = null;
       data.completerId = null;
       data.completerSnapshot = null;
     }
     delete (data as any).completeImmediately;
+    await this.validateSaleReturn(data, manager);
     await this.attachInfo(data, manager);
     await this.prepareIncomeExpenses(data, manager, req);
   }
 
-  async validateBeforeUpdate(id: string, data: DeepPartial<Order>, manager: EntityManager, req?: RequestContext): Promise<void> {
+  async validateBeforeUpdate(
+    id: string,
+    data: DeepPartial<Order>,
+    manager: EntityManager,
+    req?: RequestContext,
+  ): Promise<void> {
     const current = await this.repository.findById(id, manager);
     if (!current) throw new Error("order.not_found");
-    if (req?.storeContext?.storeId && current.storeId !== req.storeContext.storeId) throw new Error("store.scope.mismatch");
+    if (
+      req?.storeContext?.storeId &&
+      current.storeId !== req.storeContext.storeId
+    )
+      throw new Error("store.scope.mismatch");
     const targetStatus = (data.status || current.status) as OrderStatus;
-    if (targetStatus === OrderStatus.COMPLETED && current.status === OrderStatus.CANCELED) {
+    const isAllowedStatusTransition =
+      targetStatus !== current.status &&
+      (targetStatus === OrderStatus.COMPLETED ||
+        targetStatus === OrderStatus.CANCELED);
+    if (
+      current.type === OrderType.SALE_RETURN &&
+      current.refOrderId &&
+      !isAllowedStatusTransition
+    ) {
+      throw new Error("order.return.linked_locked");
+    }
+    if (
+      targetStatus === OrderStatus.COMPLETED &&
+      current.status === OrderStatus.CANCELED
+    ) {
       throw new Error("order.canceled_locked");
     }
-    if (targetStatus === OrderStatus.COMPLETED && current.status !== OrderStatus.COMPLETED) {
+    if (
+      targetStatus === OrderStatus.COMPLETED &&
+      current.status !== OrderStatus.COMPLETED
+    ) {
       data.occurredAt = data.occurredAt || new Date();
-      data.completerId = data.completerId || req?.userContext?.userId || current.completerId || null;
-      data.completerSnapshot = data.completerSnapshot || req?.userContext?.userSnapshot || current.completerSnapshot || null;
+      data.completerId =
+        data.completerId ||
+        req?.userContext?.userId ||
+        current.completerId ||
+        null;
+      data.completerSnapshot =
+        data.completerSnapshot ||
+        req?.userContext?.userSnapshot ||
+        current.completerSnapshot ||
+        null;
     }
-    if (targetStatus === OrderStatus.CANCELED && current.status !== OrderStatus.CANCELED) {
+    if (
+      targetStatus === OrderStatus.CANCELED &&
+      current.status !== OrderStatus.CANCELED
+    ) {
       data.canceledAt = data.canceledAt || new Date();
       data.cancelerId = data.cancelerId || req?.userContext?.userId || null;
-      data.cancelerSnapshot = data.cancelerSnapshot || req?.userContext?.userSnapshot || null;
+      data.cancelerSnapshot =
+        data.cancelerSnapshot || req?.userContext?.userSnapshot || null;
     }
     const merged = { ...current, ...data } as DeepPartial<Order>;
+    await this.validateSaleReturn(merged, manager, id);
     await this.attachInfo(merged, manager);
     await this.prepareIncomeExpenses(merged, manager, req);
     Object.assign(data, {
@@ -404,7 +632,8 @@ export class OrderService extends BaseService<Order> {
       returnTotalCost: merged.returnTotalCost,
       settlementAmount: merged.settlementAmount,
     });
-    if (data.incomeExpenses !== undefined) data.incomeExpenses = merged.incomeExpenses;
+    if (data.incomeExpenses !== undefined)
+      data.incomeExpenses = merged.incomeExpenses;
   }
 
   private async recalculate(
@@ -419,12 +648,11 @@ export class OrderService extends BaseService<Order> {
     const fromDate = previous?.occurredAt || data.occurredAt || data.orderAt;
     if (!fromDate) return;
 
-    const lines = [
-      ...(previous?.lines || []),
-      ...(data.lines || []),
-    ];
+    const lines = [...(previous?.lines || []), ...(data.lines || [])];
     for (const productId of new Set(
-      lines.map((line) => line.productId).filter((id): id is string => Boolean(id)),
+      lines
+        .map((line) => line.productId)
+        .filter((id): id is string => Boolean(id)),
     )) {
       await this.inventory.recalculateProductStoreFromDate(
         productId,
@@ -435,7 +663,32 @@ export class OrderService extends BaseService<Order> {
     }
   }
 
-  async actionAfterCreate(data: Order, manager: EntityManager): Promise<void> {
+  async actionAfterCreate(
+    data: Order,
+    manager: EntityManager,
+    req?: RequestContext,
+    inputData?: DeepPartial<Order>,
+  ): Promise<void> {
+    // `repository.create` may not keep the nested relation on the returned
+    // entity even though the request was normalized successfully. Prefer the
+    // normalized entity, but fall back to the original request so a payment
+    // can never silently disappear during create.
+    let incomeExpenses = data.incomeExpenses;
+    if (!incomeExpenses?.length && inputData?.incomeExpenses?.length) {
+      const normalizedData = {
+        ...data,
+        incomeExpenses: inputData.incomeExpenses,
+      } as DeepPartial<Order>;
+      await this.prepareIncomeExpenses(normalizedData, manager, req);
+      incomeExpenses = normalizedData.incomeExpenses as IncomeExpense[];
+    }
+    if (incomeExpenses !== undefined) {
+      await this.replaceOrderIncomeExpenses(
+        data.id,
+        incomeExpenses as DeepPartial<IncomeExpense>[],
+        manager,
+      );
+    }
     await this.debtService.syncForOrder(data, manager);
     await this.syncOrderIncomeExpenses(data.id, data.status, manager);
     await this.recalculate(data, manager);
@@ -463,7 +716,12 @@ export class OrderService extends BaseService<Order> {
     }
   }
 
-  async update(id: string, data: DeepPartial<Order>, manager?: EntityManager, req?: RequestContext): Promise<Order | null> {
+  async update(
+    id: string,
+    data: DeepPartial<Order>,
+    manager?: EntityManager,
+    req?: RequestContext,
+  ): Promise<Order | null> {
     const hasLines = data.lines !== undefined || data.returnLines !== undefined;
     const inputData = { ...data };
     const payload = { ...data } as any;
@@ -472,33 +730,73 @@ export class OrderService extends BaseService<Order> {
       const current = await this.repository.findById(id, em);
       if (!current) throw new Error("order.not_found");
       const hasIncomeExpenses = payload.incomeExpenses !== undefined;
-      const preparedLines = hasLines ? { lines: (payload.lines || []).map((line: any) => ({ ...line, id: undefined, orderId: id, returnOrderId: null })), returnLines: (payload.returnLines || []).map((line: any) => ({ ...line, id: undefined, orderId: null, returnOrderId: id })) } : undefined;
-      delete payload.lines; delete payload.returnLines;
-      const incomeExpenses = hasIncomeExpenses ? payload.incomeExpenses : undefined;
+      const preparedLines = hasLines
+        ? {
+            lines: (payload.lines || []).map((line: any) => ({
+              ...line,
+              id: undefined,
+              orderId: id,
+              returnOrderId: null,
+            })),
+            returnLines: (payload.returnLines || []).map((line: any) => ({
+              ...line,
+              id: undefined,
+              orderId: null,
+              returnOrderId: id,
+            })),
+          }
+        : undefined;
+      delete payload.lines;
+      delete payload.returnLines;
+      const incomeExpenses = hasIncomeExpenses
+        ? payload.incomeExpenses
+        : undefined;
       delete payload.incomeExpenses;
       const updated = await this.repository.update(id, payload, em);
       if (!updated) return null;
       const lineRepository = this.orderLineRepository.getRepository(em);
       if (preparedLines) {
-        await lineRepository.delete([{ orderId: id }, { returnOrderId: id }] as any);
-        if (preparedLines.lines.length) await lineRepository.save(lineRepository.create(preparedLines.lines as any));
-        if (preparedLines.returnLines.length) await lineRepository.save(lineRepository.create(preparedLines.returnLines as any));
+        await lineRepository.delete([
+          { orderId: id },
+          { returnOrderId: id },
+        ] as any);
+        if (preparedLines.lines.length)
+          await lineRepository.save(
+            lineRepository.create(preparedLines.lines as any),
+          );
+        if (preparedLines.returnLines.length)
+          await lineRepository.save(
+            lineRepository.create(preparedLines.returnLines as any),
+          );
       }
-      if (hasIncomeExpenses) await this.replaceOrderIncomeExpenses(id, incomeExpenses, em);
+      if (hasIncomeExpenses)
+        await this.replaceOrderIncomeExpenses(id, incomeExpenses, em);
       const result = await this.repository.findById(id, em);
       if (result) {
-        await this.actionAfterUpdate(
-          result,
-          em,
-          req,
-          { ...inputData, __previousOrder: current } as any,
-        );
+        await this.actionAfterUpdate(result, em, req, {
+          ...inputData,
+          __previousOrder: current,
+        } as any);
       }
       return result;
     };
     return manager ? run(manager) : withTransaction(run);
   }
 
-  async complete(id: string, req?: RequestContext): Promise<Order | null> { return this.update(id, { status: OrderStatus.COMPLETED, occurredAt: new Date() }, undefined, req); }
-  async cancel(id: string, req?: RequestContext): Promise<Order | null> { return this.update(id, { status: OrderStatus.CANCELED, canceledAt: new Date() }, undefined, req); }
+  async complete(id: string, req?: RequestContext): Promise<Order | null> {
+    return this.update(
+      id,
+      { status: OrderStatus.COMPLETED, occurredAt: new Date() },
+      undefined,
+      req,
+    );
+  }
+  async cancel(id: string, req?: RequestContext): Promise<Order | null> {
+    return this.update(
+      id,
+      { status: OrderStatus.CANCELED, canceledAt: new Date() },
+      undefined,
+      req,
+    );
+  }
 }

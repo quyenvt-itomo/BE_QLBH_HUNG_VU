@@ -21,28 +21,80 @@ export class OrderRepository extends BaseRepository<Order> {
   protected relations = OrderRelations;
   protected relationsForList = OrderRelationsList;
 
+  protected mapRawEntities(rawAndEntities: {
+    entities: Order[];
+    raw: any[];
+  }): Order[] {
+    const mapped = super.mapRawEntities(rawAndEntities) as Order[];
+    return mapped.map((entity, index) => {
+      const raw =
+        rawAndEntities.raw.find((candidate) =>
+          Object.entries(candidate || {}).some(
+            ([key, value]) =>
+              key.toLowerCase() === "entity_id" && String(value) === entity.id,
+          ),
+        ) ||
+        rawAndEntities.raw[index] ||
+        {};
+      const getValue = (field: string) =>
+        Object.entries(raw).find(
+          ([key]) => key.toLowerCase() === `entity_${field}`.toLowerCase(),
+        )?.[1];
+      const paidAmount = getValue("paidAmount");
+      const actualShippingFee = getValue("actualShippingFee");
+
+      if (paidAmount !== undefined) entity.paidAmount = Number(paidAmount) || 0;
+      if (actualShippingFee !== undefined) {
+        entity.actualShippingFee = Number(actualShippingFee) || 0;
+      }
+      return entity;
+    });
+  }
+
   protected async extendQueryBuilder(
     qb: SelectQueryBuilder<Order>,
     options: IFindPaginationOptions<Order>,
   ): Promise<void> {
     const alias = qb.alias;
+    qb.addSelect(
+      `(SELECT COALESCE(SUM("incomeExpense"."amount"), 0)
+        FROM "income_expenses" "incomeExpense"
+        WHERE "incomeExpense"."orderId" = "${alias}"."id"
+          AND "incomeExpense"."deletedAt" IS NULL
+          AND "incomeExpense"."status" <> 'canceled')`,
+      "entity_paidAmount",
+    );
+    qb.addSelect(
+      `(CASE WHEN "${alias}"."isFreeShipping" = true
+        THEN 0 ELSE COALESCE("${alias}"."shippingFee", 0) END)`,
+      "entity_actualShippingFee",
+    );
     const {
       partnerIds,
       supplierIds,
+
+      customerId,
       customerIds,
+
       shipperIds,
+
+      productId,
       productIds,
       fundIds,
       statuses,
       completerIds,
     } = (options.moreQuery as OrderQueryDto) || {};
-    const partnerId = (options.moreQuery as any)?.partnerId as string | undefined;
+    const partnerId = (options.moreQuery as any)?.partnerId as
+      | string
+      | undefined;
 
     if (this.checkArrayFilter(statuses)) {
       qb.andWhere(`${alias}.status IN (:...statuses)`, { statuses });
     }
     if (this.checkArrayFilter(completerIds)) {
-      qb.andWhere(`${alias}.completerId IN (:...completerIds)`, { completerIds });
+      qb.andWhere(`${alias}.completerId IN (:...completerIds)`, {
+        completerIds,
+      });
     }
 
     if (partnerId) {
@@ -59,7 +111,12 @@ export class OrderRepository extends BaseRepository<Order> {
         supplierIds,
       });
     }
-    if (this.checkArrayFilter(customerIds)) {
+
+    if (customerId) {
+      qb.andWhere(`${alias}.partnerId = :customerId`, {
+        customerId,
+      });
+    } else if (this.checkArrayFilter(customerIds)) {
       qb.andWhere(`${alias}.partnerId IN (:...customerIds)`, {
         customerIds,
       });
@@ -74,7 +131,8 @@ export class OrderRepository extends BaseRepository<Order> {
 
     // product filter
     // trong order có lines, lines có productVariant, productVariant có productId
-    if (this.checkArrayFilter(productIds)) {
+    if (productId || this.checkArrayFilter(productIds)) {
+      const productIdsToFilter = productId ? [productId] : productIds;
       qb.andWhere((qb1) => {
         const subQuery = qb1
           .subQuery()
@@ -86,7 +144,7 @@ export class OrderRepository extends BaseRepository<Order> {
           .getQuery();
 
         return `EXISTS ${subQuery}`;
-      }).setParameter("productIds", productIds);
+      }).setParameter("productIds", productIdsToFilter);
     }
 
     // fund filter

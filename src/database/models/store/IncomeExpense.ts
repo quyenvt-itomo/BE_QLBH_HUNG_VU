@@ -12,6 +12,12 @@ export enum IncomeExpenseType {
   EXPENSE = "EXPENSE", // Chi
 }
 
+export enum IncomeExpenseStatus {
+  DRAFT = "draft",
+  COMPLETED = "completed",
+  CANCELED = "canceled",
+}
+
 @Entity("income_expenses")
 export class IncomeExpense extends StoreEntity {
   @Column({ type: "timestamptz" })
@@ -22,6 +28,13 @@ export class IncomeExpense extends StoreEntity {
 
   @Column({ type: "enum", enum: IncomeExpenseType })
   type: IncomeExpenseType;
+
+  @Column({
+    type: "enum",
+    enum: IncomeExpenseStatus,
+    default: IncomeExpenseStatus.COMPLETED,
+  })
+  status: IncomeExpenseStatus;
 
   @Column({ type: "uuid", nullable: true, default: null })
   fundId: string | null;

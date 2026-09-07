@@ -3,7 +3,11 @@ import { DeepPartial, EntityManager } from "typeorm";
 import { FundTransaction, FundTransactionRefType } from "@/database/models/FundTransaction";
 import { FundAdjustment } from "@/database/models/FundAdjustment";
 import { FundTransfer } from "@/database/models/FundTransfer";
-import { IncomeExpense, IncomeExpenseType } from "@/database/models/store/IncomeExpense";
+import {
+  IncomeExpense,
+  IncomeExpenseStatus,
+  IncomeExpenseType,
+} from "@/database/models/store/IncomeExpense";
 import { OrderStatus } from "@/database/models/store/Order";
 import { Fund } from "@/database/models/Fund";
 import DatabaseConfig from "@/config/database";
@@ -90,8 +94,12 @@ export class FundTransactionService extends BaseService<FundTransaction> {
         .where("incomeExpense.fundId IN (:...fundIds)", { fundIds })
         .andWhere("incomeExpense.occurredAt <= :offsetAt", { offsetAt })
         .andWhere(
-          "(incomeExpense.orderId IS NULL OR order.status = :completedStatus)",
-          { completedStatus: OrderStatus.COMPLETED },
+          "incomeExpense.status = :completedIncomeExpenseStatus",
+          { completedIncomeExpenseStatus: IncomeExpenseStatus.COMPLETED },
+        )
+        .andWhere(
+          "(incomeExpense.orderId IS NULL OR order.status = :completedOrderStatus)",
+          { completedOrderStatus: OrderStatus.COMPLETED },
         )
         .andWhere("incomeExpense.deletedAt IS NULL")
         .getMany();
