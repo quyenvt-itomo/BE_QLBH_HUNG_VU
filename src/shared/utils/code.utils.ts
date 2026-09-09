@@ -19,6 +19,7 @@ import { IncomeExpense } from "@/database/models/store/IncomeExpense";
 import { InventoryAdjustment } from "@/database/models/store/InventoryAdjustment";
 import { Order, OrderType } from "@/database/models/store/Order";
 import { ProductPriceHistory } from "@/database/models/store/ProductPriceHistory";
+import { InternalExport } from "@/database/models/store/InternalExport";
 
 type ResetPeriod = "none" | "yearly" | "monthly";
 type CodeConfig = {
@@ -143,6 +144,12 @@ export const codeConfig: Record<string, CodeConfig> = {
     length: 3,
     resetPeriod: "monthly",
     global: true,
+  },
+  internalexport: {
+    entity: InternalExport,
+    prefix: "PXNB",
+    length: 3,
+    resetPeriod: "monthly",
   },
   order: { entity: Order, prefix: "DH", length: 4, resetPeriod: "monthly" },
   sale: { entity: Order, prefix: "HĐ", length: 4, resetPeriod: "monthly" },

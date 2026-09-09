@@ -49,6 +49,8 @@ import { ProductPriceHistory } from "./store/ProductPriceHistory";
 import { StoreProduct } from "./store/StoreProduct";
 import { StoreProductLocation } from "./store/StoreProductLocation";
 import { StoreUser } from "./store/StoreUser";
+import { InternalExport } from "./store/InternalExport";
+import { InternalExportLine } from "./store/InternalExportLine";
 
 /** Single source of truth for TypeORM entities in the store-scoped model. */
 export const entities = [
@@ -83,6 +85,8 @@ export const entities = [
   StoreProduct,
   StoreProductLocation,
   StoreUser,
+  InternalExport,
+  InternalExportLine,
 ];
 
 export {
@@ -132,6 +136,8 @@ export {
   User,
   VatAdjustment,
   StoreUser,
+  InternalExport,
+  InternalExportLine,
   VatTransaction,
   VatRefType,
   IncomeExpense,

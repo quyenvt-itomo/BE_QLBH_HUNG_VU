@@ -10,6 +10,7 @@ export enum InventoryRefType {
   SALE_RETURN = "sale_return",
   TRANSFER = "transfer",
   ADJUST = "adjust",
+  INTERNAL_EXPORT = "internal_export",
 }
 
 @Entity("inventory_transactions")

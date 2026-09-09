@@ -27,6 +27,7 @@ import { roleModule } from "@/module/role";
 import { storeModule } from "@/module/store";
 import { storeProductModule } from "@/module/storeProduct";
 import { storeTransferModule } from "@/module/storeTransfer";
+import { internalExportModule } from "@/module/internalExport";
 import { storeUserModule } from "@/module/storeUser";
 import { userModule } from "@/module/user";
 import { vatAdjustmentModule } from "@/module/vatDebtAdjustment";
@@ -56,6 +57,7 @@ container.load(
   inventoryAdjustmentModule,
   inventoryTransactionModule,
   storeTransferModule,
+  internalExportModule,
   productPriceHistoryModule,
   fundModule,
   fundAdjustmentModule,

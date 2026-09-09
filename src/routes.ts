@@ -35,6 +35,8 @@ import { INVENTORY_TRANSACTION_TYPES } from "@/module/inventoryTransaction/inven
 import { InventoryTransactionRouter } from "@/module/inventoryTransaction/inventoryTransaction.route";
 import { STORE_TRANSFER_TYPES } from "@/module/storeTransfer/storeTransfer.types";
 import { StoreTransferRouter } from "@/module/storeTransfer/storeTransfer.route";
+import { INTERNAL_EXPORT_TYPES } from "@/module/internalExport/internalExport.types";
+import { InternalExportRouter } from "@/module/internalExport/internalExport.route";
 import { PRODUCT_PRICE_HISTORY_TYPES } from "@/module/productPriceHistory/productPriceHistory.types";
 import { ProductPriceHistoryRouter } from "@/module/productPriceHistory/productPriceHistory.route";
 import { INCOME_EXPENSE_TYPES } from "@/module/incomeExpense/incomeExpense.types";
@@ -171,6 +173,10 @@ router.use(
 router.use(
   "/store-transfer",
   container.get<StoreTransferRouter>(STORE_TRANSFER_TYPES.Router).getRouter(),
+);
+router.use(
+  "/internal-export",
+  container.get<InternalExportRouter>(INTERNAL_EXPORT_TYPES.Router).getRouter(),
 );
 router.use(
   "/product-price-history",

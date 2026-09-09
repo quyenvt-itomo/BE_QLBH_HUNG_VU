@@ -25,6 +25,7 @@ import { INVENTORY_TRANSACTION_TYPES } from "../inventoryTransaction/inventoryTr
 import { InventoryTransactionRepository } from "../inventoryTransaction/inventoryTransaction.repository";
 import { PRODUCT_TYPES } from "../product/product.types";
 import { ProductRepository } from "../product/product.repository";
+import { InternalExport } from "@/database/models/store/InternalExport";
 
 export interface InventoryRecalculateNode {
   productId: string;
@@ -38,6 +39,7 @@ type SourceEvent = {
   order?: Order;
   adjustment?: InventoryAdjustment;
   transfer?: StoreTransfer;
+  internalExport?: InternalExport;
   price?: ProductPriceHistory;
   sign?: 1 | -1;
   refType: InventoryRefType;
@@ -92,10 +94,11 @@ export class InventoryRecalculateService extends TransactionService {
   }
 
   private async loadEvents(productId: string, storeId: string, fromDate: Date, manager: EntityManager): Promise<SourceEvent[]> {
-    const [orders, adjustments, transfers, prices] = await Promise.all([
+    const [orders, adjustments, transfers, internalExports, prices] = await Promise.all([
       this.orderRepository.getRepository(manager).find({ where: { storeId, status: OrderStatus.COMPLETED, deletedAt: IsNull() } as any, relations: { lines: true, returnLines: true } }),
       this.adjustmentRepository.getRepository(manager).find({ where: { storeId, deletedAt: IsNull() } as any, relations: { lines: true } }),
       this.transferRepository.getRepository(manager).find({ where: { deletedAt: IsNull() } as any, relations: { lines: true } }),
+      manager.getRepository(InternalExport).find({ where: { storeId, deletedAt: IsNull() } as any, relations: { lines: true } }),
       this.priceRepository.getRepository(manager).find({ where: { storeId, productId, deletedAt: IsNull() } as any }),
     ]);
     const events: SourceEvent[] = [];
@@ -127,6 +130,23 @@ export class InventoryRecalculateService extends TransactionService {
         const isTo = transfer.toStoreId === storeId;
         if (!isFrom && !isTo) continue;
         events.push({ occurredAt: transfer.occurredAt, transfer, sign: isTo ? 1 : -1, refType: InventoryRefType.TRANSFER, refId: transfer.id, refCode: transfer.code, quantity });
+      }
+    }
+    for (const internalExport of internalExports) {
+      if (internalExport.occurredAt < fromDate) continue;
+      for (const line of internalExport.lines || []) {
+        if (line.productId !== productId || !line.quantity) continue;
+        const quantity = Math.abs(Number(line.quantity) || 0) * (Number(line.conversionRateAtTime) || 1);
+        if (!quantity) continue;
+        events.push({
+          occurredAt: internalExport.occurredAt,
+          internalExport,
+          sign: -1,
+          refType: InventoryRefType.INTERNAL_EXPORT,
+          refId: internalExport.id,
+          refCode: internalExport.code,
+          quantity,
+        });
       }
     }
     for (const price of prices) {
@@ -214,6 +234,55 @@ export class InventoryRecalculateService extends TransactionService {
     }
     await this.syncOrderCosts(orderIds, em);
     await this.stockMetadata.updateStockMetadata(productId, em);
+  }
+
+  /** Số lượng tồn ngay trước một chứng từ, dùng để kiểm tra không xuất âm. */
+  async getQuantityBefore(
+    productId: string,
+    storeId: string,
+    occurredAt: Date | string,
+    manager?: EntityManager,
+    excludedRefId?: string,
+  ): Promise<number> {
+    const em = await this.managerOf(manager);
+    const query = this.transactionRepository
+      .getRepository(em)
+      .createQueryBuilder("tx")
+      .where('tx."productId" = :productId', { productId })
+      .andWhere('tx."storeId" = :storeId', { storeId })
+      .andWhere('tx."occurredAt" < :occurredAt', { occurredAt: new Date(occurredAt) })
+      .andWhere('tx."deletedAt" IS NULL')
+      .orderBy('tx."occurredAt"', "DESC")
+      .addOrderBy('tx."createdAt"', "DESC")
+      .addOrderBy('tx."id"', "DESC");
+
+    if (excludedRefId) query.andWhere('tx."refId" <> :excludedRefId', { excludedRefId });
+    const transaction = await query.getOne();
+    return Number(transaction?.quantityAfter) || 0;
+  }
+
+  async getCostPriceBefore(
+    productId: string,
+    storeId: string,
+    occurredAt: Date | string,
+    manager?: EntityManager,
+  ): Promise<number> {
+    const em = await this.managerOf(manager);
+    return this.costAt(productId, storeId, new Date(occurredAt), em);
+  }
+
+  async assertAvailable(
+    productId: string,
+    storeId: string,
+    quantity: number,
+    occurredAt: Date | string,
+    manager?: EntityManager,
+    excludedRefId?: string,
+  ): Promise<void> {
+    const available = await this.getQuantityBefore(productId, storeId, occurredAt, manager, excludedRefId);
+    if (available + 1e-9 < quantity) {
+      throw new Error(`inventory.insufficient:${productId}:${available}:${quantity}`);
+    }
   }
 
   async recalculateProductWarehouseFromDate(productId: string, warehouseId: string, fromDate: Date, manager?: EntityManager): Promise<void> {
