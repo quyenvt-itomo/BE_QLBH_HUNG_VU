@@ -7,7 +7,7 @@ import { OrderLine } from "@/database/models/store/OrderLine";
 import { InventoryAdjustment } from "@/database/models/store/InventoryAdjustment";
 import { InventoryTransaction, InventoryRefType } from "@/database/models/store/InventoryTransaction";
 import { ProductPriceHistory } from "@/database/models/store/ProductPriceHistory";
-import { StoreTransfer } from "@/database/models/StoreTransfer";
+import { StoreTransfer, StoreTransferStatus } from "@/database/models/StoreTransfer";
 import { INVENTORY_TYPES } from "./inventory.types";
 import { StockMetadataHelper } from "./stockMetadata.helper";
 import { PRODUCT_PRICE_HISTORY_TYPES } from "../productPriceHistory/productPriceHistory.types";
@@ -122,14 +122,44 @@ export class InventoryRecalculateService extends TransactionService {
       }
     }
     for (const transfer of transfers) {
-      if (transfer.occurredAt < fromDate) continue;
+      const status = transfer.status || StoreTransferStatus.PLANNED;
+      const exportAt =
+        transfer.exportedAt ||
+        (status !== StoreTransferStatus.PLANNED ? transfer.occurredAt : null);
+      const importAt =
+        transfer.importedAt ||
+        (status === StoreTransferStatus.IMPORTED ? exportAt : null);
+      const cancelAt = transfer.canceledAt || null;
+
       for (const line of transfer.lines || []) {
         if (line.productId !== productId || !line.quantity) continue;
-        const quantity = Math.abs(Number(line.quantity) || 0) * (Number(line.conversionRateAtTime) || 1);
-        const isFrom = transfer.fromStoreId === storeId;
-        const isTo = transfer.toStoreId === storeId;
-        if (!isFrom && !isTo) continue;
-        events.push({ occurredAt: transfer.occurredAt, transfer, sign: isTo ? 1 : -1, refType: InventoryRefType.TRANSFER, refId: transfer.id, refCode: transfer.code, quantity });
+        const quantity =
+          Math.abs(Number(line.quantity) || 0) *
+          (Number(line.conversionRateAtTime) || 1);
+        if (!quantity) continue;
+
+        const movements: Array<{ at: Date; storeId: string | null; sign: 1 | -1 }> = [];
+        if (exportAt) movements.push({ at: new Date(exportAt), storeId: transfer.fromStoreId, sign: -1 });
+        if (importAt) movements.push({ at: new Date(importAt), storeId: transfer.toStoreId, sign: 1 });
+
+        // Hủy phiếu phải đảo lại đúng những giao dịch đã phát sinh trước đó.
+        if (status === StoreTransferStatus.CANCELED && cancelAt) {
+          if (exportAt) movements.push({ at: new Date(cancelAt), storeId: transfer.fromStoreId, sign: 1 });
+          if (importAt) movements.push({ at: new Date(cancelAt), storeId: transfer.toStoreId, sign: -1 });
+        }
+
+        for (const movement of movements) {
+          if (movement.storeId !== storeId || movement.at < fromDate) continue;
+          events.push({
+            occurredAt: movement.at,
+            transfer,
+            sign: movement.sign,
+            refType: InventoryRefType.TRANSFER,
+            refId: transfer.id,
+            refCode: transfer.code,
+            quantity,
+          });
+        }
       }
     }
     for (const internalExport of internalExports) {

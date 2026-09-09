@@ -3,8 +3,25 @@ import { BaseSelect } from "@/shared/base/BaseSelect";
 import { StoreTransfer } from "@/database/models/StoreTransfer";
 
 export const StoreTransferSelectList: FindOptionsSelect<StoreTransfer> = {
-  ...BaseSelect, occurredAt: true, code: true, fromStoreId: true, fromStoreSnapshot: true,
-  toStoreId: true, toStoreSnapshot: true, reason: true, lines: true,
+  ...BaseSelect,
+  occurredAt: true,
+  status: true,
+  exportedAt: true,
+  exporterId: true,
+  exporterSnapshot: true,
+  importedAt: true,
+  importerId: true,
+  importerSnapshot: true,
+  canceledAt: true,
+  cancelerId: true,
+  cancelerSnapshot: true,
+  code: true,
+  fromStoreId: true,
+  fromStoreSnapshot: true,
+  toStoreId: true,
+  toStoreSnapshot: true,
+  reason: true,
+  lines: true,
   fromStore: { id: true, code: true, name: true },
   toStore: { id: true, code: true, name: true },
 } as any;
