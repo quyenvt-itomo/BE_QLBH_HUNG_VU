@@ -21,6 +21,8 @@ export class InternalExportService extends BaseService<InternalExport> {
   protected repository: InternalExportRepository;
   protected uniqueFields: (keyof InternalExport)[] = ["code"];
   protected uniqueScope: (keyof InternalExport)[] = ["storeId"];
+  protected timeField: keyof InternalExport = "occurredAt";
+  protected searchableFields: (keyof InternalExport)[] = ["code", "reason"];
 
   constructor(
     @inject(INTERNAL_EXPORT_TYPES.Repository) repository: InternalExportRepository,

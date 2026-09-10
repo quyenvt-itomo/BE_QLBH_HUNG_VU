@@ -45,6 +45,7 @@ export interface MoreQueryOptions<T> {
   ids?: string[]; // Filter by multiple IDs
   creatorIds?: string[]; // Filter by multiple creator IDs
   updaterIds?: string[]; // Filter by multiple updater IDs
+  storeIds?: string[]; // Filter by multiple store IDs
   storeId?: string; // Example field for filtering by store ID
   states?: string[];
   wards?: string[];
@@ -669,6 +670,16 @@ export abstract class BaseRepository<T extends ObjectLiteral> {
       }
     }
 
+    const storeIds = (options.moreQuery || options).storeIds;
+    if (this.checkArrayFilter(storeIds)) {
+      const hasStoreIdColumn = entityMetadata.columns.some(
+        (col) => col.propertyName === "storeId",
+      );
+      if (hasStoreIdColumn) {
+        qb.andWhere("entity.storeId IN (:...storeIds)", { storeIds });
+      }
+    }
+
     // nếu có ids thì filter theo ids
     if (this.checkArrayFilter(options.ids)) {
       qb.andWhere("entity.id IN (:...ids)", { ids: options.ids });
@@ -729,6 +740,13 @@ export abstract class BaseRepository<T extends ObjectLiteral> {
               if (isDateColumn && !(value instanceof Date)) {
                 const parsedDate = new Date(value);
                 if (Number.isNaN(parsedDate.getTime())) return;
+                if (
+                  matchedSuffix === "Lte" &&
+                  typeof value === "string" &&
+                  /^\d{4}-\d{2}-\d{2}$/.test(value)
+                ) {
+                  parsedDate.setUTCHours(23, 59, 59, 999);
+                }
                 normalizedValue = parsedDate;
               }
 
@@ -791,9 +809,14 @@ export abstract class BaseRepository<T extends ObjectLiteral> {
     // BETWEEN createdAt
     if (options.startAt && options.endAt && options.timeField) {
       const dateField = String(options.timeField);
+      const end = new Date(options.endAt);
+      const rawEndAt = (options.moreQuery || options).endAt;
+      if (typeof rawEndAt === "string" && /^\d{4}-\d{2}-\d{2}$/.test(rawEndAt)) {
+        end.setUTCHours(23, 59, 59, 999);
+      }
       qb.andWhere(`entity.${dateField} BETWEEN :start AND :end`, {
         start: new Date(options.startAt),
-        end: new Date(options.endAt),
+        end,
       });
     }
 

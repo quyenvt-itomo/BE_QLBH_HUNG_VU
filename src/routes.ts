@@ -75,6 +75,8 @@ import { Product } from "@/database/models/Product";
 import { InventoryTransaction } from "@/database/models/store/InventoryTransaction";
 import { EXCEL_TYPES } from "@/module/excel/excel.types";
 import { ExcelRouter } from "@/module/excel/excel.route";
+import { DASHBOARD_TYPES } from "@/module/dashboard/dashboard.types";
+import { DashboardRouter } from "@/module/dashboard/dashboard.route";
 
 const router = Router();
 router.use(companyResolver);
@@ -87,6 +89,10 @@ router.use(authenticate, authorization);
 router.use(
   "/excel",
   container.get<ExcelRouter>(EXCEL_TYPES.ExcelRouter).getRouter(),
+);
+router.use(
+  "/dashboard",
+  container.get<DashboardRouter>(DASHBOARD_TYPES.Router).getRouter(),
 );
 
 router.use(

@@ -68,7 +68,7 @@ export const CreateOrderSchema = BaseCreateSchema.extend({
     .optional(),
 }).refine(
   (data) => {
-    if (data.type === OrderType.PURCHASE_RETURN) {
+    if (data.type === OrderType.SALE_RETURN) {
       return !!data.refOrderId;
     }
     return true;

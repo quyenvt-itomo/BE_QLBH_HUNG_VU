@@ -24,6 +24,8 @@ type TransferWithActions = StoreTransfer & { _actions?: ActionMap };
 export class StoreTransferService extends BaseService<StoreTransfer> {
   protected repository: StoreTransferRepository;
   protected uniqueFields: (keyof StoreTransfer)[] = ["code"];
+  protected timeField: keyof StoreTransfer = "occurredAt";
+  protected searchableFields: (keyof StoreTransfer)[] = ["code", "reason"];
 
   constructor(
     @inject(STORE_TRANSFER_TYPES.Repository) repository: StoreTransferRepository,

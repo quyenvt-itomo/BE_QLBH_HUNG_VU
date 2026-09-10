@@ -4,6 +4,8 @@ import { BaseRepository } from "@/shared/base/BaseRepository";
 import { SelectQueryBuilder } from "typeorm";
 import { IncomeExpenseRelations, IncomeExpenseRelationsList, IncomeExpenseSelectFull, IncomeExpenseSelectList } from "./incomeExpense.select";
 import { IFindPaginationOptions } from "@/shared/base/BaseRepository";
+import { IncomeExpenseType } from "@/database/models/store/IncomeExpense";
+import { nullUuidMap } from "@/shared/constants/enum";
 @injectable()
 export class IncomeExpenseRepository extends BaseRepository<IncomeExpense> {
   protected entityClass = IncomeExpense;
@@ -26,7 +28,23 @@ export class IncomeExpenseRepository extends BaseRepository<IncomeExpense> {
         : [];
     const orderIds = query.orderIds?.length ? query.orderIds : query.orderId ? [query.orderId] : [];
 
-    if (query.categoryId) qb.andWhere(`${alias}.categoryId = :incomeExpenseCategoryId`, { incomeExpenseCategoryId: query.categoryId });
+    if (query.categoryId) {
+      if (query.categoryId === nullUuidMap.incomeCategory) {
+        qb.andWhere(`${alias}.type = :incomeExpenseIncomeType`, {
+          incomeExpenseIncomeType: IncomeExpenseType.INCOME,
+        });
+        qb.andWhere(`${alias}.categoryId IS NULL`);
+      } else if (query.categoryId === nullUuidMap.expenseCategory) {
+        qb.andWhere(`${alias}.type = :incomeExpenseExpenseType`, {
+          incomeExpenseExpenseType: IncomeExpenseType.EXPENSE,
+        });
+        qb.andWhere(`${alias}.categoryId IS NULL`);
+      } else {
+        qb.andWhere(`${alias}.categoryId = :incomeExpenseCategoryId`, {
+          incomeExpenseCategoryId: query.categoryId,
+        });
+      }
+    }
     if (fundIds.length) qb.andWhere(`${alias}.fundId IN (:...incomeExpenseFundIds)`, { incomeExpenseFundIds: fundIds });
     if (partnerIds.length) qb.andWhere(`${alias}.partnerId IN (:...incomeExpensePartnerIds)`, { incomeExpensePartnerIds: partnerIds });
     if (orderIds.length) qb.andWhere(`${alias}.orderId IN (:...incomeExpenseOrderIds)`, { incomeExpenseOrderIds: orderIds });

@@ -19,6 +19,8 @@ export class InventoryAdjustmentService extends BaseService<InventoryAdjustment>
   protected repository: InventoryAdjustmentRepository;
   protected uniqueFields: (keyof InventoryAdjustment)[] = ["code"];
   protected uniqueScope: (keyof InventoryAdjustment)[] = ["storeId"];
+  protected timeField: keyof InventoryAdjustment = "occurredAt";
+  protected searchableFields: (keyof InventoryAdjustment)[] = ["code", "reason"];
   constructor(
     @inject(INVENTORY_ADJUSTMENT_TYPES.Repository) repository: InventoryAdjustmentRepository,
     @inject(INVENTORY_ADJUSTMENT_TYPES.LineRepository) private lineRepository: InventoryAdjustmentLineRepository,

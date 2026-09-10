@@ -1,6 +1,7 @@
 export const nullUuidMap = {
   incomeCategory: "00000000-0000-4000-8000-000000000001",
   expenseCategory: "00000000-0000-4000-8000-000000000002",
+  partnerGroup: "00000000-0000-4000-8000-000000000003",
 };
 
 export enum Gender {

@@ -22,6 +22,7 @@ import { DebtRecalculateService } from "../debt/debt.recalculate.service";
 import { AttributeType } from "@/database/models/Attribute";
 import { FilterItem } from "@/shared/types/interfaces";
 import { IncomeExpenseQueryDto } from "./incomeExpense.validator";
+import { nullUuidMap } from "@/shared/constants/enum";
 @injectable()
 export class IncomeExpenseService extends BaseService<IncomeExpense> {
   protected repository: IncomeExpenseRepository;
@@ -161,12 +162,6 @@ export class IncomeExpenseService extends BaseService<IncomeExpense> {
       .addGroupBy("incomeExpense.type");
 
     if (storeId) qb.andWhere("incomeExpense.storeId = :summaryStoreId", { summaryStoreId: storeId });
-    if (query.type) qb.andWhere("incomeExpense.type = :summaryType", { summaryType: query.type });
-    if (query.categoryId) {
-      qb.andWhere("incomeExpense.categoryId = :summaryCategoryId", {
-        summaryCategoryId: query.categoryId,
-      });
-    }
     if (fundIds.length) qb.andWhere("incomeExpense.fundId IN (:...summaryFundIds)", { summaryFundIds: fundIds });
     if (partnerIds.length) {
       qb.andWhere("incomeExpense.partnerId IN (:...summaryPartnerIds)", {
@@ -204,7 +199,7 @@ export class IncomeExpenseService extends BaseService<IncomeExpense> {
       const amount = Number(row.total || 0);
       if (row.type === IncomeExpenseType.INCOME) totals.totalIncome += amount;
       if (row.type === IncomeExpenseType.EXPENSE) totals.totalExpense += amount;
-      if (row.categoryId) amountByCategory.set(`${row.categoryId}:${row.type}`, amount);
+      amountByCategory.set(`${row.categoryId || "null"}:${row.type}`, amount);
     }
 
     const filterItems = categories
@@ -215,6 +210,21 @@ export class IncomeExpenseService extends BaseService<IncomeExpense> {
         value: amountByCategory.get(`${category.id}:${category.type === AttributeType.INCOME_CATEGORY ? IncomeExpenseType.INCOME : IncomeExpenseType.EXPENSE}`) || 0,
       }))
       .filter((item) => item.value > 0);
+
+    filterItems.push(
+      {
+        id: nullUuidMap.incomeCategory,
+        name: "Thu không xác định",
+        type: AttributeType.INCOME_CATEGORY,
+        value: amountByCategory.get(`null:${IncomeExpenseType.INCOME}`) || 0,
+      },
+      {
+        id: nullUuidMap.expenseCategory,
+        name: "Chi không xác định",
+        type: AttributeType.EXPENSE_CATEGORY,
+        value: amountByCategory.get(`null:${IncomeExpenseType.EXPENSE}`) || 0,
+      },
+    );
 
     return { ...totals, filterItems };
   }

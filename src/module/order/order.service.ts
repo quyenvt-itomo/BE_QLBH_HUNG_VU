@@ -424,7 +424,11 @@ export class OrderService extends BaseService<Order> {
       for (const line of lines) {
         if (!line.productId) throw new Error("order.line.product_required");
         let rawProduct: Product | null = null;
-        if (data.type === OrderType.PURCHASE && !line.unitId) {
+        if (
+          (data.type === OrderType.PURCHASE ||
+            data.type === OrderType.PURCHASE_RETURN) &&
+          !line.unitId
+        ) {
           rawProduct = await this.productRepository
             .getRepository(manager)
             .findOne({
@@ -639,7 +643,12 @@ export class OrderService extends BaseService<Order> {
     const fromDate = previous?.occurredAt || data.occurredAt || data.orderAt;
     if (!fromDate) return;
 
-    const lines = [...(previous?.lines || []), ...(data.lines || [])];
+    const lines = [
+      ...(previous?.lines || []),
+      ...(previous?.returnLines || []),
+      ...(data.lines || []),
+      ...(data.returnLines || []),
+    ];
     for (const productId of new Set(
       lines
         .map((line) => line.productId)
