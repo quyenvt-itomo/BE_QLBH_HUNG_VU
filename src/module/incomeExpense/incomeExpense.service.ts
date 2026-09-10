@@ -1,5 +1,5 @@
 import { inject, injectable } from "inversify";
-import { DeepPartial, EntityManager } from "typeorm";
+import { DeepPartial, EntityManager, In, IsNull } from "typeorm";
 import {
   IncomeExpense,
   IncomeExpenseStatus,
@@ -19,12 +19,16 @@ import { IncomeExpenseRepository } from "./incomeExpense.repository";
 import { INCOME_EXPENSE_TYPES } from "./incomeExpense.types";
 import { DEBT_TYPES } from "../debt/debt.types";
 import { DebtRecalculateService } from "../debt/debt.recalculate.service";
+import { AttributeType } from "@/database/models/Attribute";
+import { FilterItem } from "@/shared/types/interfaces";
+import { IncomeExpenseQueryDto } from "./incomeExpense.validator";
 @injectable()
 export class IncomeExpenseService extends BaseService<IncomeExpense> {
   protected repository: IncomeExpenseRepository;
   protected uniqueFields: (keyof IncomeExpense)[] = ["code"];
   protected uniqueScope: (keyof IncomeExpense)[] = ["storeId"];
   protected searchableFields = ["code", "description"];
+  protected timeField: keyof IncomeExpense = "occurredAt";
   constructor(
     @inject(INCOME_EXPENSE_TYPES.Repository) repository: IncomeExpenseRepository,
     @inject(FUND_TYPES.Repository) private fundRepository: FundRepository,
@@ -126,6 +130,93 @@ export class IncomeExpenseService extends BaseService<IncomeExpense> {
 
   async actionAfterDelete(data: IncomeExpense, manager: EntityManager): Promise<void> {
     await this.debtService.removeIncomeExpenseReferences(data.id, manager);
+  }
+
+  async getFilterItemsAndTotal(
+    query: IncomeExpenseQueryDto,
+    req?: RequestContext,
+  ): Promise<{
+    totalIncome: number;
+    totalExpense: number;
+    filterItems: FilterItem[];
+  }> {
+    const storeId = req?.storeContext?.storeId || query.storeId;
+    const fundIds = query.fundIds?.length ? query.fundIds : query.fundId ? [query.fundId] : [];
+    const partnerIds = query.partnerIds?.length
+      ? query.partnerIds
+      : query.partnerId
+        ? [query.partnerId]
+        : [];
+    const orderIds = query.orderIds?.length ? query.orderIds : query.orderId ? [query.orderId] : [];
+    const status = query.status || IncomeExpenseStatus.COMPLETED;
+    const qb = this.repository
+      .getRepository()
+      .createQueryBuilder("incomeExpense")
+      .select("incomeExpense.categoryId", "categoryId")
+      .addSelect("incomeExpense.type", "type")
+      .addSelect("COALESCE(SUM(incomeExpense.amount), 0)", "total")
+      .where("incomeExpense.deletedAt IS NULL")
+      .andWhere("incomeExpense.status = :summaryStatus", { summaryStatus: status })
+      .groupBy("incomeExpense.categoryId")
+      .addGroupBy("incomeExpense.type");
+
+    if (storeId) qb.andWhere("incomeExpense.storeId = :summaryStoreId", { summaryStoreId: storeId });
+    if (query.type) qb.andWhere("incomeExpense.type = :summaryType", { summaryType: query.type });
+    if (query.categoryId) {
+      qb.andWhere("incomeExpense.categoryId = :summaryCategoryId", {
+        summaryCategoryId: query.categoryId,
+      });
+    }
+    if (fundIds.length) qb.andWhere("incomeExpense.fundId IN (:...summaryFundIds)", { summaryFundIds: fundIds });
+    if (partnerIds.length) {
+      qb.andWhere("incomeExpense.partnerId IN (:...summaryPartnerIds)", {
+        summaryPartnerIds: partnerIds,
+      });
+    }
+    if (orderIds.length) qb.andWhere("incomeExpense.orderId IN (:...summaryOrderIds)", { summaryOrderIds: orderIds });
+    if (query.startAt) qb.andWhere("incomeExpense.occurredAt >= :summaryStartAt", { summaryStartAt: query.startAt });
+    if (query.endAt) qb.andWhere("incomeExpense.occurredAt <= :summaryEndAt", { summaryEndAt: query.endAt });
+
+    for (const suffix of ["Gte", "Gt", "Eq", "Lte", "Lt"] as const) {
+      const value = (query as Record<string, unknown>)[`amount${suffix}`];
+      if (value === undefined || value === null || value === "") continue;
+      const operator = { Gte: ">=", Gt: ">", Eq: "=", Lte: "<=", Lt: "<" }[suffix];
+      qb.andWhere(`incomeExpense.amount ${operator} :summaryAmount${suffix}`, {
+        [`summaryAmount${suffix}`]: value,
+      });
+    }
+
+    const [categories, rows] = await Promise.all([
+      this.attributeRepository.findByOptions({
+        where: {
+          type: In([AttributeType.INCOME_CATEGORY, AttributeType.EXPENSE_CATEGORY]),
+          deletedAt: IsNull(),
+        } as any,
+        select: { id: true, name: true, type: true } as any,
+        order: { name: "ASC" } as any,
+      }),
+      qb.getRawMany<{ categoryId: string | null; type: IncomeExpenseType; total: string }>(),
+    ]);
+
+    const totals = { totalIncome: 0, totalExpense: 0 };
+    const amountByCategory = new Map<string, number>();
+    for (const row of rows) {
+      const amount = Number(row.total || 0);
+      if (row.type === IncomeExpenseType.INCOME) totals.totalIncome += amount;
+      if (row.type === IncomeExpenseType.EXPENSE) totals.totalExpense += amount;
+      if (row.categoryId) amountByCategory.set(`${row.categoryId}:${row.type}`, amount);
+    }
+
+    const filterItems = categories
+      .map((category) => ({
+        id: category.id,
+        name: category.name,
+        type: category.type,
+        value: amountByCategory.get(`${category.id}:${category.type === AttributeType.INCOME_CATEGORY ? IncomeExpenseType.INCOME : IncomeExpenseType.EXPENSE}`) || 0,
+      }))
+      .filter((item) => item.value > 0);
+
+    return { ...totals, filterItems };
   }
 
   private getStatusForOrder(status: OrderStatus): IncomeExpenseStatus {

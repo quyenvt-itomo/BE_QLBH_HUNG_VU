@@ -4,5 +4,4 @@ export * from "./incomeExpense.service";
 export * from "./incomeExpense.controller";
 export * from "./incomeExpense.route";
 export * from "./incomeExpense.validator";
-export * from "./incomeExpense.middleware";
 export * from "./incomeExpense.container";

@@ -141,6 +141,7 @@ router.use(
 );
 
 router.use(
+  "/income-expense",
   container.get<IncomeExpenseRouter>(INCOME_EXPENSE_TYPES.Router).getRouter(),
 );
 router.use("/fund", container.get<FundRouter>(FUND_TYPES.Router).getRouter());

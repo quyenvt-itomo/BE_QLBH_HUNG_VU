@@ -1,5 +1,7 @@
 import {
   BaseCreateSchema,
+  BaseDeleteManySchema,
+  BaseParamsSchema,
   BaseQuerySchema,
   BaseUpdateSchema,
   DateTransform,
@@ -40,4 +42,16 @@ export const UpdateIncomeExpenseSchema = BaseUpdateSchema.extend({
   amount: z.number().min(0).optional(),
 });
 
-export const IncomeExpenseQuerySchema = BaseQuerySchema;
+export const IncomeExpenseQuerySchema = BaseQuerySchema.extend({
+  type: z.enum(IncomeExpenseType).optional(),
+  status: z.enum(IncomeExpenseStatus).optional(),
+  fundId: z.uuid().optional(),
+  orderId: z.uuid().optional(),
+  categoryId: z.uuid().optional(),
+  partnerId: z.uuid().optional(),
+});
+
+export const IncomeExpenseParamsSchema = BaseParamsSchema;
+export const IncomeExpenseDeleteManySchema = BaseDeleteManySchema;
+
+export type IncomeExpenseQueryDto = z.infer<typeof IncomeExpenseQuerySchema>;
