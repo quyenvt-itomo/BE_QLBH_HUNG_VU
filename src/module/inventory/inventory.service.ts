@@ -1,5 +1,5 @@
 import { inject, injectable } from "inversify";
-import { In, IsNull, EntityManager } from "typeorm";
+import { In, IsNull } from "typeorm";
 import { TransactionService } from "@/shared/base/TransactionService";
 import { ApiResponse } from "@/shared/types/interfaces";
 import {
@@ -14,8 +14,7 @@ import {
 import { INVENTORY_TYPES } from "./inventory.types";
 import { PRODUCT_TYPES } from "../product/product.types";
 import { ProductRepository } from "../product/product.repository";
-import { INVENTORY_TRANSACTION_TYPES } from "../inventoryTransaction/inventoryTransaction.types";
-import { InventoryTransactionRepository } from "../inventoryTransaction/inventoryTransaction.repository";
+import { InventoryRepository } from "./inventory.repository";
 import { StoreTransfer } from "@/database/models/StoreTransfer";
 
 type InventoryTransactionDetail = Omit<InventoryTransaction, "isDeleted"> & {
@@ -30,8 +29,8 @@ export class InventoryService extends TransactionService {
   constructor(
     @inject(PRODUCT_TYPES.ProductRepository)
     private productRepository: ProductRepository,
-    @inject(INVENTORY_TRANSACTION_TYPES.Repository)
-    private transactionRepository: InventoryTransactionRepository,
+    @inject(INVENTORY_TYPES.InventoryRepository)
+    private transactionRepository: InventoryRepository,
   ) {
     super();
   }
@@ -142,16 +141,14 @@ export class InventoryService extends TransactionService {
     const size = Math.max(1, Number(params.size) || 20);
     const startAt = params.startAt ? new Date(params.startAt) : new Date(0);
     const endAt = params.endAt ? new Date(params.endAt) : new Date();
-    const rows = await this.transactionRepository
-      .getRepository(manager)
-      .find({
-        where: {
-          productId: params.productId,
-          ...(params.storeId ? { storeId: params.storeId } : {}),
-          deletedAt: IsNull(),
-        } as any,
-        order: { occurredAt: "ASC", createdAt: "ASC", id: "ASC" } as any,
-      });
+    const rows = await this.transactionRepository.getRepository(manager).find({
+      where: {
+        productId: params.productId,
+        ...(params.storeId ? { storeId: params.storeId } : {}),
+        deletedAt: IsNull(),
+      } as any,
+      order: { occurredAt: "ASC", createdAt: "ASC", id: "ASC" } as any,
+    });
 
     const internalTransferIds = new Set<string>();
     if (!params.storeId) {
@@ -244,9 +241,7 @@ export class InventoryService extends TransactionService {
         totalOutAmount += amount;
       }
 
-      const runningBalance = params.storeId
-        ? balance
-        : getTotalBalance();
+      const runningBalance = params.storeId ? balance : getTotalBalance();
       const runningCostPrice = getCostPrice(runningBalance);
       const detail: InventoryTransactionDetail = {
         ...tx,

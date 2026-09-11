@@ -34,8 +34,6 @@ import { INVENTORY_TYPES } from "@/module/inventory/inventory.types";
 import { InventoryRouter } from "@/module/inventory/inventory.route";
 import { INVENTORY_ADJUSTMENT_TYPES } from "@/module/inventoryAdjustment/inventoryAdjustment.types";
 import { InventoryAdjustmentRouter } from "@/module/inventoryAdjustment/inventoryAdjustment.route";
-import { INVENTORY_TRANSACTION_TYPES } from "@/module/inventoryTransaction/inventoryTransaction.types";
-import { InventoryTransactionRouter } from "@/module/inventoryTransaction/inventoryTransaction.route";
 import { STORE_TRANSFER_TYPES } from "@/module/storeTransfer/storeTransfer.types";
 import { StoreTransferRouter } from "@/module/storeTransfer/storeTransfer.route";
 import { INTERNAL_EXPORT_TYPES } from "@/module/internalExport/internalExport.types";
@@ -81,6 +79,7 @@ import { ExcelRouter } from "@/module/excel/excel.route";
 import { DASHBOARD_TYPES } from "@/module/dashboard/dashboard.types";
 import { DashboardRouter } from "@/module/dashboard/dashboard.route";
 import { LOG_TYPES, LogRouter } from "./module/log";
+import { ANALYSIS_TYPES, AnalysisRouter } from "@/module/analysis";
 
 const router = Router();
 router.use(companyResolver);
@@ -98,6 +97,10 @@ router.use(
 router.use(
   "/dashboard",
   container.get<DashboardRouter>(DASHBOARD_TYPES.Router).getRouter(),
+);
+router.use(
+  "/analysis",
+  container.get<AnalysisRouter>(ANALYSIS_TYPES.Router).getRouter(),
 );
 
 router.use(
@@ -182,12 +185,6 @@ router.use(
   "/inventory-adjustment",
   container
     .get<InventoryAdjustmentRouter>(INVENTORY_ADJUSTMENT_TYPES.Router)
-    .getRouter(),
-);
-router.use(
-  "/inventory-transaction",
-  container
-    .get<InventoryTransactionRouter>(INVENTORY_TRANSACTION_TYPES.Router)
     .getRouter(),
 );
 router.use(

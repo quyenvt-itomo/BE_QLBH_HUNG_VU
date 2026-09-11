@@ -10,7 +10,7 @@ export enum VatRefType {
   SALE_RETURN = "sale_return", // khách trả hàng
 
   EXPENSE = "expense", // chi
-  ADJUSTMENT = "adjustment", // điều chỉnh công nợ
+  ADJUSTMENT = "adjustment", // điều chỉnh
 }
 
 @Entity("vat_transactions")

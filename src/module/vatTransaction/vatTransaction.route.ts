@@ -4,7 +4,7 @@ import { permissionMiddleware } from "@/shared/middleware/permission.middleware"
 import { zodValidate } from "@/shared/middleware/validation.middleware";
 import { VatTransactionController } from "./vatTransaction.controller";
 import { VAT_TRANSACTION_TYPES } from "./vatTransaction.types";
-import { VatBalanceQuerySchema } from "./vatTransaction.validator";
+import { VatBalanceQuerySchema, VatTransactionQuerySchema } from "./vatTransaction.validator";
 @injectable()
 export class VatTransactionRouter {
   private router = Router();
@@ -15,6 +15,7 @@ export class VatTransactionRouter {
   ) {
     this.router.get(
       "/",
+      zodValidate(VatTransactionQuerySchema, "query"),
       permissionMiddleware("vatReport", "read"),
       controller.getAllWithPagination,
     );

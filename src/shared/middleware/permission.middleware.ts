@@ -6,6 +6,8 @@ import { JwtPayload } from "../types/interfaces";
 /** Permission keys are deliberately limited to the current model/module set. */
 export const MODULES = [
   "report", // Báo cáo
+  "analysis", // Phân tích
+  "reports", // Báo cáo chi tiết
   "debtReport", // Báo cáo công nợ
   "inventoryReport", // Báo cáo tồn kho
   "fundReport", // Báo cáo số dư quỹ
@@ -59,6 +61,8 @@ export type PermissionStructure = { [key in Module]?: Permission[] };
 
 export const ReadOnlyModules: Module[] = [
   "report",
+  "analysis",
+  "reports",
   "debtReport",
   "inventoryReport",
   "fundReport",

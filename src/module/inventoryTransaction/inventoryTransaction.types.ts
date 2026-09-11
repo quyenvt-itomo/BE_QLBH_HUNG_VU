@@ -1,1 +1,0 @@
-export const INVENTORY_TRANSACTION_TYPES = { Repository: Symbol.for("InventoryTransactionRepository"), Service: Symbol.for("InventoryTransactionService"), Controller: Symbol.for("InventoryTransactionController"), Router: Symbol.for("InventoryTransactionRouter") };

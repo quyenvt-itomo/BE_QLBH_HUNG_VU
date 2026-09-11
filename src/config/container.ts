@@ -14,7 +14,6 @@ import { fundTransferModule } from "@/module/fundTransfer";
 import { incomeExpenseModule } from "@/module/incomeExpense";
 import { inventoryModule } from "@/module/inventory";
 import { inventoryAdjustmentModule } from "@/module/inventoryAdjustment";
-import { inventoryTransactionModule } from "@/module/inventoryTransaction";
 import { notificationModule } from "@/module/notification";
 import { orderModule } from "@/module/order";
 import { otpTokenModule } from "@/module/otpToken";
@@ -35,6 +34,7 @@ import { vatTransactionModule } from "@/module/vatTransaction";
 import { excelModule } from "@/module/excel";
 import { dashboardModule } from "@/module/dashboard";
 import { logModule } from "@/module/log";
+import { analysisModule } from "@/module/analysis";
 
 // ================== Container Setup ====================
 export const container = new Container();
@@ -57,7 +57,6 @@ container.load(
   orderModule,
   inventoryModule,
   inventoryAdjustmentModule,
-  inventoryTransactionModule,
   storeTransferModule,
   internalExportModule,
   productPriceHistoryModule,
@@ -76,4 +75,5 @@ container.load(
   excelModule,
   dashboardModule,
   logModule,
+  analysisModule,
 );
