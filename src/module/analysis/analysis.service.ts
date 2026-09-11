@@ -186,28 +186,51 @@ export class AnalysisService {
   async getSaleProfitEffectiveness(branch: string, query: AnalysisQuery) {
     const range = resolveAnalysisRange(query.period);
     const scope = this.scope(branch, query);
-    const [summary, components, adjustments, shipping, branches, costs] = await Promise.all([
+    const [summary, componentsByBranch, adjustmentsByBranch, shippingByBranch, branches, costs] = await Promise.all([
       this.repository.getSummary(scope, range),
-      this.repository.getProfitComponents(scope, range),
-      this.repository.getAdjustments(scope, range),
-      this.repository.getFreeShippingAndInternalExport(scope, range),
+      this.repository.getProfitComponentsByBranch(scope, range),
+      this.repository.getAdjustmentsByBranch(scope, range),
+      this.repository.getFreeShippingAndInternalExportByBranch(scope, range),
       this.repository.getBranches(scope, range),
       this.repository.getCostStructure(scope, range),
     ]);
     const goodsTotal = numeric(summary.goodsTotal || summary.revenue);
     const discounts = numeric(summary.discounts);
-    const otherCost = numeric(components.otherCost);
-    const otherIncome = numeric(components.otherIncome);
-    const adjustment = numeric(adjustments.inventory) + numeric(adjustments.fund) + numeric(adjustments.vat) + numeric(adjustments.debt);
+    const otherCost = componentsByBranch.reduce((sum, item) => sum + numeric(item.otherCost), 0);
+    const otherIncome = componentsByBranch.reduce((sum, item) => sum + numeric(item.otherIncome), 0);
+    const adjustment = adjustmentsByBranch.reduce((sum, item) => sum + numeric(item.value), 0);
+    const shipping = shippingByBranch.reduce((sum, item) => sum + numeric(item.value), 0);
     const netProfit = numeric(summary.grossProfit) - shipping - otherCost + otherIncome + adjustment;
+    const branchNames = Array.from(new Set([
+      ...branches.map((item) => item.branch),
+      ...costs.map((item) => item.branch),
+      ...componentsByBranch.map((item) => item.branch),
+      ...adjustmentsByBranch.map((item) => item.branch),
+      ...shippingByBranch.map((item) => item.branch),
+    ]));
     const branchData = (key: string) => {
       if (branch !== "all") return undefined;
-      return branches.map((item) => {
-        const branchValue = key === "goods" ? item.revenue : key === "reductions" ? item.returns : key === "netRevenue" ? item.netRevenue : key === "cost" ? item.totalCost : key === "grossProfit" || key === "netProfit" ? item.grossProfit : 0;
-        const value = key === "netProfit"
-          ? branchValue - costs.filter((cost) => cost.branch === item.branch).reduce((sum, cost) => sum + numeric(cost.total), 0)
-          : numeric(branchValue);
-        return { branch: item.branch, value };
+      return branchNames.map((branchName) => {
+        const sales = branches.find((item) => item.branch === branchName);
+        const component = componentsByBranch.find((item) => item.branch === branchName);
+        const adjustmentValue = adjustmentsByBranch.find((item) => item.branch === branchName)?.value || 0;
+        const shippingValue = shippingByBranch.find((item) => item.branch === branchName)?.value || 0;
+        const otherCostValue = costs
+          .filter((cost) => cost.branch === branchName)
+          .reduce((sum, cost) => sum + numeric(cost.total), 0);
+        const grossProfit = numeric(sales?.grossProfit);
+        const value = key === "goods" ? numeric(sales?.goodsTotal)
+          : key === "reductions" ? numeric(sales?.returns) + numeric(sales?.discounts)
+          : key === "netRevenue" ? numeric(sales?.netRevenue)
+          : key === "cost" ? numeric(sales?.totalCost)
+          : key === "grossProfit" ? grossProfit
+          : key === "costs" ? numeric(shippingValue)
+          : key === "otherCost" ? numeric(component?.otherCost ?? otherCostValue)
+          : key === "otherIncome" ? numeric(component?.otherIncome)
+          : key === "adjustment" ? numeric(adjustmentValue)
+          : key === "netProfit" ? grossProfit - numeric(shippingValue) - numeric(component?.otherCost ?? otherCostValue) + numeric(component?.otherIncome) + numeric(adjustmentValue)
+          : 0;
+        return { branch: branchName, value };
       });
     };
     const effectiveness = [
