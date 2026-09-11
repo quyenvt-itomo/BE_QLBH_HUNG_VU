@@ -6,6 +6,7 @@ import { DebtService } from "./debt.service";
 import {
   GetPartnerDebtReportQueryDto,
   GetTransactionDetailsQueryDto,
+  DebtBalanceQueryDto,
 } from "./debt.validator";
 
 /** Controller cho báo cáo công nợ, không dùng CRUD BaseController. */
@@ -46,9 +47,16 @@ export class DebtController {
   };
 
   getBalance = async (req: Request, res: Response): Promise<void> => {
-    const data = await this.debtService.getCurrentBalance(
-      req.params.partnerId,
-    );
+    const { offsetAt, excludeId } = req.query as unknown as DebtBalanceQueryDto;
+    const data = offsetAt
+      ? await this.debtService.getDebtAtDate(
+          req.params.partnerId,
+          offsetAt,
+          undefined,
+          undefined,
+          excludeId,
+        )
+      : await this.debtService.getCurrentBalance(req.params.partnerId);
     res.json({
       statusCode: 200,
       success: true,

@@ -6,6 +6,7 @@ import { DebtController } from "./debt.controller";
 import { DEBT_TYPES } from "./debt.types";
 import {
   DebtBalanceParamsSchema,
+  DebtBalanceQuerySchema,
   GetPartnerDebtReportQuerySchema,
   GetTransactionDetailsQuerySchema,
 } from "./debt.validator";
@@ -34,7 +35,8 @@ export class DebtRouter {
     this.router.get(
       "/balance/:partnerId",
       zodValidate(DebtBalanceParamsSchema, "params"),
-      permissionMiddleware("debtReport", "read"),
+      zodValidate(DebtBalanceQuerySchema, "query"),
+      permissionMiddleware("debtAdjustment", "read"),
       controller.getBalance,
     );
   }

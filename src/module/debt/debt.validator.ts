@@ -1,5 +1,9 @@
 import { z } from "zod";
-import { BaseParamsSchema, BaseQuerySchema } from "@/shared/base/BaseValidator";
+import {
+  BaseParamsSchema,
+  BaseQuerySchema,
+  DateTransform,
+} from "@/shared/base/BaseValidator";
 import { DebtSide } from "@/shared/constants/enum";
 
 /** Query dùng cho báo cáo tổng hợp công nợ theo đối tác. */
@@ -18,6 +22,10 @@ export const GetTransactionDetailsQuerySchema = BaseQuerySchema.extend({
 
 export const DebtParamsSchema = BaseParamsSchema;
 export const DebtBalanceParamsSchema = z.object({ partnerId: z.uuid() });
+export const DebtBalanceQuerySchema = z.object({
+  offsetAt: DateTransform.optional(),
+  excludeId: z.uuid().optional(),
+});
 
 export type GetPartnerDebtReportQueryDto = z.infer<
   typeof GetPartnerDebtReportQuerySchema
@@ -25,3 +33,4 @@ export type GetPartnerDebtReportQueryDto = z.infer<
 export type GetTransactionDetailsQueryDto = z.infer<
   typeof GetTransactionDetailsQuerySchema
 >;
+export type DebtBalanceQueryDto = z.infer<typeof DebtBalanceQuerySchema>;
