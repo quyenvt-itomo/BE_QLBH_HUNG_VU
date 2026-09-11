@@ -4,6 +4,7 @@ import { ORDER_TYPES } from "./order.types";
 import { BaseController } from "@/shared/base/BaseController";
 import { Order } from "@/database/models/store/Order";
 import { asyncHandler } from "@/shared/utils/controller.utils";
+import type { OrderHistoryQueryDto } from "./order.validator";
 
 /**
  * Order Controller - Tenant Entity
@@ -28,5 +29,13 @@ export class OrderController extends BaseController<Order> {
   cancel = asyncHandler(async (req, res) => {
     const data = await this.service.cancel(req.params.id, this.service.getReqContext(req));
     this.sendResponse({ res, data });
+  });
+
+  getAllTypesHistory = asyncHandler(async (req, res) => {
+    const data = await this.service.getAllTypesHistory(
+      req.query as unknown as OrderHistoryQueryDto,
+    );
+    if (data.data?.length) await this.service.hydrateEntities(data.data);
+    res.status(data.statusCode).json(data);
   });
 }

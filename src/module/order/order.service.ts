@@ -33,6 +33,7 @@ import { DEBT_TYPES } from "@/module/debt/debt.types";
 import { DebtRecalculateService } from "@/module/debt/debt.recalculate.service";
 import { FUND_TYPES } from "@/module/fund/fund.types";
 import { FundRepository } from "@/module/fund/fund.repository";
+import type { OrderHistoryQueryDto } from "./order.validator";
 
 const calculateRateAmount = (
   baseAmount: number,
@@ -101,6 +102,17 @@ export class OrderService extends BaseService<Order> {
   ) {
     super();
     this.repository = repository;
+  }
+
+  async getAllTypesHistory(query: OrderHistoryQueryDto) {
+    const { shipperId, type: _type, ...options } = query as OrderHistoryQueryDto & {
+      type?: unknown;
+    };
+
+    return this.findAllWithPagination({
+      ...options,
+      shipperIds: [shipperId],
+    } as any);
   }
 
   protected async attachActions(

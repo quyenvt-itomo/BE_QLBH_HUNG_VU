@@ -262,6 +262,7 @@ export class DebtService extends TransactionService {
     atDate: Date = new Date(),
     _storeId?: string,
     manager?: EntityManager,
+    excludeId?: string,
   ): Promise<{
     payableDebtAmount: number;
     receivableDebtAmount: number;
@@ -273,12 +274,14 @@ export class DebtService extends TransactionService {
         DebtSide.PAYABLE,
         atDate,
         mainManager,
+        excludeId,
       ),
       this.getLedgerRows(
         [partnerId],
         DebtSide.RECEIVABLE,
         atDate,
         mainManager,
+        excludeId,
       ),
     ]);
 
@@ -342,6 +345,7 @@ export class DebtService extends TransactionService {
     side: DebtSide,
     endAt: Date,
     manager: EntityManager,
+    excludeId?: string,
   ): Promise<DebtLedgerRow[]> {
     if (partnerIds.length === 0) return [];
 
@@ -383,20 +387,22 @@ export class DebtService extends TransactionService {
       note: row.note,
     }));
 
-    const adjustmentRows: DebtLedgerRow[] = adjustments.map((row) => ({
-      id: row.id,
-      occurredAt: row.occurredAt,
-      createdAt: row.createdAt,
-      partnerId: row.partnerId as string,
-      side: row.side,
-      type:
-        Number(row.deltaAmount) >= 0 ? TransactionType.IN : TransactionType.OUT,
-      amount: Math.abs(Number(row.deltaAmount) || 0),
-      refType: DebtRefType.ADJUSTMENT,
-      refId: row.id,
-      refCode: row.code,
-      note: row.reason,
-    }));
+    const adjustmentRows: DebtLedgerRow[] = adjustments
+      .filter((row) => row.id !== excludeId)
+      .map((row) => ({
+        id: row.id,
+        occurredAt: row.occurredAt,
+        createdAt: row.createdAt,
+        partnerId: row.partnerId as string,
+        side: row.side,
+        type:
+          Number(row.deltaAmount) >= 0 ? TransactionType.IN : TransactionType.OUT,
+        amount: Math.abs(Number(row.deltaAmount) || 0),
+        refType: DebtRefType.ADJUSTMENT,
+        refId: row.id,
+        refCode: row.code,
+        note: row.reason,
+      }));
 
     return [...transactionRows, ...adjustmentRows].sort(
       (left, right) =>

@@ -20,7 +20,10 @@ import { PARTNER_CONTACT_TYPES } from "@/module/partnerContact/partnerContact.ty
 import { PartnerContactRouter } from "@/module/partnerContact/partnerContact.route";
 import { ORDER_TYPES } from "@/module/order/order.types";
 import { OrderRouter } from "@/module/order/order.route";
+import { OrderController } from "@/module/order/order.controller";
+import { OrderHistoryQuerySchema } from "@/module/order/order.validator";
 import { orderContextMiddleware } from "@/module/order/order.middleware";
+import { zodValidate } from "@/shared/middleware/validation.middleware";
 import { ATTRIBUTE_TYPES } from "@/module/attribute/attribute.types";
 import { AttributeRouter } from "@/module/attribute/attribute.route";
 import { FILE_TYPES } from "@/module/file/file.types";
@@ -112,6 +115,14 @@ router.use(
 router.use(
   "/product",
   container.get<ProductRouter>(PRODUCT_TYPES.ProductRouter).getRouter(),
+);
+
+router.get(
+  "/order/history",
+  zodValidate(OrderHistoryQuerySchema, "query"),
+  container
+    .get<OrderController>(ORDER_TYPES.OrderController)
+    .getAllTypesHistory,
 );
 
 const partnerRouter = container

@@ -141,6 +141,7 @@ export const UpdateOrderSchema = BaseUpdateSchema.extend({
 
 // Extend BaseQuerySchema with Order-specific filters
 export const OrderQuerySchema = BaseQuerySchema.extend({
+  partnerId: z.uuid().optional(),
   statuses: zArrayable(z.enum(OrderStatus)),
   completerIds: zArrayable(z.uuid()),
   grossAmountGte: z.coerce.number().min(0).optional(),
@@ -174,9 +175,15 @@ export const OrderQuerySchema = BaseQuerySchema.extend({
   totalAmountEq: z.coerce.number().min(0).optional(),
 });
 
+/** Lịch sử đơn hàng của đơn vị vận chuyển, không giới hạn theo type. */
+export const OrderHistoryQuerySchema = BaseQuerySchema.extend({
+  shipperId: z.uuid(),
+});
+
 export const OrderParamsSchema = BaseParamsSchema;
 
 export type CreateOrderDto = z.infer<typeof CreateOrderSchema>;
 export type UpdateOrderDto = z.infer<typeof UpdateOrderSchema>;
 export type OrderQueryDto = z.infer<typeof OrderQuerySchema>;
+export type OrderHistoryQueryDto = z.infer<typeof OrderHistoryQuerySchema>;
 export type OrderParamsDto = z.infer<typeof OrderParamsSchema>;
