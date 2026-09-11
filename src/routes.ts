@@ -77,6 +77,7 @@ import { EXCEL_TYPES } from "@/module/excel/excel.types";
 import { ExcelRouter } from "@/module/excel/excel.route";
 import { DASHBOARD_TYPES } from "@/module/dashboard/dashboard.types";
 import { DashboardRouter } from "@/module/dashboard/dashboard.route";
+import { LOG_TYPES, LogRouter } from "./module/log";
 
 const router = Router();
 router.use(companyResolver);
@@ -86,6 +87,7 @@ router.use(
   container.get<AuthRouter>(AUTH_TYPES.AuthRouter).getRouter(),
 );
 router.use(authenticate, authorization);
+router.use("/log", container.get<LogRouter>(LOG_TYPES.LogRouter).getRouter());
 router.use(
   "/excel",
   container.get<ExcelRouter>(EXCEL_TYPES.ExcelRouter).getRouter(),

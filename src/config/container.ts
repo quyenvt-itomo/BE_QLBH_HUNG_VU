@@ -34,6 +34,7 @@ import { vatAdjustmentModule } from "@/module/vatDebtAdjustment";
 import { vatTransactionModule } from "@/module/vatTransaction";
 import { excelModule } from "@/module/excel";
 import { dashboardModule } from "@/module/dashboard";
+import { logModule } from "@/module/log";
 
 // ================== Container Setup ====================
 export const container = new Container();
@@ -74,4 +75,5 @@ container.load(
   storeUserModule,
   excelModule,
   dashboardModule,
+  logModule,
 );

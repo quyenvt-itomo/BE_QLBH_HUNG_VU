@@ -42,6 +42,7 @@ export const MODULES = [
   "user", // Người dùng
   "role", // Vai trò hệ thống
   "attribute", // Danh mục
+  "log", // Nhật ký thao tác
 ] as const;
 
 export type Module = (typeof MODULES)[number];
@@ -62,6 +63,7 @@ export const ReadOnlyModules: Module[] = [
   "inventoryReport",
   "fundReport",
   "vatReport",
+  "log",
 ];
 export const ApprovalModules: Module[] = [];
 export const CompleteModules: Module[] = [
