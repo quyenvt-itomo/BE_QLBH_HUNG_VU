@@ -159,7 +159,7 @@ export class AnalysisRepository {
   }
 
   async getCostStructure(scope: AnalysisScope, range: AnalysisRange): Promise<any[]> {
-    const params: unknown[] = [IncomeExpenseStatus.COMPLETED, IncomeExpenseType.EXPENSE, IncomeExpenseType.INCOME, scope.timezone, range.startAt, range.endExclusive];
+    const params: unknown[] = [IncomeExpenseStatus.COMPLETED, IncomeExpenseType.EXPENSE, scope.timezone, range.startAt, range.endExclusive];
     const branch = this.scope("ie", scope, params);
     return DatabaseConfig.query(
       `SELECT COALESCE(category.name, 'Chưa phân loại') AS name, SUM(ie.amount)::float AS total, ie."storeId", COALESCE(s.name, 'Toàn hệ thống') AS branch
@@ -168,7 +168,7 @@ export class AnalysisRepository {
        LEFT JOIN stores s ON s.id = ie."storeId"
        WHERE ie."deletedAt" IS NULL AND ie.status = $1 AND ie.type = $2 AND ie."partnerId" IS NULL
          AND COALESCE(category.name, '') <> 'Nộp thuế VAT'
-         AND timezone($4, ie."occurredAt")::date >= $5::date AND timezone($4, ie."occurredAt")::date < $6::date ${branch}
+         AND timezone($3, ie."occurredAt")::date >= $4::date AND timezone($3, ie."occurredAt")::date < $5::date ${branch}
        GROUP BY category.name, ie."storeId", s.name ORDER BY total DESC`,
       params,
     ).then((rows: any[]) => rows.map((row) => ({ name: row.name, total: numeric(row.total), branch: row.branch, storeId: row.storeId })));
