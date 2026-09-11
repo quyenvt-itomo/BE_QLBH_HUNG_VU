@@ -127,7 +127,7 @@ export interface SaleProfitData {
     netRevenue: AnalysisMetric;
     grossProfit: AnalysisMetric;
     totalCost: AnalysisMetric;
-    customerIncome: AnalysisMetric;
+    otherIncome: AnalysisMetric;
     netProfit: AnalysisMetric;
     averageCostPerDay: AnalysisMetric;
     costRevenueRatio: AnalysisMetric;

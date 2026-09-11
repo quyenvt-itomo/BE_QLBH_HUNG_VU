@@ -143,7 +143,7 @@ export class AnalysisService {
       netRevenue: metric(netRevenue, previousNetRevenue),
       grossProfit: metric(numeric(summary.grossProfit), numeric(previousSummary.grossProfit)),
       totalCost: metric(otherCost + shipping, previousOtherCost + numeric(previousShipping)),
-      customerIncome: metric(numeric(components.customerIncome), numeric(previousComponents.customerIncome)),
+      otherIncome: metric(otherIncome, previousOtherIncome),
       netProfit: metric(netProfit, previousNetProfit),
       averageCostPerDay: metric(
         range.days ? (otherCost + shipping) / range.days : 0,

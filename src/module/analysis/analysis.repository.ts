@@ -99,10 +99,10 @@ export class AnalysisRepository {
     const params: unknown[] = [OrderStatus.COMPLETED, OrderType.SALE, OrderType.SALE_RETURN, scope.timezone, range.startAt, range.endExclusive, previous.startAt, previous.endExclusive];
     const branch = this.scope("o", scope, params);
     const isCustomerGroup = kind === "customerGroup";
-    const entityId = isCustomerGroup ? `COALESCE(p."groupId"::text, 'ungrouped')` : kind === "group" ? `COALESCE(pr."groupId"::text, 'ungrouped')` : `COALESCE(pr.id::text, ol."productSnapshot"->>'id')`;
+    const entityId = isCustomerGroup ? `COALESCE(p."groupId"::text, 'ungrouped')` : kind === "group" ? `COALESCE(pr."groupId"::text, 'ungrouped')` : `COALESCE(pr.id::text, 'unknown')`;
     const entityName = isCustomerGroup
       ? `COALESCE(g.name, 'Chưa phân loại')`
-      : kind === "group" ? `COALESCE(g.name, 'Chưa phân loại')` : `COALESCE(pr.name, ol."productSnapshot"->>'name', 'Không xác định')`;
+      : kind === "group" ? `COALESCE(g.name, 'Chưa phân loại')` : `COALESCE(pr.name, 'Không xác định')`;
     const source = isCustomerGroup
       ? `orders o LEFT JOIN partners p ON p.id = o."partnerId" LEFT JOIN attributes g ON g.id = p."groupId"`
       : `order_lines ol INNER JOIN orders o ON o.id = ol."orderId" LEFT JOIN products pr ON pr.id = ol."productId" LEFT JOIN attributes g ON g.id = pr."groupId"`;
@@ -162,12 +162,14 @@ export class AnalysisRepository {
     const params: unknown[] = [IncomeExpenseStatus.COMPLETED, IncomeExpenseType.EXPENSE, IncomeExpenseType.INCOME, scope.timezone, range.startAt, range.endExclusive];
     const branch = this.scope("ie", scope, params);
     return DatabaseConfig.query(
-      `SELECT COALESCE(ie."categorySnapshot"->>'name', 'Chưa phân loại') AS name, SUM(ie.amount)::float AS total, ie."storeId", COALESCE(s.name, 'Toàn hệ thống') AS branch
-       FROM income_expenses ie LEFT JOIN stores s ON s.id = ie."storeId"
+      `SELECT COALESCE(category.name, 'Chưa phân loại') AS name, SUM(ie.amount)::float AS total, ie."storeId", COALESCE(s.name, 'Toàn hệ thống') AS branch
+       FROM income_expenses ie
+       LEFT JOIN attributes category ON category.id = ie."categoryId"
+       LEFT JOIN stores s ON s.id = ie."storeId"
        WHERE ie."deletedAt" IS NULL AND ie.status = $1 AND ie.type = $2 AND ie."partnerId" IS NULL
-         AND COALESCE(ie."categorySnapshot"->>'name', '') <> 'Nộp thuế VAT'
+         AND COALESCE(category.name, '') <> 'Nộp thuế VAT'
          AND timezone($4, ie."occurredAt")::date >= $5::date AND timezone($4, ie."occurredAt")::date < $6::date ${branch}
-       GROUP BY name, ie."storeId", s.name ORDER BY total DESC`,
+       GROUP BY category.name, ie."storeId", s.name ORDER BY total DESC`,
       params,
     ).then((rows: any[]) => rows.map((row) => ({ name: row.name, total: numeric(row.total), branch: row.branch, storeId: row.storeId })));
   }
@@ -177,15 +179,16 @@ export class AnalysisRepository {
     const branch = this.scope("ie", scope, params);
     const rows = await DatabaseConfig.query(
       `SELECT
-        COALESCE(SUM(ie.amount) FILTER (WHERE ie.type = $2 AND ie."partnerId" IS NOT NULL), 0)::float AS "customerIncome",
-        COALESCE(SUM(ie.amount) FILTER (WHERE ie.type = $3 AND ie."partnerId" IS NULL AND COALESCE(ie."categorySnapshot"->>'name', '') <> 'Nộp thuế VAT'), 0)::float AS "otherCost",
+        COALESCE(SUM(ie.amount) FILTER (WHERE ie.type = $3 AND ie."partnerId" IS NULL AND COALESCE(category.name, '') <> 'Nộp thuế VAT'), 0)::float AS "otherCost",
         COALESCE(SUM(ie.amount) FILTER (WHERE ie.type = $2 AND ie."partnerId" IS NULL), 0)::float AS "otherIncome"
-       FROM income_expenses ie WHERE ie."deletedAt" IS NULL AND ie.status = $1
+       FROM income_expenses ie
+       LEFT JOIN attributes category ON category.id = ie."categoryId"
+       WHERE ie."deletedAt" IS NULL AND ie.status = $1
          AND timezone($4, ie."occurredAt")::date >= $5::date AND timezone($4, ie."occurredAt")::date < $6::date ${branch}`,
       params,
     );
     const row = rows[0] || {};
-    return { customerIncome: numeric(row.customerIncome), otherCost: numeric(row.otherCost), otherIncome: numeric(row.otherIncome) };
+    return { otherCost: numeric(row.otherCost), otherIncome: numeric(row.otherIncome) };
   }
 
   async getAdjustments(scope: AnalysisScope, range: AnalysisRange): Promise<Record<string, number>> {
