@@ -74,7 +74,7 @@ export class AnalysisRepository {
 
   async getBranches(scope: AnalysisScope, range: AnalysisRange, sortBy: AnalysisSortBy = "revenue"): Promise<AnalysisRepositoryBranch[]> {
     const params: unknown[] = [OrderStatus.COMPLETED, OrderType.SALE, OrderType.SALE_RETURN, scope.timezone, range.startAt, range.endExclusive];
-    const branch = this.scope("s", scope, params);
+    const branch = scope.branch === "all" ? "" : (params.push(scope.branch), ` AND s.id = $${params.length}`);
     const rows = await DatabaseConfig.query(
       `SELECT s.id AS "storeId", s.name AS branch,
         COALESCE(SUM(o."grossAmount"), 0)::float AS "goodsTotal",
